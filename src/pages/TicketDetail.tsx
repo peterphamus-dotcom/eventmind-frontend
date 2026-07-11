@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
-import type { Ticket } from '../types';
-import { TicketStatus, Urgency } from '../types';
+import type { Ticket, TicketStatus, Urgency } from '../types';
+import { TicketStatus as TicketStatusValues, Urgency as UrgencyValues } from '../types';
 
 export function TicketDetail() {
   const navigate = useNavigate();
@@ -160,7 +160,7 @@ export function TicketDetail() {
                   }}
                   disabled={isUpdating}
                 >
-                  {Object.values(TicketStatus).map((status) => (
+                  {Object.values(TicketStatusValues).map((status) => (
                     <option key={status} value={status}>
                       {status.replace(/_/g, ' ')}
                     </option>
@@ -184,7 +184,7 @@ export function TicketDetail() {
                   }}
                   disabled={isUpdating}
                 >
-                  {Object.values(Urgency).map((urg) => (
+                  {Object.values(UrgencyValues).map((urg) => (
                     <option key={urg} value={urg}>
                       {urg}
                     </option>

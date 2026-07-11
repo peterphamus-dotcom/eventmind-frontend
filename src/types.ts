@@ -29,18 +29,20 @@ export interface Tag {
   isPredefined: boolean;
 }
 
-export enum Urgency {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
-}
+export const Urgency = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+} as const;
+export type Urgency = (typeof Urgency)[keyof typeof Urgency];
 
-export enum TicketStatus {
-  OPEN = 'OPEN',
-  IN_PROGRESS = 'IN_PROGRESS',
-  RESOLVED = 'RESOLVED',
-  ARCHIVED = 'ARCHIVED',
-}
+export const TicketStatus = {
+  OPEN: 'OPEN',
+  IN_PROGRESS: 'IN_PROGRESS',
+  RESOLVED: 'RESOLVED',
+  ARCHIVED: 'ARCHIVED',
+} as const;
+export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus];
 
 export interface Report {
   id: string;

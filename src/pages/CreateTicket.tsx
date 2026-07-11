@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
-import type { Location, Tag } from '../types';
-import { Urgency } from '../types';
+import type { Location, Tag, Urgency } from '../types';
+import { Urgency as UrgencyValues } from '../types';
 
 export function CreateTicket() {
   const navigate = useNavigate();
@@ -171,7 +171,7 @@ export function CreateTicket() {
                 style={styles.select}
                 disabled={isLoading}
               >
-                {Object.values(Urgency).map((urg) => (
+                {Object.values(UrgencyValues).map((urg) => (
                   <option key={urg} value={urg}>
                     {urg}
                   </option>
