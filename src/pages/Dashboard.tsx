@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { api } from '../api';
-import { Ticket, Report } from '../types';
+import type { Ticket, Report } from '../types';
 
 export function Dashboard() {
   const { user, logout } = useAuth();

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
-import { Report } from '../types';
+import type { Report } from '../types';
 
 export function ReportDetail() {
   const navigate = useNavigate();

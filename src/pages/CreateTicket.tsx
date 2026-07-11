@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
-import { Location, Tag, Urgency } from '../types';
+import type { Location, Tag } from '../types';
+import { Urgency } from '../types';
 
 export function CreateTicket() {
   const navigate = useNavigate();

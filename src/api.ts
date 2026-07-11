@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ApiResponse, User, Report, Ticket, Tag, Location, PaginatedResponse } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Location, PaginatedResponse } from './types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 

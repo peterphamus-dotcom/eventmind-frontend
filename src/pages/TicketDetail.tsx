@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
-import { Ticket, TicketStatus, Urgency } from '../types';
+import type { Ticket } from '../types';
+import { TicketStatus, Urgency } from '../types';
 
 export function TicketDetail() {
   const navigate = useNavigate();
