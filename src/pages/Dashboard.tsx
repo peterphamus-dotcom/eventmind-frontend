@@ -61,7 +61,7 @@ export function Dashboard() {
           <button onClick={() => navigate('/tickets/new')} style={styles.actionBtn}>
             + Create Ticket
           </button>
-          {user?.role === 'ADMIN' && (
+          {(user?.role === 'ADMIN' || user?.role === 'CORE_TEAM') && (
             <button onClick={() => navigate('/admin')} style={styles.actionBtn}>
               ⚙️ Admin Panel
             </button>
