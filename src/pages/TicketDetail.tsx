@@ -1,0 +1,626 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { api } from '../api';
+import { useAuth } from '../AuthContext';
+import { Ticket, TicketStatus, Urgency } from '../types';
+
+export function TicketDetail() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { ticketId } = useParams<{ ticketId: string }>();
+  const [ticket, setTicket] = useState<Ticket | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+
+  const canUpdateUrgency = user?.role === 'ADMIN' || user?.role === 'CORE_TEAM';
+  const isCreator = ticket?.submitterId === user?.id;
+
+  useEffect(() => {
+    loadTicket();
+  }, [ticketId]);
+
+  async function loadTicket() {
+    if (!ticketId) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await api.getTicket(ticketId);
+      setTicket(response.data.data || null);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to load ticket');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleStatusChange(newStatus: string) {
+    if (!ticket || isUpdating) return;
+    setIsUpdating(true);
+    setUpdateError(null);
+    try {
+      const response = await api.updateTicket(ticket.id, newStatus);
+      setTicket(response.data.data || null);
+    } catch (err: any) {
+      setUpdateError(err.response?.data?.error || 'Failed to update status');
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
+  async function handleUrgencyChange(newUrgency: string) {
+    if (!ticket || isUpdating) return;
+    setIsUpdating(true);
+    setUpdateError(null);
+    try {
+      const response = await api.updateTicket(ticket.id, undefined, newUrgency);
+      setTicket(response.data.data || null);
+    } catch (err: any) {
+      setUpdateError(err.response?.data?.error || 'Failed to update urgency');
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
+  async function handleGlobalPin() {
+    if (!ticket || isUpdating) return;
+    setIsUpdating(true);
+    setUpdateError(null);
+    try {
+      await api.pinTicket(ticket.id);
+      setTicket({ ...ticket, isPinnedGlobal: !ticket.isPinnedGlobal });
+    } catch (err: any) {
+      setUpdateError(err.response?.data?.error || 'Failed to update pin');
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
+  async function handlePersonalPin() {
+    if (!ticket || isUpdating) return;
+    setIsUpdating(true);
+    setUpdateError(null);
+    try {
+      await api.pinTicketPersonal(ticket.id);
+      setTicket({
+        ...ticket,
+        userHasPersonalPin: !ticket.userHasPersonalPin,
+      });
+    } catch (err: any) {
+      setUpdateError(err.response?.data?.error || 'Failed to update personal pin');
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
+  const urgencyColor = (urgency: Urgency) => {
+    switch (urgency) {
+      case 'HIGH':
+        return '#dc3545';
+      case 'MEDIUM':
+        return '#ffc107';
+      case 'LOW':
+        return '#28a745';
+      default:
+        return '#666';
+    }
+  };
+
+  const statusColor = (status: TicketStatus) => {
+    switch (status) {
+      case 'OPEN':
+        return '#007bff';
+      case 'IN_PROGRESS':
+        return '#ffc107';
+      case 'RESOLVED':
+        return '#28a745';
+      case 'ARCHIVED':
+        return '#6c757d';
+      default:
+        return '#999';
+    }
+  };
+
+  if (isLoading) return <div style={styles.loading}>Loading...</div>;
+  if (error) return <div style={styles.error}>{error}</div>;
+  if (!ticket) return <div style={styles.error}>Ticket not found</div>;
+
+  return (
+    <div style={styles.container}>
+      {/* Header */}
+      <div style={styles.header}>
+        <button onClick={() => navigate('/dashboard')} style={styles.backBtn}>
+          ← Back to Dashboard
+        </button>
+        <h1 style={styles.title}>Ticket Details</h1>
+      </div>
+
+      {/* Content */}
+      <div style={styles.content}>
+        <div style={styles.card}>
+          {updateError && <div style={styles.updateError}>{updateError}</div>}
+
+          {/* Title and Status Row */}
+          <div style={styles.titleRow}>
+            <div>
+              <h2 style={styles.ticketTitle}>{ticket.title}</h2>
+              <p style={styles.ticketDescription}>{ticket.description}</p>
+            </div>
+            <div style={styles.statusSection}>
+              <div style={styles.statusControl}>
+                <label style={styles.label}>Status</label>
+                <select
+                  value={ticket.status}
+                  onChange={(e) => handleStatusChange(e.target.value)}
+                  style={{
+                    ...styles.statusSelect,
+                    borderColor: statusColor(ticket.status as TicketStatus),
+                  }}
+                  disabled={isUpdating}
+                >
+                  {Object.values(TicketStatus).map((status) => (
+                    <option key={status} value={status}>
+                      {status.replace(/_/g, ' ')}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Urgency and Pins Row */}
+          <div style={styles.controlRow}>
+            <div style={styles.urgencyControl}>
+              <label style={styles.label}>Urgency</label>
+              {canUpdateUrgency ? (
+                <select
+                  value={ticket.urgency}
+                  onChange={(e) => handleUrgencyChange(e.target.value)}
+                  style={{
+                    ...styles.urgencySelect,
+                    borderColor: urgencyColor(ticket.urgency as Urgency),
+                  }}
+                  disabled={isUpdating}
+                >
+                  {Object.values(Urgency).map((urg) => (
+                    <option key={urg} value={urg}>
+                      {urg}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div
+                  style={{
+                    ...styles.urgencyBadge,
+                    backgroundColor: urgencyColor(ticket.urgency as Urgency),
+                  }}
+                >
+                  {ticket.urgency}
+                </div>
+              )}
+            </div>
+
+            <div style={styles.pinControls}>
+              <button
+                onClick={handlePersonalPin}
+                style={{
+                  ...styles.pinBtn,
+                  ...(ticket.userHasPersonalPin ? styles.pinBtnActive : {}),
+                }}
+                disabled={isUpdating}
+                title="Pin for yourself only"
+              >
+                {ticket.userHasPersonalPin ? '⭐' : '☆'} Personal
+              </button>
+              {(user?.role === 'ADMIN' || user?.role === 'CORE_TEAM') && (
+                <button
+                  onClick={handleGlobalPin}
+                  style={{
+                    ...styles.pinBtn,
+                    ...(ticket.isPinnedGlobal ? styles.pinBtnActive : {}),
+                  }}
+                  disabled={isUpdating}
+                  title="Pin for everyone"
+                >
+                  {ticket.isPinnedGlobal ? '📌' : '📍'} Global
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Metadata */}
+          <div style={styles.section}>
+            <h3 style={styles.subtitle}>Details</h3>
+            <div style={styles.details}>
+              <div style={styles.detailRow}>
+                <span style={styles.detailLabel}>Location:</span>
+                <span>{ticket.location?.name || 'Unknown'}</span>
+              </div>
+              <div style={styles.detailRow}>
+                <span style={styles.detailLabel}>Reported by:</span>
+                <span>
+                  {ticket.submitter?.name} ({ticket.submitter?.email})
+                  {isCreator && <span style={styles.creatorBadge}> (You)</span>}
+                </span>
+              </div>
+              <div style={styles.detailRow}>
+                <span style={styles.detailLabel}>Created at:</span>
+                <span>{new Date(ticket.createdAt).toLocaleString()}</span>
+              </div>
+              <div style={styles.detailRow}>
+                <span style={styles.detailLabel}>Updated at:</span>
+                <span>{new Date(ticket.updatedAt).toLocaleString()}</span>
+              </div>
+              <div style={styles.detailRow}>
+                <span style={styles.detailLabel}>Outside home location:</span>
+                <span>{ticket.isOutsideHomeLocation ? 'Yes' : 'No'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Tags */}
+          {ticket.tags && ticket.tags.length > 0 && (
+            <div style={styles.section}>
+              <h3 style={styles.subtitle}>Tags</h3>
+              <div style={styles.tags}>
+                {ticket.tags.map((tag) => (
+                  <span key={tag.id} style={styles.tag}>
+                    {tag.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Photos */}
+          {ticket.photos && ticket.photos.length > 0 && (
+            <div style={styles.section}>
+              <h3 style={styles.subtitle}>Photos ({ticket.photos.length})</h3>
+              <div style={styles.photoGrid}>
+                {ticket.photos.map((photo) => (
+                  <div key={photo.id} style={styles.photoContainer}>
+                    <img
+                      src={`http://localhost:3000${photo.url}`}
+                      alt={photo.caption || 'Ticket photo'}
+                      style={styles.photo}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="14" fill="%23999"%3EPhoto unavailable%3C/text%3E%3C/svg%3E';
+                      }}
+                    />
+                    {photo.caption && <p style={styles.photoCaption}>{photo.caption}</p>}
+                    <p style={styles.photoDate}>{new Date(photo.uploadedAt).toLocaleString()}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Urgency Audit Trail */}
+          {ticket.urgencyAudits && ticket.urgencyAudits.length > 0 && (
+            <div style={styles.section}>
+              <h3 style={styles.subtitle}>Urgency History</h3>
+              <div style={styles.auditTrail}>
+                {ticket.urgencyAudits.map((audit) => (
+                  <div key={audit.id} style={styles.auditEntry}>
+                    <div style={styles.auditTime}>
+                      {new Date(audit.changedAt).toLocaleString()}
+                    </div>
+                    <div style={styles.auditChange}>
+                      {audit.changedBy.name} changed urgency from{' '}
+                      <span style={styles.auditFrom}>
+                        {audit.fromUrgency || 'UNSET'}
+                      </span>{' '}
+                      to{' '}
+                      <span style={styles.auditTo}>{audit.toUrgency}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div style={styles.actions}>
+            <button onClick={() => navigate('/tickets/new')} style={styles.primaryBtn}>
+              + New Ticket
+            </button>
+            <button onClick={() => navigate('/dashboard')} style={styles.secondaryBtn}>
+              Back to Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const styles = {
+  container: {
+    minHeight: '100vh',
+    backgroundColor: '#f5f5f5',
+  },
+  header: {
+    backgroundColor: 'white',
+    padding: '20px 40px',
+    borderBottom: '1px solid #eee',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '20px',
+  },
+  backBtn: {
+    fontSize: '14px',
+    color: '#007bff',
+    backgroundColor: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    fontWeight: '500' as const,
+    padding: 0,
+  },
+  title: {
+    fontSize: '24px',
+    fontWeight: 'bold',
+    margin: 0,
+  },
+  content: {
+    maxWidth: '900px',
+    margin: '40px auto',
+    padding: '0 20px',
+  },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: '8px',
+    padding: '32px',
+    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+  },
+  titleRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    gap: '20px',
+    marginBottom: '24px',
+    paddingBottom: '24px',
+    borderBottom: '1px solid #eee',
+  },
+  ticketTitle: {
+    fontSize: '22px',
+    fontWeight: '600',
+    margin: '0 0 8px 0',
+    color: '#333',
+  },
+  ticketDescription: {
+    fontSize: '14px',
+    lineHeight: '1.6',
+    color: '#666',
+    margin: 0,
+    whiteSpace: 'pre-wrap' as const,
+  },
+  statusSection: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '8px',
+    minWidth: '200px',
+  },
+  statusControl: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '8px',
+  },
+  label: {
+    fontSize: '12px',
+    fontWeight: '600',
+    color: '#666',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.5px',
+  },
+  statusSelect: {
+    padding: '8px 12px',
+    border: '2px solid #007bff',
+    borderRadius: '4px',
+    fontSize: '13px',
+    fontFamily: 'inherit',
+    fontWeight: '500' as const,
+  },
+  controlRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    gap: '20px',
+    marginBottom: '24px',
+    paddingBottom: '24px',
+    borderBottom: '1px solid #eee',
+  },
+  urgencyControl: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '8px',
+    minWidth: '150px',
+  },
+  urgencySelect: {
+    padding: '8px 12px',
+    border: '2px solid',
+    borderRadius: '4px',
+    fontSize: '13px',
+    fontFamily: 'inherit',
+    fontWeight: '500' as const,
+  },
+  urgencyBadge: {
+    padding: '8px 12px',
+    borderRadius: '4px',
+    color: 'white',
+    fontSize: '13px',
+    fontWeight: '500' as const,
+    textAlign: 'center' as const,
+  },
+  pinControls: {
+    display: 'flex',
+    gap: '8px',
+  },
+  pinBtn: {
+    padding: '8px 12px',
+    fontSize: '13px',
+    backgroundColor: '#f5f5f5',
+    border: '1px solid #ddd',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontWeight: '500' as const,
+    transition: 'all 0.2s',
+  },
+  pinBtnActive: {
+    backgroundColor: '#fff3cd',
+    borderColor: '#ffc107',
+    color: '#856404',
+  },
+  section: {
+    marginBottom: '32px',
+    paddingBottom: '24px',
+    borderBottom: '1px solid #eee',
+  },
+  subtitle: {
+    fontSize: '16px',
+    fontWeight: '600',
+    marginBottom: '12px',
+    color: '#333',
+    margin: '0 0 12px 0',
+  },
+  details: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '12px',
+  },
+  detailRow: {
+    display: 'flex',
+    gap: '16px',
+    fontSize: '14px',
+  },
+  detailLabel: {
+    fontWeight: '600',
+    color: '#333',
+    minWidth: '150px',
+  },
+  creatorBadge: {
+    fontSize: '11px',
+    backgroundColor: '#d1ecf1',
+    color: '#0c5460',
+    padding: '2px 6px',
+    borderRadius: '3px',
+    marginLeft: '8px',
+    fontWeight: '600' as const,
+  },
+  tags: {
+    display: 'flex',
+    flexWrap: 'wrap' as const,
+    gap: '8px',
+  },
+  tag: {
+    display: 'inline-block',
+    padding: '6px 12px',
+    backgroundColor: '#e3f2fd',
+    color: '#1976d2',
+    borderRadius: '16px',
+    fontSize: '13px',
+    fontWeight: '500' as const,
+  },
+  photoGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+    gap: '16px',
+  },
+  photoContainer: {
+    borderRadius: '4px',
+    overflow: 'hidden',
+    backgroundColor: '#f5f5f5',
+  },
+  photo: {
+    width: '100%',
+    height: '200px',
+    objectFit: 'cover' as const,
+    display: 'block',
+  },
+  photoCaption: {
+    fontSize: '12px',
+    color: '#666',
+    padding: '8px 12px',
+    margin: 0,
+  },
+  photoDate: {
+    fontSize: '11px',
+    color: '#999',
+    padding: '0 12px 8px 12px',
+    margin: 0,
+  },
+  auditTrail: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '12px',
+  },
+  auditEntry: {
+    padding: '12px',
+    backgroundColor: '#f9f9f9',
+    borderLeft: '3px solid #007bff',
+    borderRadius: '4px',
+  },
+  auditTime: {
+    fontSize: '11px',
+    color: '#999',
+    marginBottom: '4px',
+  },
+  auditChange: {
+    fontSize: '13px',
+    color: '#333',
+  },
+  auditFrom: {
+    fontWeight: '500' as const,
+    color: '#666',
+  },
+  auditTo: {
+    fontWeight: '600' as const,
+    color: '#333',
+  },
+  actions: {
+    display: 'flex',
+    gap: '12px',
+    marginTop: '24px',
+  },
+  primaryBtn: {
+    padding: '10px 20px',
+    backgroundColor: '#007bff',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '500' as const,
+    flex: 1,
+  },
+  secondaryBtn: {
+    padding: '10px 20px',
+    backgroundColor: '#6c757d',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '500' as const,
+    flex: 1,
+  },
+  loading: {
+    padding: '20px',
+    fontSize: '16px',
+    color: '#666',
+  },
+  error: {
+    padding: '20px',
+    fontSize: '16px',
+    color: '#c00',
+    backgroundColor: '#fee',
+  },
+  updateError: {
+    padding: '12px 16px',
+    backgroundColor: '#fee',
+    color: '#c00',
+    borderRadius: '4px',
+    fontSize: '14px',
+    marginBottom: '16px',
+  },
+};

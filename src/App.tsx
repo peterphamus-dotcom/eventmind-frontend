@@ -4,6 +4,7 @@ import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { CreateReport } from './pages/CreateReport';
 import { ReportDetail } from './pages/ReportDetail';
+import { TicketDetail } from './pages/TicketDetail';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -41,6 +42,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <ReportDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tickets/:ticketId"
+        element={
+          <ProtectedRoute>
+            <TicketDetail />
           </ProtectedRoute>
         }
       />
