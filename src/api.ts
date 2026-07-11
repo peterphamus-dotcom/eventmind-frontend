@@ -19,8 +19,8 @@ export const api = {
   // Users
   getMe: () => client.get<ApiResponse<User>>('/users/me'),
   getUser: (id: string) => client.get<ApiResponse<User>>(`/users/${id}`),
-  listUsers: (page = 1, pageSize = 20) =>
-    client.get<ApiResponse<PaginatedResponse<User>>>('/users', { params: { page, pageSize } }),
+  listUsers: (page = 1, pageSize = 20, filters?: any) =>
+    client.get<ApiResponse<PaginatedResponse<User>>>('/users', { params: { page, pageSize, ...filters } }),
   updateUser: (id: string, role?: string, teamIds?: string[]) =>
     client.patch<ApiResponse<User>>(`/users/${id}`, { role, teamIds }),
 
