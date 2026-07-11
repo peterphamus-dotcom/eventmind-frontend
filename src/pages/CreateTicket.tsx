@@ -9,7 +9,7 @@ export function CreateTicket() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [locationId, setLocationId] = useState('');
-  const [urgency, setUrgency] = useState<Urgency>(Urgency.MEDIUM);
+  const [urgency, setUrgency] = useState<Urgency>(UrgencyValues.MEDIUM);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [photos, setPhotos] = useState<File[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
