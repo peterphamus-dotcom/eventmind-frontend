@@ -69,4 +69,8 @@ export const api = {
     client.post<ApiResponse<{ ticketId: string; isPinnedGlobal: boolean }>>(`/tickets/${id}/pin`),
   pinTicketPersonal: (id: string) =>
     client.post<ApiResponse<{ ticketId: string; isPinned: boolean }>>(`/tickets/${id}/personal-pin`),
+
+  // Admin
+  seedDatabase: () =>
+    client.post<ApiResponse<any>>('/admin/seed'),
 };
