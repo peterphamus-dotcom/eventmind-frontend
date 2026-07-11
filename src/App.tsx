@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './AuthContext';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
+import { CreateReport } from './pages/CreateReport';
+import { ReportDetail } from './pages/ReportDetail';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -23,6 +25,22 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/reports/new"
+        element={
+          <ProtectedRoute>
+            <CreateReport />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/reports/:reportId"
+        element={
+          <ProtectedRoute>
+            <ReportDetail />
           </ProtectedRoute>
         }
       />
