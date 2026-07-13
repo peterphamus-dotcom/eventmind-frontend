@@ -3,42 +3,25 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useToast } from '../Toast';
 import { PhotoPicker } from '../components/PhotoPicker';
-import type { Location, Tag } from '../types';
+import { useFormLists } from '../hooks/useFormLists';
 
 export function CreateReport() {
   const navigate = useNavigate();
   const showToast = useToast();
+  const { locations, tags, loadError, reload } = useFormLists();
   const [text, setText] = useState('');
   const [locationId, setLocationId] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [photos, setPhotos] = useState<File[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Default to the first location once loaded
   useEffect(() => {
-    loadFormData();
-  }, []);
-
-  async function loadFormData() {
-    try {
-      const [locRes, tagRes] = await Promise.all([
-        api.listLocations(),
-        api.listTags(),
-      ]);
-      setLocations(locRes.data.data?.items || []);
-      setTags(tagRes.data.data?.items || []);
-
-      // Set first location as default
-      if (locRes.data.data?.items && locRes.data.data.items.length > 0) {
-        setLocationId(locRes.data.data.items[0].id);
-      }
-    } catch (err) {
-      setError('Failed to load form data');
-      console.error(err);
+    if (!locationId && locations.length > 0) {
+      setLocationId(locations[0].id);
     }
-  }
+  }, [locations, locationId]);
 
   function toggleTag(tagId: string) {
     setSelectedTags((prev) =>
@@ -137,6 +120,14 @@ export function CreateReport() {
                 </option>
               ))}
             </select>
+            {loadError && locations.length === 0 && (
+              <p style={styles.loadWarning}>
+                Couldn't load locations — check your connection.{' '}
+                <button type="button" onClick={reload} style={styles.retryBtn}>
+                  Retry
+                </button>
+              </p>
+            )}
           </div>
 
           {/* Tags */}
@@ -311,5 +302,21 @@ const styles = {
     borderRadius: '4px',
     fontSize: '14px',
     marginBottom: '16px',
+  },
+  loadWarning: {
+    fontSize: '13px',
+    color: '#c00',
+    margin: 0,
+  },
+  retryBtn: {
+    fontSize: '13px',
+    color: '#007bff',
+    backgroundColor: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    fontWeight: '600' as const,
+    padding: 0,
+    textDecoration: 'underline',
+    minHeight: 'auto',
   },
 };
