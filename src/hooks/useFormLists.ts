@@ -26,8 +26,10 @@ export function useFormLists() {
       setTags(tagRes.data.data?.items || []);
       setLoadError(false);
     } catch {
-      if (attempt < 2) {
-        await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+      // Back off 2s/4s/8s/16s — long enough to ride out a free-tier
+      // cold start (~30s) or a brief rate-limit window
+      if (attempt < 4) {
+        await new Promise((r) => setTimeout(r, 2000 * 2 ** attempt));
         return load(attempt + 1);
       }
       setLoadError(true);
