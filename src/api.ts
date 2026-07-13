@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, User, Report, Ticket, Tag, Location, PaginatedResponse } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, PaginatedResponse } from './types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -69,6 +69,16 @@ export const api = {
     client.post<ApiResponse<{ ticketId: string; isPinnedGlobal: boolean }>>(`/tickets/${id}/pin`),
   pinTicketPersonal: (id: string) =>
     client.post<ApiResponse<{ ticketId: string; isPinned: boolean }>>(`/tickets/${id}/personal-pin`),
+
+  // Teams
+  listTeams: () =>
+    client.get<ApiResponse<{ items: Team[]; total: number }>>('/teams'),
+  createTeam: (name: string, tagIds?: string[], memberIds?: string[]) =>
+    client.post<ApiResponse<Team>>('/teams', { name, tagIds, memberIds }),
+  updateTeam: (id: string, updates: { name?: string; tagIds?: string[]; memberIds?: string[] }) =>
+    client.patch<ApiResponse<Team>>(`/teams/${id}`, updates),
+  deleteTeam: (id: string) =>
+    client.delete<ApiResponse<{ message: string }>>(`/teams/${id}`),
 
   // Admin
   seedDatabase: () =>

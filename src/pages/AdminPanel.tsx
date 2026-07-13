@@ -4,8 +4,9 @@ import { useAuth } from '../AuthContext';
 import AdminUsers from './admin/AdminUsers';
 import AdminLocations from './admin/AdminLocations';
 import AdminTags from './admin/AdminTags';
+import AdminTeams from './admin/AdminTeams';
 
-type AdminTab = 'users' | 'locations' | 'tags';
+type AdminTab = 'users' | 'teams' | 'locations' | 'tags';
 
 export function AdminPanel() {
   const navigate = useNavigate();
@@ -60,6 +61,15 @@ export function AdminPanel() {
           👥 Users
         </button>
         <button
+          onClick={() => setActiveTab('teams')}
+          style={{
+            ...styles.tab,
+            ...(activeTab === 'teams' ? styles.tabActive : {}),
+          }}
+        >
+          🤝 Teams
+        </button>
+        <button
           onClick={() => setActiveTab('locations')}
           style={{
             ...styles.tab,
@@ -82,6 +92,7 @@ export function AdminPanel() {
       {/* Content */}
       <div style={styles.content}>
         {activeTab === 'users' && <AdminUsers />}
+        {activeTab === 'teams' && <AdminTeams />}
         {activeTab === 'locations' && <AdminLocations />}
         {activeTab === 'tags' && <AdminTags />}
       </div>

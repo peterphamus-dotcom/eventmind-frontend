@@ -21,6 +21,15 @@ export interface Team {
   id: string;
   name: string;
   tags?: Tag[];
+  members?: TeamMember[];
+  createdAt?: string;
+}
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: 'MEMBER' | 'CORE_TEAM' | 'ADMIN';
 }
 
 export interface Tag {
