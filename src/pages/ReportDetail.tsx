@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { api } from '../api';
+import { api, photoSrc } from '../api';
 import type { Report } from '../types';
 
 export function ReportDetail() {
@@ -95,7 +95,7 @@ export function ReportDetail() {
                 {report.photos.map((photo) => (
                   <div key={photo.id} style={styles.photoContainer}>
                     <img
-                      src={`http://localhost:3000${photo.url}`}
+                      src={photoSrc(photo.url)}
                       alt={photo.caption || 'Report photo'}
                       style={styles.photo}
                       onError={(e) => {

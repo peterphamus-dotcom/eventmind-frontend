@@ -13,6 +13,15 @@ const client = axios.create({
   withCredentials: true, // Send cookies with requests
 });
 
+/**
+ * Resolve a Photo.url to an <img> src. R2-stored photos are absolute
+ * URLs used as-is; local-dev photos are relative /uploads paths that
+ * need the API base prepended.
+ */
+export function photoSrc(url: string): string {
+  return url.startsWith('http') ? url : `${API_URL}${url}`;
+}
+
 export const api = {
   // Auth
   login: (email: string, password: string) =>

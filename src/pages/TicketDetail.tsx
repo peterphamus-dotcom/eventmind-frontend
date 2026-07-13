@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { api } from '../api';
+import { api, photoSrc } from '../api';
 import { useAuth } from '../AuthContext';
 import type { Ticket, TicketStatus, Urgency } from '../types';
 import { TicketStatus as TicketStatusValues, Urgency as UrgencyValues } from '../types';
@@ -282,7 +282,7 @@ export function TicketDetail() {
                 {ticket.photos.map((photo) => (
                   <div key={photo.id} style={styles.photoContainer}>
                     <img
-                      src={`http://localhost:3000${photo.url}`}
+                      src={photoSrc(photo.url)}
                       alt={photo.caption || 'Ticket photo'}
                       style={styles.photo}
                       onError={(e) => {
