@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
-import type { Ticket } from '../types';
+import type { Ticket, Location } from '../types';
 
-type SortOption = 'default' | 'recent' | 'urgency' | 'location';
+type SortOption = 'default' | 'recent' | 'urgency';
 type StatusFilter = 'ALL' | 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'ARCHIVED';
 
 const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
@@ -18,7 +18,6 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'default', label: 'Pinned & urgent first' },
   { value: 'recent', label: 'Most recent' },
   { value: 'urgency', label: 'Urgency' },
-  { value: 'location', label: 'Location' },
 ];
 
 type TicketStats = Record<'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'ARCHIVED', number>;
@@ -32,16 +31,22 @@ export function TicketList() {
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('default');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
+  const [locationFilter, setLocationFilter] = useState('ALL');
+  const [locations, setLocations] = useState<Location[]>([]);
 
   useEffect(() => {
     loadTickets();
-  }, [sortBy, statusFilter]);
+  }, [sortBy, statusFilter, locationFilter]);
 
   useEffect(() => {
     api
       .getTicketStats()
       .then((res) => setStats(res.data.data || null))
       .catch(() => setStats(null)); // tiles just hide if stats fail
+    api
+      .listLocations()
+      .then((res) => setLocations(res.data.data?.items || []))
+      .catch(() => setLocations([])); // dropdown just shows All if this fails
   }, []);
 
   async function loadTickets() {
@@ -51,6 +56,7 @@ export function TicketList() {
       const filters: Record<string, string> = {};
       if (sortBy !== 'default') filters.sortBy = sortBy;
       if (statusFilter !== 'ALL') filters.status = statusFilter;
+      if (locationFilter !== 'ALL') filters.locationId = locationFilter;
 
       const response = await api.listTickets(1, 100, filters);
       setTickets(response.data.data?.items || []);
@@ -116,6 +122,21 @@ export function TicketList() {
 
         {/* Controls */}
         <div style={styles.controls}>
+          <div style={styles.sortControl}>
+            <label style={styles.sortLabel}>Location</label>
+            <select
+              value={locationFilter}
+              onChange={(e) => setLocationFilter(e.target.value)}
+              style={styles.sortSelect}
+            >
+              <option value="ALL">All locations</option>
+              {locations.map((loc) => (
+                <option key={loc.id} value={loc.id}>
+                  {loc.name}
+                </option>
+              ))}
+            </select>
+          </div>
           <div style={styles.sortControl}>
             <label style={styles.sortLabel}>Sort by</label>
             <select
@@ -256,7 +277,7 @@ const styles = {
   },
   controls: {
     display: 'flex',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     alignItems: 'center',
     gap: '12px',
     flexWrap: 'wrap' as const,
