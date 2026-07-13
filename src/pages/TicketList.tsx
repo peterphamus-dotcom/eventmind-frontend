@@ -116,20 +116,6 @@ export function TicketList() {
 
         {/* Controls */}
         <div style={styles.controls}>
-          <div style={styles.filterChips}>
-            {STATUS_FILTERS.map((f) => (
-              <button
-                key={f.value}
-                onClick={() => setStatusFilter(f.value)}
-                style={{
-                  ...styles.chip,
-                  ...(statusFilter === f.value ? styles.chipActive : {}),
-                }}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
           <div style={styles.sortControl}>
             <label style={styles.sortLabel}>Sort by</label>
             <select
@@ -270,31 +256,11 @@ const styles = {
   },
   controls: {
     display: 'flex',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     gap: '12px',
     flexWrap: 'wrap' as const,
     marginBottom: '20px',
-  },
-  filterChips: {
-    display: 'flex',
-    gap: '8px',
-    flexWrap: 'wrap' as const,
-  },
-  chip: {
-    padding: '8px 14px',
-    backgroundColor: 'white',
-    color: '#333',
-    border: '1px solid #ccc',
-    borderRadius: '16px',
-    cursor: 'pointer',
-    fontSize: '13px',
-    fontWeight: '500' as const,
-  },
-  chipActive: {
-    backgroundColor: '#007bff',
-    color: 'white',
-    borderColor: '#007bff',
   },
   sortControl: {
     display: 'flex',
