@@ -57,9 +57,9 @@ export const api = {
     client.delete<ApiResponse<{ message: string }>>(`/tags/${id}`),
 
   // Reports
-  listReports: (page = 1, pageSize = 20, locationId?: string, tagIds?: string[]) =>
+  listReports: (page = 1, pageSize = 20, filters?: any) =>
     client.get<ApiResponse<PaginatedResponse<Report>>>('/reports', {
-      params: { page, pageSize, locationId, tagIds: tagIds?.join(',') },
+      params: { page, pageSize, ...filters },
     }),
   getReport: (id: string) =>
     client.get<ApiResponse<Report>>(`/reports/${id}`),

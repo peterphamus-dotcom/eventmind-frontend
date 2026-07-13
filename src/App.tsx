@@ -5,6 +5,7 @@ import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { CreateReport } from './pages/CreateReport';
 import { ReportDetail } from './pages/ReportDetail';
+import { ReportList } from './pages/ReportList';
 import { CreateTicket } from './pages/CreateTicket';
 import { TicketDetail } from './pages/TicketDetail';
 import { TicketList } from './pages/TicketList';
@@ -30,6 +31,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/reports"
+        element={
+          <ProtectedRoute>
+            <ReportList />
           </ProtectedRoute>
         }
       />
