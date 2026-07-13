@@ -31,12 +31,14 @@ export function TicketList() {
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('default');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
-  const [locationFilter, setLocationFilter] = useState('ALL');
+  const [selectedLocationIds, setSelectedLocationIds] = useState<string[]>([]);
+  const [locationsOpen, setLocationsOpen] = useState(false);
   const [locations, setLocations] = useState<Location[]>([]);
 
+  const locationKey = selectedLocationIds.join(',');
   useEffect(() => {
     loadTickets();
-  }, [sortBy, statusFilter, locationFilter]);
+  }, [sortBy, statusFilter, locationKey]);
 
   useEffect(() => {
     api
@@ -56,7 +58,7 @@ export function TicketList() {
       const filters: Record<string, string> = {};
       if (sortBy !== 'default') filters.sortBy = sortBy;
       if (statusFilter !== 'ALL') filters.status = statusFilter;
-      if (locationFilter !== 'ALL') filters.locationId = locationFilter;
+      if (selectedLocationIds.length > 0) filters.locationId = selectedLocationIds.join(',');
 
       const response = await api.listTickets(1, 100, filters);
       setTickets(response.data.data?.items || []);
@@ -79,6 +81,19 @@ export function TicketList() {
         : status === 'RESOLVED'
           ? '#28a745'
           : '#6c757d';
+
+  function toggleLocation(id: string) {
+    setSelectedLocationIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  }
+
+  const locationLabel =
+    selectedLocationIds.length === 0
+      ? 'All locations'
+      : selectedLocationIds.length === 1
+        ? locations.find((l) => l.id === selectedLocationIds[0])?.name || '1 location'
+        : `${selectedLocationIds.length} locations`;
 
   return (
     <div style={styles.container}>
@@ -123,19 +138,50 @@ export function TicketList() {
         {/* Controls */}
         <div style={styles.controls}>
           <div style={styles.sortControl}>
-            <label style={styles.sortLabel}>Location</label>
-            <select
-              value={locationFilter}
-              onChange={(e) => setLocationFilter(e.target.value)}
-              style={styles.sortSelect}
-            >
-              <option value="ALL">All locations</option>
-              {locations.map((loc) => (
-                <option key={loc.id} value={loc.id}>
-                  {loc.name}
-                </option>
-              ))}
-            </select>
+            <label style={styles.sortLabel}>Locations</label>
+            <div style={styles.popoverAnchor}>
+              <button
+                type="button"
+                onClick={() => setLocationsOpen(!locationsOpen)}
+                style={styles.locationBtn}
+              >
+                {locationLabel} ▾
+              </button>
+              {locationsOpen && (
+                <>
+                  <div
+                    style={styles.popoverBackdrop}
+                    onClick={() => setLocationsOpen(false)}
+                  />
+                  <div style={styles.popover}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedLocationIds([])}
+                      style={{
+                        ...styles.popoverItem,
+                        fontWeight: selectedLocationIds.length === 0 ? '700' : '400',
+                      }}
+                    >
+                      {selectedLocationIds.length === 0 ? '✓ ' : ''}All locations
+                    </button>
+                    {locations.map((loc) => (
+                      <button
+                        key={loc.id}
+                        type="button"
+                        onClick={() => toggleLocation(loc.id)}
+                        style={{
+                          ...styles.popoverItem,
+                          fontWeight: selectedLocationIds.includes(loc.id) ? '700' : '400',
+                        }}
+                      >
+                        {selectedLocationIds.includes(loc.id) ? '✓ ' : ''}
+                        {loc.name}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
           <div style={styles.sortControl}>
             <label style={styles.sortLabel}>Sort by</label>
@@ -299,6 +345,48 @@ const styles = {
     border: '1px solid #ccc',
     borderRadius: '4px',
     backgroundColor: 'white',
+  },
+  popoverAnchor: {
+    position: 'relative' as const,
+  },
+  locationBtn: {
+    padding: '8px 12px',
+    border: '1px solid #ccc',
+    borderRadius: '4px',
+    backgroundColor: 'white',
+    cursor: 'pointer',
+    fontSize: '14px',
+    whiteSpace: 'nowrap' as const,
+  },
+  popoverBackdrop: {
+    position: 'fixed' as const,
+    inset: 0,
+    zIndex: 10,
+  },
+  popover: {
+    position: 'absolute' as const,
+    top: 'calc(100% + 4px)',
+    left: 0,
+    zIndex: 11,
+    backgroundColor: 'white',
+    border: '1px solid #ddd',
+    borderRadius: '6px',
+    boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+    minWidth: '200px',
+    maxHeight: '260px',
+    overflowY: 'auto' as const,
+    padding: '4px 0',
+  },
+  popoverItem: {
+    display: 'block',
+    width: '100%',
+    textAlign: 'left' as const,
+    padding: '10px 14px',
+    backgroundColor: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '14px',
+    color: '#333',
   },
   error: {
     padding: '12px 16px',
