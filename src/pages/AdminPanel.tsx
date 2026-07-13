@@ -114,14 +114,16 @@ const styles = {
   },
   header: {
     backgroundColor: 'white',
-    padding: '20px 40px',
+    padding: '16px clamp(16px, 4vw, 40px)',
     borderBottom: '1px solid #eee',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexWrap: 'wrap' as const,
+    gap: '8px',
   },
   title: {
-    fontSize: '28px',
+    fontSize: 'clamp(20px, 5vw, 28px)',
     fontWeight: 'bold',
     margin: 0,
     color: '#333',
@@ -131,6 +133,7 @@ const styles = {
     gap: '16px',
     alignItems: 'center',
     fontSize: '14px',
+    flexWrap: 'wrap' as const,
   },
   logoutBtn: {
     padding: '8px 16px',
@@ -147,10 +150,11 @@ const styles = {
     gap: '0',
     backgroundColor: 'white',
     borderBottom: '1px solid #ddd',
-    padding: '0 40px',
+    padding: '0 clamp(8px, 3vw, 40px)',
+    overflowX: 'auto' as const,
   },
   tab: {
-    padding: '16px 24px',
+    padding: '16px clamp(12px, 3vw, 24px)',
     border: 'none',
     backgroundColor: 'transparent',
     cursor: 'pointer',
@@ -159,6 +163,7 @@ const styles = {
     color: '#666',
     borderBottom: '3px solid transparent',
     transition: 'all 0.2s',
+    whiteSpace: 'nowrap' as const,
   },
   tabActive: {
     color: '#007bff',
@@ -166,8 +171,8 @@ const styles = {
   },
   content: {
     maxWidth: '1200px',
-    margin: '40px auto',
-    padding: '0 20px',
+    margin: 'clamp(16px, 4vw, 40px) auto',
+    padding: '0 clamp(12px, 3vw, 20px)',
   },
   error: {
     maxWidth: '600px',

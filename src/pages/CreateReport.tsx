@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
+import { useToast } from '../Toast';
+import { PhotoPicker } from '../components/PhotoPicker';
 import type { Location, Tag } from '../types';
 
 export function CreateReport() {
   const navigate = useNavigate();
+  const showToast = useToast();
   const [text, setText] = useState('');
   const [locationId, setLocationId] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -35,15 +38,6 @@ export function CreateReport() {
       setError('Failed to load form data');
       console.error(err);
     }
-  }
-
-  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files || []);
-    setPhotos((prev) => [...prev, ...files]);
-  }
-
-  function removePhoto(index: number) {
-    setPhotos((prev) => prev.filter((_, i) => i !== index));
   }
 
   function toggleTag(tagId: string) {
@@ -89,6 +83,7 @@ export function CreateReport() {
 
       const response = await api.createReport(formData);
       if (response.data.success) {
+        showToast('Report submitted ✓');
         navigate(`/reports/${response.data.data?.id}`);
       }
     } catch (err: any) {
@@ -168,38 +163,8 @@ export function CreateReport() {
 
           {/* Photos */}
           <div style={styles.formGroup}>
-            <label style={styles.label}>Photos (upload at least one) *</label>
-            <div style={styles.uploadArea}>
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handlePhotoChange}
-                style={styles.fileInput}
-                disabled={isLoading}
-              />
-              <p style={styles.uploadText}>Click to select photos (JPEG, PNG, WebP)</p>
-            </div>
-
-            {/* Photo Preview */}
-            {photos.length > 0 && (
-              <div style={styles.photoGrid}>
-                {photos.map((photo, idx) => (
-                  <div key={idx} style={styles.photoCard}>
-                    <div style={styles.photoName}>{photo.name}</div>
-                    <div style={styles.photoSize}>{(photo.size / 1024).toFixed(0)} KB</div>
-                    <button
-                      type="button"
-                      onClick={() => removePhoto(idx)}
-                      style={styles.removeBtn}
-                      disabled={isLoading}
-                    >
-                      ✕ Remove
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+            <label style={styles.label}>Photos (at least one) *</label>
+            <PhotoPicker photos={photos} onChange={setPhotos} disabled={isLoading} />
           </div>
 
           {/* Buttons */}
@@ -233,11 +198,12 @@ const styles = {
   },
   header: {
     backgroundColor: 'white',
-    padding: '20px 40px',
+    padding: '16px clamp(16px, 4vw, 40px)',
     borderBottom: '1px solid #eee',
     display: 'flex',
     alignItems: 'center',
-    gap: '20px',
+    gap: '16px',
+    flexWrap: 'wrap' as const,
   },
   backBtn: {
     fontSize: '14px',
@@ -255,13 +221,13 @@ const styles = {
   },
   formContainer: {
     maxWidth: '800px',
-    margin: '40px auto',
-    padding: '0 20px',
+    margin: 'clamp(16px, 4vw, 40px) auto',
+    padding: '0 clamp(12px, 3vw, 20px)',
   },
   form: {
     backgroundColor: 'white',
     borderRadius: '8px',
-    padding: '32px',
+    padding: 'clamp(16px, 4vw, 32px)',
     boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
   },
   formGroup: {
@@ -310,59 +276,11 @@ const styles = {
     color: 'white',
     borderColor: '#007bff',
   },
-  uploadArea: {
-    border: '2px dashed #ddd',
-    borderRadius: '4px',
-    padding: '32px',
-    textAlign: 'center' as const,
-    cursor: 'pointer',
-    transition: 'border-color 0.2s',
-  },
-  fileInput: {
-    display: 'none',
-  },
-  uploadText: {
-    fontSize: '14px',
-    color: '#666',
-    margin: 0,
-  },
-  photoGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
-    gap: '12px',
-    marginTop: '16px',
-  },
-  photoCard: {
-    border: '1px solid #ddd',
-    borderRadius: '4px',
-    padding: '12px',
-    textAlign: 'center' as const,
-    backgroundColor: '#fafafa',
-  },
-  photoName: {
-    fontSize: '12px',
-    fontWeight: '500',
-    color: '#333',
-    marginBottom: '4px',
-    wordBreak: 'break-word' as const,
-  },
-  photoSize: {
-    fontSize: '11px',
-    color: '#999',
-    marginBottom: '8px',
-  },
-  removeBtn: {
-    fontSize: '11px',
-    color: '#dc3545',
-    backgroundColor: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    padding: 0,
-  },
   actions: {
     display: 'flex',
     gap: '12px',
     marginTop: '32px',
+    flexWrap: 'wrap' as const,
   },
   submitBtn: {
     padding: '10px 20px',
@@ -373,7 +291,7 @@ const styles = {
     cursor: 'pointer',
     fontSize: '14px',
     fontWeight: '500',
-    flex: 1,
+    flex: '1 1 140px',
   },
   cancelBtn: {
     padding: '10px 20px',
@@ -384,7 +302,7 @@ const styles = {
     cursor: 'pointer',
     fontSize: '14px',
     fontWeight: '500',
-    flex: 1,
+    flex: '1 1 140px',
   },
   error: {
     padding: '12px 16px',

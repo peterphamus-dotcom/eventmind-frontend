@@ -40,6 +40,12 @@ export function Dashboard() {
     }
   }
 
+  const memberWithoutTeam =
+    user?.role === 'MEMBER' && (!user.teams || user.teams.length === 0);
+  const teamHint = memberWithoutTeam
+    ? " You're not on a team yet, so you'll only see items you submit — ask an admin to add you to a team to see your team's activity."
+    : '';
+
   return (
     <div style={styles.container}>
       {/* Header */}
@@ -77,7 +83,10 @@ export function Dashboard() {
               <h2 style={styles.sectionTitle}>Recent Tickets ({tickets.length})</h2>
               <div style={styles.list}>
                 {tickets.length === 0 ? (
-                  <p style={styles.empty}>No tickets yet</p>
+                  <p style={styles.empty}>
+                    No tickets yet — tap “+ Create Ticket” when something needs
+                    to be tracked to resolution.{teamHint}
+                  </p>
                 ) : (
                   tickets.map((ticket) => (
                     <div
@@ -112,7 +121,10 @@ export function Dashboard() {
               <h2 style={styles.sectionTitle}>Recent Reports ({reports.length})</h2>
               <div style={styles.list}>
                 {reports.length === 0 ? (
-                  <p style={styles.empty}>No reports yet</p>
+                  <p style={styles.empty}>
+                    No reports yet — tap “+ Report Issue” to log something you
+                    saw, with a photo.{teamHint}
+                  </p>
                 ) : (
                   reports.map((report) => (
                     <div
@@ -148,14 +160,16 @@ const styles = {
   },
   header: {
     backgroundColor: 'white',
-    padding: '20px 40px',
+    padding: '16px clamp(16px, 4vw, 40px)',
     borderBottom: '1px solid #eee',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexWrap: 'wrap' as const,
+    gap: '8px',
   },
   title: {
-    fontSize: '24px',
+    fontSize: 'clamp(18px, 5vw, 24px)',
     fontWeight: 'bold',
     margin: 0,
   },
@@ -164,6 +178,7 @@ const styles = {
     gap: '16px',
     alignItems: 'center',
     fontSize: '14px',
+    flexWrap: 'wrap' as const,
   },
   logoutBtn: {
     padding: '8px 16px',
@@ -175,7 +190,7 @@ const styles = {
     fontSize: '14px',
   },
   content: {
-    padding: '40px',
+    padding: 'clamp(16px, 4vw, 40px)',
     maxWidth: '1200px',
     margin: '0 auto',
   },
@@ -183,9 +198,10 @@ const styles = {
     display: 'flex',
     gap: '12px',
     marginBottom: '32px',
+    flexWrap: 'wrap' as const,
   },
   actionBtn: {
-    padding: '10px 20px',
+    padding: '12px 20px',
     backgroundColor: '#007bff',
     color: 'white',
     border: 'none',
@@ -193,6 +209,8 @@ const styles = {
     cursor: 'pointer',
     fontSize: '14px',
     fontWeight: '500',
+    flex: '1 1 150px',
+    maxWidth: '300px',
   },
   section: {
     marginBottom: '32px',
