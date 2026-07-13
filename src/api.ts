@@ -83,6 +83,8 @@ export const api = {
     client.post<ApiResponse<{ ticketId: string; isPinnedGlobal: boolean }>>(`/tickets/${id}/pin`),
   pinTicketPersonal: (id: string) =>
     client.post<ApiResponse<{ ticketId: string; isPinned: boolean }>>(`/tickets/${id}/personal-pin`),
+  getTicketStats: () =>
+    client.get<ApiResponse<Record<'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'ARCHIVED', number>>>('/tickets/stats'),
 
   // Teams
   listTeams: () =>

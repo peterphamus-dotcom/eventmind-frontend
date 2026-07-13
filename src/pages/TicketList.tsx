@@ -21,10 +21,13 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'location', label: 'Location' },
 ];
 
+type TicketStats = Record<'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'ARCHIVED', number>;
+
 export function TicketList() {
   const navigate = useNavigate();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [total, setTotal] = useState(0);
+  const [stats, setStats] = useState<TicketStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('default');
@@ -33,6 +36,13 @@ export function TicketList() {
   useEffect(() => {
     loadTickets();
   }, [sortBy, statusFilter]);
+
+  useEffect(() => {
+    api
+      .getTicketStats()
+      .then((res) => setStats(res.data.data || null))
+      .catch(() => setStats(null)); // tiles just hide if stats fail
+  }, []);
 
   async function loadTickets() {
     setIsLoading(true);
@@ -75,6 +85,35 @@ export function TicketList() {
       </div>
 
       <div style={styles.content}>
+        {/* Status counters */}
+        {stats && (
+          <div style={styles.statsRow}>
+            {(
+              [
+                ['OPEN', 'Open'],
+                ['IN_PROGRESS', 'In Progress'],
+                ['RESOLVED', 'Resolved'],
+                ['ARCHIVED', 'Archived'],
+              ] as const
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setStatusFilter(statusFilter === key ? 'ALL' : key)}
+                style={{
+                  ...styles.statTile,
+                  borderColor: statusColor(key),
+                  ...(statusFilter === key ? { backgroundColor: '#f0f7ff' } : {}),
+                }}
+              >
+                <span style={{ ...styles.statNumber, color: statusColor(key) }}>
+                  {stats[key]}
+                </span>
+                <span style={styles.statLabel}>{label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Controls */}
         <div style={styles.controls}>
           <div style={styles.filterChips}>
@@ -200,6 +239,34 @@ const styles = {
     maxWidth: '900px',
     margin: '0 auto',
     padding: 'clamp(16px, 4vw, 32px)',
+  },
+  statsRow: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+    gap: '12px',
+    marginBottom: '20px',
+  },
+  statTile: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    gap: '4px',
+    padding: '14px 8px',
+    backgroundColor: 'white',
+    border: '1px solid',
+    borderLeftWidth: '4px',
+    borderRadius: '6px',
+    cursor: 'pointer',
+  },
+  statNumber: {
+    fontSize: '24px',
+    fontWeight: '700' as const,
+    lineHeight: 1,
+  },
+  statLabel: {
+    fontSize: '12px',
+    color: '#666',
+    fontWeight: '600' as const,
   },
   controls: {
     display: 'flex',
