@@ -1,7 +1,12 @@
 import axios from 'axios';
 import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, PaginatedResponse } from './types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+// Production always uses the same-origin /api proxy (see server.js) so the
+// session cookie stays first-party — Safari/iOS blocks cross-site cookies.
+// Local dev talks to the backend directly.
+const API_URL = import.meta.env.DEV
+  ? import.meta.env.VITE_API_URL || 'http://localhost:3000'
+  : '/api';
 
 const client = axios.create({
   baseURL: API_URL,
