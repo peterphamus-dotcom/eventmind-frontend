@@ -177,6 +177,10 @@ export function TicketList() {
                     alt=""
                     loading="lazy"
                     style={styles.thumb}
+                    onError={(e) => {
+                      // Pre-R2 photos lived on ephemeral disk and are gone
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                 )}
                 <div style={styles.itemBody}>
