@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../api';
+import { api, photoSrc } from '../api';
 import type { Ticket, Location } from '../types';
 
 type SortOption = 'default' | 'recent' | 'urgency';
@@ -222,6 +222,14 @@ export function TicketList() {
                   opacity: ticket.status === 'RESOLVED' || ticket.status === 'ARCHIVED' ? 0.65 : 1,
                 }}
               >
+                {ticket.photos && ticket.photos.length > 0 && (
+                  <img
+                    src={photoSrc(ticket.photos[0].url)}
+                    alt=""
+                    loading="lazy"
+                    style={styles.thumb}
+                  />
+                )}
                 <div style={styles.itemBody}>
                   <h3 style={styles.itemTitle}>{ticket.title}</h3>
                   <div style={styles.itemMeta}>
@@ -421,8 +429,17 @@ const styles = {
     alignItems: 'center',
     gap: '8px',
   },
+  thumb: {
+    width: '56px',
+    height: '56px',
+    objectFit: 'cover' as const,
+    borderRadius: '6px',
+    flexShrink: 0,
+    backgroundColor: '#eee',
+  },
   itemBody: {
     minWidth: 0,
+    flex: 1,
   },
   itemTitle: {
     fontSize: '15px',
