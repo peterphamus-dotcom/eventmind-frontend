@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api, photoSrc } from '../api';
 import { useAuth } from '../AuthContext';
+import { useToast } from '../Toast';
 import type { Ticket, TicketStatus, Urgency } from '../types';
 import { TicketStatus as TicketStatusValues, Urgency as UrgencyValues } from '../types';
 
 export function TicketDetail() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const showToast = useToast();
   const { ticketId } = useParams<{ ticketId: string }>();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -15,7 +17,8 @@ export function TicketDetail() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
 
-  const canUpdateUrgency = user?.role === 'ADMIN' || user?.role === 'CORE_TEAM';
+  const isAdminOrCore = user?.role === 'ADMIN' || user?.role === 'CORE_TEAM';
+  const canUpdateUrgency = isAdminOrCore;
   const isCreator = ticket?.submitterId === user?.id;
 
   useEffect(() => {
@@ -43,6 +46,9 @@ export function TicketDetail() {
     try {
       const response = await api.updateTicket(ticket.id, newStatus);
       setTicket(response.data.data || null);
+      if (newStatus === 'RESOLVED') {
+        showToast('Ticket marked as resolved ✓');
+      }
     } catch (err: any) {
       setUpdateError(err.response?.data?.error || 'Failed to update status');
     } finally {
@@ -151,21 +157,41 @@ export function TicketDetail() {
             <div style={styles.statusSection}>
               <div style={styles.statusControl}>
                 <label style={styles.label}>Status</label>
-                <select
-                  value={ticket.status}
-                  onChange={(e) => handleStatusChange(e.target.value)}
-                  style={{
-                    ...styles.statusSelect,
-                    borderColor: statusColor(ticket.status as TicketStatus),
-                  }}
-                  disabled={isUpdating}
-                >
-                  {Object.values(TicketStatusValues).map((status) => (
-                    <option key={status} value={status}>
-                      {status.replace(/_/g, ' ')}
-                    </option>
-                  ))}
-                </select>
+                {isAdminOrCore ? (
+                  <select
+                    value={ticket.status}
+                    onChange={(e) => handleStatusChange(e.target.value)}
+                    style={{
+                      ...styles.statusSelect,
+                      borderColor: statusColor(ticket.status as TicketStatus),
+                    }}
+                    disabled={isUpdating}
+                  >
+                    {Object.values(TicketStatusValues).map((status) => (
+                      <option key={status} value={status}>
+                        {status.replace(/_/g, ' ')}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div
+                    style={{
+                      ...styles.statusBadge,
+                      backgroundColor: statusColor(ticket.status as TicketStatus),
+                    }}
+                  >
+                    {ticket.status.replace(/_/g, ' ')}
+                  </div>
+                )}
+                {!isAdminOrCore && isCreator && ticket.status !== 'RESOLVED' && (
+                  <button
+                    onClick={() => handleStatusChange('RESOLVED')}
+                    style={styles.resolveBtn}
+                    disabled={isUpdating}
+                  >
+                    {isUpdating ? 'Updating…' : '✓ Mark as Resolved'}
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -452,6 +478,26 @@ const styles = {
     fontSize: '13px',
     fontWeight: '500' as const,
     textAlign: 'center' as const,
+  },
+  statusBadge: {
+    padding: '8px 12px',
+    borderRadius: '4px',
+    color: 'white',
+    fontSize: '13px',
+    fontWeight: '500' as const,
+    textAlign: 'center' as const,
+  },
+  resolveBtn: {
+    marginTop: '8px',
+    padding: '10px 16px',
+    backgroundColor: '#28a745',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '600' as const,
+    width: '100%',
   },
   pinControls: {
     display: 'flex',
