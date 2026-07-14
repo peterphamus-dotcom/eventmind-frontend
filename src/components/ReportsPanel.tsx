@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, photoSrc } from '../api';
 import { LocationFilter } from './LocationFilter';
+import { CollapsibleSection } from './CollapsibleSection';
 import type { Report, Location } from '../types';
 
 type SortOption = 'recent' | 'location';
@@ -89,41 +90,43 @@ export function ReportsPanel() {
       ) : reports.length === 0 ? (
         <p style={styles.empty}>No reports found.</p>
       ) : (
-        <div style={styles.list}>
-          {reports.map((report) => (
-            <div
-              key={report.id}
-              onClick={() => navigate(`/reports/${report.id}`)}
-              style={styles.listItem}
-            >
-              {report.photos && report.photos.length > 0 && (
-                <img
-                  src={photoSrc(report.photos[0].url)}
-                  alt=""
-                  loading="lazy"
-                  style={styles.thumb}
-                  onError={(e) => {
-                    // Pre-R2 photos lived on ephemeral disk and are gone
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-              )}
-              <div style={styles.itemBody}>
-                <h3 style={styles.itemTitle}>{report.text}</h3>
-                <div style={styles.itemMeta}>
-                  <span style={styles.metaText}>📍 {report.location?.name}</span>
-                  <span style={styles.metaText}>By {report.submitter?.name}</span>
-                  <span style={styles.metaText}>
-                    {new Date(report.submittedAt).toLocaleDateString()}
-                  </span>
-                  {report.photos && report.photos.length > 1 && (
-                    <span style={styles.metaText}>📷 {report.photos.length}+</span>
-                  )}
+        <CollapsibleSection title="Reports" count={reports.length} storageKey="reports-all">
+          <div style={styles.list}>
+            {reports.map((report) => (
+              <div
+                key={report.id}
+                onClick={() => navigate(`/reports/${report.id}`)}
+                style={styles.listItem}
+              >
+                {report.photos && report.photos.length > 0 && (
+                  <img
+                    src={photoSrc(report.photos[0].url)}
+                    alt=""
+                    loading="lazy"
+                    style={styles.thumb}
+                    onError={(e) => {
+                      // Pre-R2 photos lived on ephemeral disk and are gone
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                )}
+                <div style={styles.itemBody}>
+                  <h3 style={styles.itemTitle}>{report.text}</h3>
+                  <div style={styles.itemMeta}>
+                    <span style={styles.metaText}>📍 {report.location?.name}</span>
+                    <span style={styles.metaText}>By {report.submitter?.name}</span>
+                    <span style={styles.metaText}>
+                      {new Date(report.submittedAt).toLocaleDateString()}
+                    </span>
+                    {report.photos && report.photos.length > 1 && (
+                      <span style={styles.metaText}>📷 {report.photos.length}+</span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </CollapsibleSection>
       )}
 
       {!isLoading && reports.length > 0 && (

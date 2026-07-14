@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, photoSrc } from '../api';
 import { LocationFilter } from './LocationFilter';
+import { CollapsibleSection } from './CollapsibleSection';
 import type { Ticket, Location } from '../types';
 
 type SortOption = 'urgency' | 'recent';
@@ -203,23 +204,25 @@ export function TicketsPanel() {
       ) : (
         <>
           {pinned.length > 0 && (
-            <div style={styles.group}>
-              <h3 style={styles.groupTitle}>📌 Pinned</h3>
+            <CollapsibleSection title="📌 Pinned" count={pinned.length} storageKey="tickets-pinned">
               <div style={styles.list}>{pinned.map(renderTicket)}</div>
-            </div>
+            </CollapsibleSection>
           )}
           {saved.length > 0 && (
-            <div style={styles.group}>
-              <h3 style={styles.groupTitle}>⭐ Saved</h3>
+            <CollapsibleSection title="⭐ Saved" count={saved.length} storageKey="tickets-saved">
               <div style={styles.list}>{saved.map(renderTicket)}</div>
-            </div>
+            </CollapsibleSection>
           )}
-          {rest.length > 0 && (
-            <div style={styles.group}>
-              {hasGroups && <h3 style={styles.groupTitle}>All Tickets</h3>}
-              <div style={styles.list}>{rest.map(renderTicket)}</div>
-            </div>
-          )}
+          {rest.length > 0 &&
+            (hasGroups ? (
+              <CollapsibleSection title="All Tickets" count={rest.length} storageKey="tickets-all">
+                <div style={styles.list}>{rest.map(renderTicket)}</div>
+              </CollapsibleSection>
+            ) : (
+              <div style={styles.group}>
+                <div style={styles.list}>{rest.map(renderTicket)}</div>
+              </div>
+            ))}
         </>
       )}
 
