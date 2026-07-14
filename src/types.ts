@@ -63,6 +63,7 @@ export interface Report {
   isOutsideHomeLocation: boolean;
   tags?: Tag[];
   photos?: Photo[];
+  comments?: Comment[];
   submittedAt: string;
 }
 
@@ -83,6 +84,7 @@ export interface Ticket {
   tags?: Tag[];
   photos?: Photo[];
   urgencyAudits?: UrgencyAudit[];
+  comments?: Comment[];
   userHasPersonalPin?: boolean;
   createdAt: string;
   updatedAt: string;
@@ -101,6 +103,13 @@ export interface Photo {
   url: string;
   caption?: string;
   uploadedAt: string;
+}
+
+export interface Comment {
+  id: string;
+  text: string;
+  author: { id: string; name: string };
+  createdAt: string;
 }
 
 export interface PaginatedResponse<T> {

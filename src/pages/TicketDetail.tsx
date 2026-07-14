@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { api, photoSrc } from '../api';
 import { useAuth } from '../AuthContext';
 import { useToast } from '../Toast';
+import { CommentsSection } from '../components/CommentsSection';
 import type { Ticket, TicketStatus, Urgency } from '../types';
 import { TicketStatus as TicketStatusValues, Urgency as UrgencyValues } from '../types';
 
@@ -347,6 +348,15 @@ export function TicketDetail() {
               </div>
             </div>
           )}
+
+          {/* Comments */}
+          <CommentsSection
+            initialComments={ticket.comments || []}
+            onAdd={async (text) => {
+              const res = await api.addTicketComment(ticket.id, text);
+              return res.data.data!;
+            }}
+          />
 
           {/* Action Buttons */}
           <div style={styles.actions}>

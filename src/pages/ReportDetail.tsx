@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api, photoSrc } from '../api';
+import { CommentsSection } from '../components/CommentsSection';
 import type { Report } from '../types';
 
 export function ReportDetail() {
@@ -110,6 +111,15 @@ export function ReportDetail() {
               </div>
             </div>
           )}
+
+          {/* Comments */}
+          <CommentsSection
+            initialComments={report.comments || []}
+            onAdd={async (text) => {
+              const res = await api.addReportComment(report.id, text);
+              return res.data.data!;
+            }}
+          />
 
           {/* Action Buttons */}
           <div style={styles.actions}>
