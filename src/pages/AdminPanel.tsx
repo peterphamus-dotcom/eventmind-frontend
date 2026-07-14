@@ -6,8 +6,9 @@ import AdminLocations from './admin/AdminLocations';
 import AdminTags from './admin/AdminTags';
 import AdminTeams from './admin/AdminTeams';
 import AdminBanner from './admin/AdminBanner';
+import AdminExport from './admin/AdminExport';
 
-type AdminTab = 'users' | 'teams' | 'locations' | 'tags' | 'banner';
+type AdminTab = 'users' | 'teams' | 'locations' | 'tags' | 'banner' | 'export';
 
 export function AdminPanel() {
   const navigate = useNavigate();
@@ -88,6 +89,15 @@ export function AdminPanel() {
         >
           🏷️ Tags
         </button>
+        <button
+          onClick={() => setActiveTab('export')}
+          style={{
+            ...styles.tab,
+            ...(activeTab === 'export' ? styles.tabActive : {}),
+          }}
+        >
+          ⬇ Export
+        </button>
         {user?.role === 'ADMIN' && (
           <button
             onClick={() => setActiveTab('banner')}
@@ -107,6 +117,7 @@ export function AdminPanel() {
         {activeTab === 'teams' && <AdminTeams />}
         {activeTab === 'locations' && <AdminLocations />}
         {activeTab === 'tags' && <AdminTags />}
+        {activeTab === 'export' && <AdminExport />}
         {activeTab === 'banner' && <AdminBanner />}
       </div>
 

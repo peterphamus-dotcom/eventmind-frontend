@@ -134,4 +134,8 @@ export const api = {
   // Admin
   seedDatabase: () =>
     client.post<ApiResponse<any>>('/admin/seed'),
+  exportTicketsCsv: () =>
+    client.get('/admin/export/tickets.csv', { responseType: 'blob' }),
+  exportReportsCsv: () =>
+    client.get('/admin/export/reports.csv', { responseType: 'blob' }),
 };
