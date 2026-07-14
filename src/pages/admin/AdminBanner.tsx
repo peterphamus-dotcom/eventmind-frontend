@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../../api';
 import { useToast } from '../../Toast';
-import { compressImage } from '../../imageUtils';
+import ImageCropper from '../../components/ImageCropper';
 
 export default function AdminBanner() {
   const showToast = useToast();
@@ -12,6 +12,7 @@ export default function AdminBanner() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cropFile, setCropFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -28,15 +29,20 @@ export default function AdminBanner() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  async function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
+    // Open the crop/zoom editor; upload happens on Apply.
+    setCropFile(file);
+  }
+
+  async function handleCropConfirm(cropped: File) {
+    setCropFile(null);
     setIsUploading(true);
     setError(null);
     try {
-      const compressed = await compressImage(file, 2000, 0.82);
-      const res = await api.setBannerImage(compressed);
+      const res = await api.setBannerImage(cropped);
       setImageUrl(res.data.data!.imageUrl);
       showToast('Header photo updated');
     } catch (err: any) {
@@ -109,6 +115,7 @@ export default function AdminBanner() {
         ) : (
           <div style={styles.imagePlaceholder}>No header photo set</div>
         )}
+        <p style={styles.imageHint}>You'll crop &amp; zoom after picking a photo.</p>
         <input
           ref={fileInputRef}
           type="file"
@@ -177,6 +184,15 @@ export default function AdminBanner() {
           </button>
         </div>
       </form>
+
+      {cropFile && (
+        <ImageCropper
+          file={cropFile}
+          aspect={3}
+          onCancel={() => setCropFile(null)}
+          onConfirm={handleCropConfirm}
+        />
+      )}
     </div>
   );
 }
@@ -237,6 +253,11 @@ const styles = {
     color: '#999',
     fontSize: '14px',
     marginBottom: '10px',
+  },
+  imageHint: {
+    fontSize: '12px',
+    color: '#999',
+    margin: '0 0 10px',
   },
   imageActions: {
     display: 'flex',
