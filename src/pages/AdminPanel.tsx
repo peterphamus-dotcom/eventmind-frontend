@@ -5,8 +5,9 @@ import AdminUsers from './admin/AdminUsers';
 import AdminLocations from './admin/AdminLocations';
 import AdminTags from './admin/AdminTags';
 import AdminTeams from './admin/AdminTeams';
+import AdminBanner from './admin/AdminBanner';
 
-type AdminTab = 'users' | 'teams' | 'locations' | 'tags';
+type AdminTab = 'users' | 'teams' | 'locations' | 'tags' | 'banner';
 
 export function AdminPanel() {
   const navigate = useNavigate();
@@ -87,6 +88,17 @@ export function AdminPanel() {
         >
           🏷️ Tags
         </button>
+        {user?.role === 'ADMIN' && (
+          <button
+            onClick={() => setActiveTab('banner')}
+            style={{
+              ...styles.tab,
+              ...(activeTab === 'banner' ? styles.tabActive : {}),
+            }}
+          >
+            📢 Banner
+          </button>
+        )}
       </div>
 
       {/* Content */}
@@ -95,6 +107,7 @@ export function AdminPanel() {
         {activeTab === 'teams' && <AdminTeams />}
         {activeTab === 'locations' && <AdminLocations />}
         {activeTab === 'tags' && <AdminTags />}
+        {activeTab === 'banner' && <AdminBanner />}
       </div>
 
       {/* Footer */}

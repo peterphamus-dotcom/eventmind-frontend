@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './AuthContext';
 import { ToastProvider } from './Toast';
+import { BannerBar } from './components/BannerBar';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { CreateReport } from './pages/CreateReport';
@@ -22,7 +23,9 @@ function AppRoutes() {
   const { user } = useAuth();
 
   return (
-    <Routes>
+    <>
+      {user && <BannerBar />}
+      <Routes>
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
       <Route
         path="/dashboard"
@@ -77,7 +80,8 @@ function AppRoutes() {
       />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
-    </Routes>
+      </Routes>
+    </>
   );
 }
 

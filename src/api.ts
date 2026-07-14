@@ -116,6 +116,12 @@ export const api = {
   deleteTeam: (id: string) =>
     client.delete<ApiResponse<{ message: string }>>(`/teams/${id}`),
 
+  // Banner
+  getBanner: () =>
+    client.get<ApiResponse<{ message: string; isActive: boolean } | null>>('/banner'),
+  setBanner: (message: string, isActive: boolean) =>
+    client.put<ApiResponse<{ message: string; isActive: boolean }>>('/banner', { message, isActive }),
+
   // Admin
   seedDatabase: () =>
     client.post<ApiResponse<any>>('/admin/seed'),
