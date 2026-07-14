@@ -118,9 +118,9 @@ export const api = {
 
   // Banner
   getBanner: () =>
-    client.get<ApiResponse<{ message: string; isActive: boolean; imageUrl: string | null } | null>>('/banner'),
-  setBanner: (message: string, isActive: boolean) =>
-    client.put<ApiResponse<{ message: string; isActive: boolean; imageUrl: string | null }>>('/banner', { message, isActive }),
+    client.get<ApiResponse<{ message: string; messages: string[]; isActive: boolean; imageUrl: string | null } | null>>('/banner'),
+  setBanner: (messages: string[], isActive: boolean) =>
+    client.put<ApiResponse<{ message: string; messages: string[]; isActive: boolean; imageUrl: string | null }>>('/banner', { messages, isActive }),
   setBannerImage: (file: File) => {
     const fd = new FormData();
     fd.append('image', file);

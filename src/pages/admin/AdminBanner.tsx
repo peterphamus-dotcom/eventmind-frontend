@@ -5,7 +5,7 @@ import ImageCropper from '../../components/ImageCropper';
 
 export default function AdminBanner() {
   const showToast = useToast();
-  const [message, setMessage] = useState('');
+  const [messages, setMessages] = useState<string[]>(['']);
   const [isActive, setIsActive] = useState(true);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -20,7 +20,8 @@ export default function AdminBanner() {
       .getBanner()
       .then((res) => {
         if (res.data.data) {
-          setMessage(res.data.data.message);
+          const list = res.data.data.messages ?? [];
+          setMessages(list.length ? list : ['']);
           setIsActive(res.data.data.isActive);
           setImageUrl(res.data.data.imageUrl);
         }
@@ -66,15 +67,29 @@ export default function AdminBanner() {
     }
   }
 
+  function updateMessage(i: number, value: string) {
+    setMessages((prev) => prev.map((m, idx) => (idx === i ? value : m)));
+  }
+
+  function addMessage() {
+    setMessages((prev) => [...prev, '']);
+  }
+
+  function removeMessage(i: number) {
+    setMessages((prev) => {
+      const next = prev.filter((_, idx) => idx !== i);
+      return next.length ? next : [''];
+    });
+  }
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setIsSaving(true);
     setError(null);
     try {
-      await api.setBanner(message, isActive);
-      showToast(
-        !message.trim() || !isActive ? 'Banner hidden' : 'Banner published'
-      );
+      const cleaned = messages.map((m) => m.trim()).filter(Boolean);
+      await api.setBanner(cleaned, isActive);
+      showToast(cleaned.length === 0 || !isActive ? 'Banner hidden' : 'Banner published');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to save banner');
     } finally {
@@ -83,11 +98,11 @@ export default function AdminBanner() {
   }
 
   async function handleClear() {
-    setMessage('');
+    setMessages(['']);
     setIsSaving(true);
     setError(null);
     try {
-      await api.setBanner('', false);
+      await api.setBanner([], false);
       showToast('Banner hidden');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to clear banner');
@@ -148,14 +163,39 @@ export default function AdminBanner() {
       <hr style={styles.divider} />
 
       <form onSubmit={handleSave}>
-        <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="e.g. Doors open at 6pm — all teams report to the main stage by 5:30."
-          style={styles.textarea}
-          rows={3}
-          disabled={isSaving}
-        />
+        <label style={styles.fieldLabel}>Messages</label>
+        <p style={styles.imageHint}>
+          Add one or more announcements. When there's more than one they cycle in the bar.
+        </p>
+
+        {messages.map((msg, i) => (
+          <div key={i} style={styles.msgRow}>
+            <span style={styles.msgNum}>{i + 1}</span>
+            <textarea
+              value={msg}
+              onChange={(e) => updateMessage(i, e.target.value)}
+              placeholder="e.g. Doors open at 6pm — all teams report to the main stage by 5:30."
+              style={styles.msgTextarea}
+              rows={2}
+              disabled={isSaving}
+            />
+            {messages.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeMessage(i)}
+                style={styles.msgRemove}
+                aria-label={`Remove message ${i + 1}`}
+                disabled={isSaving}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        ))}
+
+        <button type="button" onClick={addMessage} style={styles.addBtn} disabled={isSaving}>
+          ＋ Add message
+        </button>
 
         <label style={styles.checkboxRow}>
           <input
@@ -168,10 +208,16 @@ export default function AdminBanner() {
         </label>
 
         {/* Live preview */}
-        {message.trim() && isActive && (
-          <div style={styles.preview}>
-            <span>📢</span>
-            <span>{message}</span>
+        {isActive && messages.some((m) => m.trim()) && (
+          <div style={styles.previewWrap}>
+            {messages
+              .filter((m) => m.trim())
+              .map((m, i) => (
+                <div key={i} style={styles.preview}>
+                  <span>📢</span>
+                  <span>{m}</span>
+                </div>
+              ))}
           </div>
         )}
 
@@ -286,6 +332,63 @@ const styles = {
     fontFamily: 'inherit',
     resize: 'vertical' as const,
     marginBottom: '12px',
+  },
+  msgRow: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '8px',
+    marginBottom: '10px',
+  },
+  msgNum: {
+    flexShrink: 0,
+    width: '22px',
+    height: '22px',
+    marginTop: '9px',
+    borderRadius: '50%',
+    backgroundColor: '#eef',
+    color: '#0d3b66',
+    fontSize: '12px',
+    fontWeight: '600' as const,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  msgTextarea: {
+    flex: 1,
+    padding: '12px',
+    border: '1px solid #ddd',
+    borderRadius: '4px',
+    fontFamily: 'inherit',
+    resize: 'vertical' as const,
+  },
+  msgRemove: {
+    flexShrink: 0,
+    marginTop: '6px',
+    width: '30px',
+    height: '30px',
+    background: 'transparent',
+    border: '1px solid #ddd',
+    borderRadius: '4px',
+    color: '#c00',
+    cursor: 'pointer',
+    fontSize: '13px',
+  },
+  addBtn: {
+    padding: '8px 14px',
+    backgroundColor: '#eef',
+    color: '#0d3b66',
+    border: '1px dashed #9ab',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: '600' as const,
+    marginBottom: '16px',
+  },
+  previewWrap: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '8px',
+    marginBottom: '16px',
   },
   checkboxRow: {
     display: 'flex',
