@@ -1,13 +1,16 @@
 import { useState } from 'react';
-import type { Comment } from '../types';
+import type { Comment, ReactionSummary } from '../types';
+import { ReactionBar } from './ReactionBar';
 
 interface CommentsSectionProps {
   initialComments: Comment[];
   /** Persist a new comment and return the created record */
   onAdd: (text: string) => Promise<Comment>;
+  /** Toggle a reaction on a comment; resolves to its fresh summary */
+  onReact: (commentId: string, emoji: string) => Promise<ReactionSummary[]>;
 }
 
-export function CommentsSection({ initialComments, onAdd }: CommentsSectionProps) {
+export function CommentsSection({ initialComments, onAdd, onReact }: CommentsSectionProps) {
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [text, setText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,6 +47,12 @@ export function CommentsSection({ initialComments, onAdd }: CommentsSectionProps
                 <span style={styles.date}>{new Date(c.createdAt).toLocaleString()}</span>
               </div>
               <p style={styles.text}>{c.text}</p>
+              <div style={styles.reactions}>
+                <ReactionBar
+                  reactions={c.reactions || []}
+                  onToggle={(emoji) => onReact(c.id, emoji)}
+                />
+              </div>
             </div>
           ))}
         </div>
@@ -124,6 +133,9 @@ const styles = {
     margin: 0,
     whiteSpace: 'pre-wrap' as const,
     wordBreak: 'break-word' as const,
+  },
+  reactions: {
+    marginTop: '8px',
   },
   error: {
     padding: '10px 12px',

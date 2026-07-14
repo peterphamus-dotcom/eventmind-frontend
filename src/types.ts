@@ -64,6 +64,7 @@ export interface Report {
   tags?: Tag[];
   photos?: Photo[];
   comments?: Comment[];
+  reactions?: ReactionSummary[];
   submittedAt: string;
 }
 
@@ -85,6 +86,7 @@ export interface Ticket {
   photos?: Photo[];
   urgencyAudits?: UrgencyAudit[];
   comments?: Comment[];
+  reactions?: ReactionSummary[];
   userHasPersonalPin?: boolean;
   createdAt: string;
   updatedAt: string;
@@ -105,10 +107,17 @@ export interface Photo {
   uploadedAt: string;
 }
 
+export interface ReactionSummary {
+  emoji: string;
+  count: number;
+  reactedByMe: boolean;
+}
+
 export interface Comment {
   id: string;
   text: string;
   author: { id: string; name: string };
+  reactions?: ReactionSummary[];
   createdAt: string;
 }
 

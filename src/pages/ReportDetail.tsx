@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api, photoSrc } from '../api';
 import { CommentsSection } from '../components/CommentsSection';
+import { ReactionBar } from '../components/ReactionBar';
 import type { Report } from '../types';
 
 export function ReportDetail() {
@@ -49,6 +50,15 @@ export function ReportDetail() {
           <div style={styles.section}>
             <h2 style={styles.sectionTitle}>Report</h2>
             <p style={styles.text}>{report.text}</p>
+            <div style={{ marginTop: '12px' }}>
+              <ReactionBar
+                reactions={report.reactions || []}
+                onToggle={async (emoji) => {
+                  const res = await api.toggleReportReaction(report.id, emoji);
+                  return res.data.data!.reactions;
+                }}
+              />
+            </div>
           </div>
 
           {/* Metadata */}
@@ -118,6 +128,10 @@ export function ReportDetail() {
             onAdd={async (text) => {
               const res = await api.addReportComment(report.id, text);
               return res.data.data!;
+            }}
+            onReact={async (commentId, emoji) => {
+              const res = await api.toggleReportCommentReaction(report.id, commentId, emoji);
+              return res.data.data!.reactions;
             }}
           />
 

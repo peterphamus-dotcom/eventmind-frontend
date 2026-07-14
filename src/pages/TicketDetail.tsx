@@ -4,6 +4,7 @@ import { api, photoSrc } from '../api';
 import { useAuth } from '../AuthContext';
 import { useToast } from '../Toast';
 import { CommentsSection } from '../components/CommentsSection';
+import { ReactionBar } from '../components/ReactionBar';
 import type { Ticket, TicketStatus, Urgency } from '../types';
 import { TicketStatus as TicketStatusValues, Urgency as UrgencyValues } from '../types';
 
@@ -154,6 +155,15 @@ export function TicketDetail() {
             <div>
               <h2 style={styles.ticketTitle}>{ticket.title}</h2>
               <p style={styles.ticketDescription}>{ticket.description}</p>
+              <div style={{ marginTop: '12px' }}>
+                <ReactionBar
+                  reactions={ticket.reactions || []}
+                  onToggle={async (emoji) => {
+                    const res = await api.toggleTicketReaction(ticket.id, emoji);
+                    return res.data.data!.reactions;
+                  }}
+                />
+              </div>
             </div>
             <div style={styles.statusSection}>
               <div style={styles.statusControl}>
@@ -355,6 +365,10 @@ export function TicketDetail() {
             onAdd={async (text) => {
               const res = await api.addTicketComment(ticket.id, text);
               return res.data.data!;
+            }}
+            onReact={async (commentId, emoji) => {
+              const res = await api.toggleTicketCommentReaction(ticket.id, commentId, emoji);
+              return res.data.data!.reactions;
             }}
           />
 

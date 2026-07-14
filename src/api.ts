@@ -1,5 +1,7 @@
 import axios from 'axios';
-import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, PaginatedResponse } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse } from './types';
+
+type ReactionsPayload = { reactions: ReactionSummary[] };
 
 // Production always uses the same-origin /api proxy (see server.js) so the
 // session cookie stays first-party — Safari/iOS blocks cross-site cookies.
@@ -69,6 +71,13 @@ export const api = {
     }),
   addReportComment: (id: string, text: string) =>
     client.post<ApiResponse<Comment>>(`/reports/${id}/comments`, { text }),
+  toggleReportReaction: (id: string, emoji: string) =>
+    client.post<ApiResponse<ReactionsPayload>>(`/reports/${id}/reactions`, { emoji }),
+  toggleReportCommentReaction: (reportId: string, commentId: string, emoji: string) =>
+    client.post<ApiResponse<ReactionsPayload>>(
+      `/reports/${reportId}/comments/${commentId}/reactions`,
+      { emoji }
+    ),
 
   // Tickets
   listTickets: (page = 1, pageSize = 20, filters?: any) =>
@@ -87,6 +96,13 @@ export const api = {
     client.post<ApiResponse<{ ticketId: string; isPinned: boolean }>>(`/tickets/${id}/personal-pin`),
   addTicketComment: (id: string, text: string) =>
     client.post<ApiResponse<Comment>>(`/tickets/${id}/comments`, { text }),
+  toggleTicketReaction: (id: string, emoji: string) =>
+    client.post<ApiResponse<ReactionsPayload>>(`/tickets/${id}/reactions`, { emoji }),
+  toggleTicketCommentReaction: (ticketId: string, commentId: string, emoji: string) =>
+    client.post<ApiResponse<ReactionsPayload>>(
+      `/tickets/${ticketId}/comments/${commentId}/reactions`,
+      { emoji }
+    ),
   getTicketStats: () =>
     client.get<ApiResponse<Record<'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'ARCHIVED', number>>>('/tickets/stats'),
 
