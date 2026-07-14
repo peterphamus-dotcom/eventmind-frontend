@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './AuthContext';
 import { ToastProvider } from './Toast';
 import { BannerBar } from './components/BannerBar';
+import { ScrollToTopButton } from './components/ScrollToTopButton';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { CreateReport } from './pages/CreateReport';
@@ -81,6 +82,7 @@ function AppRoutes() {
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+      {user && <ScrollToTopButton />}
     </>
   );
 }
