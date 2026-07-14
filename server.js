@@ -18,24 +18,58 @@ function proxyToApi(req, res) {
   const targetUrl = new URL(req.url.replace(/^\/api/, '') || '/', API_ORIGIN);
   const headers = { ...req.headers, host: targetUrl.host };
 
-  const proxyReq = httpsRequest(
-    targetUrl,
-    { method: req.method, headers },
-    (proxyRes) => {
-      res.writeHead(proxyRes.statusCode, proxyRes.headers);
-      proxyRes.pipe(res);
-    }
-  );
+  // Buffer the body so the request can be retried while the free-tier
+  // API cold-starts (Render answers 502 until the instance is awake).
+  const chunks = [];
+  req.on('data', (c) => chunks.push(c));
+  req.on('end', () => {
+    const body = Buffer.concat(chunks);
 
-  proxyReq.on('error', (err) => {
-    console.error('[PROXY] Upstream error:', err.message);
-    if (!res.headersSent) {
-      res.writeHead(502, { 'Content-Type': 'application/json' });
-    }
-    res.end(JSON.stringify({ success: false, error: 'API unavailable, please retry' }));
+    const attempt = (triesLeft) => {
+      const proxyReq = httpsRequest(
+        targetUrl,
+        { method: req.method, headers },
+        (proxyRes) => {
+          const isWakingUp = [502, 503, 504].includes(proxyRes.statusCode);
+          if (isWakingUp) {
+            proxyRes.resume(); // discard interstitial body
+            if (triesLeft > 0) {
+              console.log(`[PROXY] Upstream ${proxyRes.statusCode}, retrying (${triesLeft} left)…`);
+              setTimeout(() => attempt(triesLeft - 1), 8000);
+              return;
+            }
+            // Retries exhausted: answer JSON, not Render's HTML interstitial
+            res.writeHead(503, { 'Content-Type': 'application/json' });
+            res.end(
+              JSON.stringify({ success: false, error: 'Server is waking up — please try again in a moment' })
+            );
+            return;
+          }
+          res.writeHead(proxyRes.statusCode, proxyRes.headers);
+          proxyRes.pipe(res);
+        }
+      );
+
+      proxyReq.on('error', (err) => {
+        if (triesLeft > 0) {
+          console.log(`[PROXY] ${err.message}, retrying (${triesLeft} left)…`);
+          setTimeout(() => attempt(triesLeft - 1), 8000);
+          return;
+        }
+        console.error('[PROXY] Upstream error:', err.message);
+        if (!res.headersSent) {
+          res.writeHead(502, { 'Content-Type': 'application/json' });
+        }
+        res.end(
+          JSON.stringify({ success: false, error: 'Server is waking up — please try again in a moment' })
+        );
+      });
+
+      proxyReq.end(body);
+    };
+
+    attempt(4); // up to ~32s of retries, enough to ride out a cold start
   });
-
-  req.pipe(proxyReq);
 }
 
 const mimeTypes = {
