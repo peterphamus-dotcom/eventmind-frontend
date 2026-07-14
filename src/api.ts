@@ -118,9 +118,18 @@ export const api = {
 
   // Banner
   getBanner: () =>
-    client.get<ApiResponse<{ message: string; isActive: boolean } | null>>('/banner'),
+    client.get<ApiResponse<{ message: string; isActive: boolean; imageUrl: string | null } | null>>('/banner'),
   setBanner: (message: string, isActive: boolean) =>
-    client.put<ApiResponse<{ message: string; isActive: boolean }>>('/banner', { message, isActive }),
+    client.put<ApiResponse<{ message: string; isActive: boolean; imageUrl: string | null }>>('/banner', { message, isActive }),
+  setBannerImage: (file: File) => {
+    const fd = new FormData();
+    fd.append('image', file);
+    return client.post<ApiResponse<{ imageUrl: string }>>('/banner/image', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  removeBannerImage: () =>
+    client.delete<ApiResponse<{ imageUrl: null }>>('/banner/image'),
 
   // Admin
   seedDatabase: () =>

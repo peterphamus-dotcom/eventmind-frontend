@@ -1,14 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '../../api';
 import { useToast } from '../../Toast';
+import { compressImage } from '../../imageUtils';
 
 export default function AdminBanner() {
   const showToast = useToast();
   const [message, setMessage] = useState('');
   const [isActive, setIsActive] = useState(true);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     api
@@ -17,11 +21,44 @@ export default function AdminBanner() {
         if (res.data.data) {
           setMessage(res.data.data.message);
           setIsActive(res.data.data.isActive);
+          setImageUrl(res.data.data.imageUrl);
         }
       })
       .catch(() => setError('Failed to load current banner'))
       .finally(() => setIsLoading(false));
   }, []);
+
+  async function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setIsUploading(true);
+    setError(null);
+    try {
+      const compressed = await compressImage(file, 2000, 0.82);
+      const res = await api.setBannerImage(compressed);
+      setImageUrl(res.data.data!.imageUrl);
+      showToast('Header photo updated');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to upload header photo');
+    } finally {
+      setIsUploading(false);
+    }
+  }
+
+  async function handleRemoveImage() {
+    setIsUploading(true);
+    setError(null);
+    try {
+      await api.removeBannerImage();
+      setImageUrl(null);
+      showToast('Header photo removed');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to remove header photo');
+    } finally {
+      setIsUploading(false);
+    }
+  }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -63,6 +100,45 @@ export default function AdminBanner() {
       </p>
 
       {error && <div style={styles.error}>{error}</div>}
+
+      {/* Header photo */}
+      <div style={styles.imageSection}>
+        <label style={styles.fieldLabel}>Header photo</label>
+        {imageUrl ? (
+          <img src={imageUrl} alt="Header preview" style={styles.imagePreview} />
+        ) : (
+          <div style={styles.imagePlaceholder}>No header photo set</div>
+        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handleImageSelect}
+          style={{ display: 'none' }}
+        />
+        <div style={styles.imageActions}>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            style={styles.uploadBtn}
+            disabled={isUploading}
+          >
+            {isUploading ? 'Uploading…' : imageUrl ? '🖼️ Replace photo' : '🖼️ Upload photo'}
+          </button>
+          {imageUrl && (
+            <button
+              type="button"
+              onClick={handleRemoveImage}
+              style={styles.clearBtn}
+              disabled={isUploading}
+            >
+              Remove
+            </button>
+          )}
+        </div>
+      </div>
+
+      <hr style={styles.divider} />
 
       <form onSubmit={handleSave}>
         <textarea
@@ -130,6 +206,56 @@ const styles = {
     borderRadius: '4px',
     fontSize: '14px',
     marginBottom: '16px',
+  },
+  imageSection: {
+    marginBottom: '20px',
+  },
+  fieldLabel: {
+    display: 'block',
+    fontSize: '13px',
+    fontWeight: '600' as const,
+    color: '#555',
+    marginBottom: '8px',
+  },
+  imagePreview: {
+    display: 'block',
+    width: '100%',
+    height: '160px',
+    objectFit: 'cover' as const,
+    borderRadius: '6px',
+    marginBottom: '10px',
+    backgroundColor: '#eee',
+  },
+  imagePlaceholder: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '120px',
+    borderRadius: '6px',
+    border: '2px dashed #ddd',
+    color: '#999',
+    fontSize: '14px',
+    marginBottom: '10px',
+  },
+  imageActions: {
+    display: 'flex',
+    gap: '10px',
+  },
+  uploadBtn: {
+    padding: '9px 16px',
+    backgroundColor: '#007bff',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '500' as const,
+  },
+  divider: {
+    border: 'none',
+    borderTop: '1px solid #eee',
+    margin: '20px 0',
   },
   textarea: {
     width: '100%',

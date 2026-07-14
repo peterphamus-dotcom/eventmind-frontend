@@ -1,21 +1,25 @@
 import { useEffect, useState } from 'react';
-import { api } from '../api';
+import { api, photoSrc } from '../api';
 
 const DISMISS_KEY = 'dismissedBanner';
 
 /**
- * Top-of-app announcement bar. Shows the admin-set banner to every
- * logged-in user. A user can dismiss it; it stays hidden until the
- * message changes.
+ * Top-of-app header. Shows the admin-set cover photo (like a social
+ * media header) and, below it, the announcement message. The photo is
+ * always shown; the message can be dismissed until it changes.
  */
 export function BannerBar() {
   const [message, setMessage] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     api
       .getBanner()
       .then((res) => {
-        const msg = res.data.data?.message?.trim();
+        const data = res.data.data;
+        if (!data) return;
+        setImageUrl(data.imageUrl || null);
+        const msg = data.message?.trim();
         if (msg && localStorage.getItem(DISMISS_KEY) !== msg) {
           setMessage(msg);
         }
@@ -25,7 +29,7 @@ export function BannerBar() {
       });
   }, []);
 
-  if (!message) return null;
+  if (!message && !imageUrl) return null;
 
   function dismiss() {
     if (message) localStorage.setItem(DISMISS_KEY, message);
@@ -33,17 +37,29 @@ export function BannerBar() {
   }
 
   return (
-    <div style={styles.bar}>
-      <span style={styles.icon}>📢</span>
-      <span style={styles.text}>{message}</span>
-      <button onClick={dismiss} style={styles.close} aria-label="Dismiss banner">
-        ✕
-      </button>
+    <div>
+      {imageUrl && <img src={photoSrc(imageUrl)} alt="" style={styles.headerImg} />}
+      {message && (
+        <div style={styles.bar}>
+          <span style={styles.icon}>📢</span>
+          <span style={styles.text}>{message}</span>
+          <button onClick={dismiss} style={styles.close} aria-label="Dismiss banner">
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
 const styles = {
+  headerImg: {
+    display: 'block',
+    width: '100%',
+    height: 'clamp(120px, 26vw, 260px)',
+    objectFit: 'cover' as const,
+    backgroundColor: '#e5e5e5',
+  },
   bar: {
     display: 'flex',
     alignItems: 'center',
