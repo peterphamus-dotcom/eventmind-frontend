@@ -1,34 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import { api } from '../api';
-import type { Ticket, Report } from '../types';
+import { TicketsPanel } from '../components/TicketsPanel';
+import { ReportsPanel } from '../components/ReportsPanel';
+
+type Tab = 'tickets' | 'reports';
 
 export function Dashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [reports, setReports] = useState<Report[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Remember the tab across detail-page round trips
+  const [activeTab, setActiveTab] = useState<Tab>(
+    (sessionStorage.getItem('dashboardTab') as Tab) || 'tickets'
+  );
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  async function loadData() {
-    setIsLoading(true);
-    try {
-      const [ticketsRes, reportsRes] = await Promise.all([
-        api.listTickets(1, 10),
-        api.listReports(1, 10),
-      ]);
-      setTickets(ticketsRes.data.data?.items || []);
-      setReports(reportsRes.data.data?.items || []);
-    } catch (error) {
-      console.error('Failed to load data:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  function selectTab(tab: Tab) {
+    setActiveTab(tab);
+    sessionStorage.setItem('dashboardTab', tab);
   }
 
   async function handleLogout() {
@@ -40,20 +28,18 @@ export function Dashboard() {
     }
   }
 
-  const memberWithoutTeam =
-    user?.role === 'MEMBER' && (!user.teams || user.teams.length === 0);
-  const teamHint = memberWithoutTeam
-    ? " You're not on a team yet, so you'll only see items you submit — ask an admin to add you to a team to see your team's activity."
-    : '';
-
   return (
     <div style={styles.container}>
       {/* Header */}
       <div style={styles.header}>
         <h1 style={styles.title}>EventMind Dashboard</h1>
         <div style={styles.userInfo}>
-          <span>{user?.name} ({user?.role})</span>
-          <button onClick={handleLogout} style={styles.logoutBtn}>Logout</button>
+          <span>
+            {user?.name} ({user?.role})
+          </span>
+          <button onClick={handleLogout} style={styles.logoutBtn}>
+            Logout
+          </button>
         </div>
       </div>
 
@@ -74,80 +60,30 @@ export function Dashboard() {
           )}
         </div>
 
-        {isLoading ? (
-          <p>Loading...</p>
-        ) : (
-          <>
-            {/* Tickets Section */}
-            <section style={styles.section}>
-              <h2 style={styles.sectionTitle}>Recent Tickets ({tickets.length})</h2>
-              <div style={styles.list}>
-                {tickets.length === 0 ? (
-                  <p style={styles.empty}>
-                    No tickets yet — tap “+ Create Ticket” when something needs
-                    to be tracked to resolution.{teamHint}
-                  </p>
-                ) : (
-                  tickets.map((ticket) => (
-                    <div
-                      key={ticket.id}
-                      onClick={() => navigate(`/tickets/${ticket.id}`)}
-                      style={{
-                        ...styles.listItem,
-                        borderLeftColor: ticket.urgency === 'HIGH' ? '#dc3545' : ticket.urgency === 'MEDIUM' ? '#ffc107' : '#28a745',
-                      }}
-                    >
-                      <div>
-                        <h3 style={styles.itemTitle}>{ticket.title}</h3>
-                        <p style={styles.itemMeta}>
-                          Status: {ticket.status} | Urgency: {ticket.urgency} | {ticket.location?.name}
-                        </p>
-                      </div>
-                      <div style={styles.itemBadge}>
-                        {ticket.isPinnedGlobal && '📌'}
-                        {ticket.userHasPersonalPin && '⭐'}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-              <button onClick={() => navigate('/tickets')} style={styles.viewAllBtn}>
-                View All Tickets →
-              </button>
-            </section>
+        {/* Tab switcher */}
+        <div style={styles.tabs}>
+          <button
+            onClick={() => selectTab('tickets')}
+            style={{
+              ...styles.tab,
+              ...(activeTab === 'tickets' ? styles.tabActive : {}),
+            }}
+          >
+            🎫 Tickets
+          </button>
+          <button
+            onClick={() => selectTab('reports')}
+            style={{
+              ...styles.tab,
+              ...(activeTab === 'reports' ? styles.tabActive : {}),
+            }}
+          >
+            📋 Reports
+          </button>
+        </div>
 
-            {/* Reports Section */}
-            <section style={styles.section}>
-              <h2 style={styles.sectionTitle}>Recent Reports ({reports.length})</h2>
-              <div style={styles.list}>
-                {reports.length === 0 ? (
-                  <p style={styles.empty}>
-                    No reports yet — tap “+ Report Issue” to log something you
-                    saw, with a photo.{teamHint}
-                  </p>
-                ) : (
-                  reports.map((report) => (
-                    <div
-                      key={report.id}
-                      onClick={() => navigate(`/reports/${report.id}`)}
-                      style={styles.listItem}
-                    >
-                      <div>
-                        <h3 style={styles.itemTitle}>{report.text}</h3>
-                        <p style={styles.itemMeta}>
-                          By {report.submitter?.name} | {report.location?.name} | {report.photos?.length || 0} photos
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-              <button onClick={() => navigate('/reports')} style={styles.viewAllBtn}>
-                View All Reports →
-              </button>
-            </section>
-          </>
-        )}
+        {/* Active panel */}
+        {activeTab === 'tickets' ? <TicketsPanel /> : <ReportsPanel />}
       </div>
     </div>
   );
@@ -191,13 +127,13 @@ const styles = {
   },
   content: {
     padding: 'clamp(16px, 4vw, 40px)',
-    maxWidth: '1200px',
+    maxWidth: '1000px',
     margin: '0 auto',
   },
   actions: {
     display: 'flex',
     gap: '12px',
-    marginBottom: '32px',
+    marginBottom: '24px',
     flexWrap: 'wrap' as const,
   },
   actionBtn: {
@@ -212,61 +148,25 @@ const styles = {
     flex: '1 1 150px',
     maxWidth: '300px',
   },
-  section: {
-    marginBottom: '32px',
-  },
-  sectionTitle: {
-    fontSize: '18px',
-    fontWeight: '600',
-    marginBottom: '16px',
-    color: '#333',
-  },
-  list: {
+  tabs: {
     display: 'flex',
-    flexDirection: 'column' as const,
     gap: '8px',
-    marginBottom: '16px',
+    marginBottom: '24px',
+    borderBottom: '1px solid #ddd',
   },
-  listItem: {
-    backgroundColor: 'white',
-    padding: '16px',
-    borderRadius: '4px',
-    borderLeft: '4px solid #007bff',
-    cursor: 'pointer',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    transition: 'box-shadow 0.2s',
-  },
-  itemTitle: {
-    fontSize: '14px',
-    fontWeight: '600',
-    margin: '0 0 6px 0',
-    color: '#333',
-  },
-  itemMeta: {
-    fontSize: '12px',
-    color: '#666',
-    margin: 0,
-  },
-  itemBadge: {
-    fontSize: '16px',
-    minWidth: '40px',
-    textAlign: 'right' as const,
-  },
-  empty: {
-    fontSize: '14px',
-    color: '#999',
-    padding: '16px',
-    fontStyle: 'italic',
-  },
-  viewAllBtn: {
-    fontSize: '14px',
-    color: '#007bff',
-    backgroundColor: 'transparent',
+  tab: {
+    padding: '12px 24px',
     border: 'none',
+    backgroundColor: 'transparent',
     cursor: 'pointer',
-    fontWeight: '500',
-    padding: 0,
+    fontSize: '15px',
+    fontWeight: '600' as const,
+    color: '#666',
+    borderBottom: '3px solid transparent',
+    marginBottom: '-1px',
+  },
+  tabActive: {
+    color: '#007bff',
+    borderBottomColor: '#007bff',
   },
 };

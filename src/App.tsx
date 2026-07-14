@@ -5,10 +5,8 @@ import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { CreateReport } from './pages/CreateReport';
 import { ReportDetail } from './pages/ReportDetail';
-import { ReportList } from './pages/ReportList';
 import { CreateTicket } from './pages/CreateTicket';
 import { TicketDetail } from './pages/TicketDetail';
-import { TicketList } from './pages/TicketList';
 import { AdminPanel } from './pages/AdminPanel';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -34,14 +32,8 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/reports"
-        element={
-          <ProtectedRoute>
-            <ReportList />
-          </ProtectedRoute>
-        }
-      />
+      {/* Reports and tickets lists now live as tabs on the dashboard */}
+      <Route path="/reports" element={<Navigate to="/dashboard" replace />} />
       <Route
         path="/reports/new"
         element={
@@ -58,14 +50,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/tickets"
-        element={
-          <ProtectedRoute>
-            <TicketList />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/tickets" element={<Navigate to="/dashboard" replace />} />
       <Route
         path="/tickets/new"
         element={

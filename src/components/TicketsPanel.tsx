@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, photoSrc } from '../api';
-import { LocationFilter } from '../components/LocationFilter';
+import { LocationFilter } from './LocationFilter';
 import type { Ticket, Location } from '../types';
 
 type SortOption = 'default' | 'recent' | 'urgency';
@@ -23,7 +23,9 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
 
 type TicketStats = Record<'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'ARCHIVED', number>;
 
-export function TicketList() {
+/** The full ticket list experience (counters, filters, sort, thumbnails)
+ *  without a page header — embeddable in the dashboard or a standalone page. */
+export function TicketsPanel() {
   const navigate = useNavigate();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [total, setTotal] = useState(0);
@@ -83,177 +85,131 @@ export function TicketList() {
           : '#6c757d';
 
   return (
-    <div style={styles.container}>
-      {/* Header */}
-      <div style={styles.header}>
-        <button onClick={() => navigate('/dashboard')} style={styles.backBtn}>
-          ← Back to Dashboard
-        </button>
-        <h1 style={styles.title}>All Tickets</h1>
+    <div>
+      {/* Status counters */}
+      {stats && (
+        <div style={styles.statsRow}>
+          {(
+            [
+              ['OPEN', 'Open'],
+              ['IN_PROGRESS', 'In Progress'],
+              ['RESOLVED', 'Resolved'],
+              ['ARCHIVED', 'Archived'],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setStatusFilter(statusFilter === key ? 'ALL' : key)}
+              style={{
+                ...styles.statTile,
+                borderColor: statusColor(key),
+                ...(statusFilter === key ? { backgroundColor: '#f0f7ff' } : {}),
+              }}
+            >
+              <span style={{ ...styles.statNumber, color: statusColor(key) }}>
+                {stats[key]}
+              </span>
+              <span style={styles.statLabel}>{label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Controls */}
+      <div style={styles.controls}>
+        <div style={styles.control}>
+          <label style={styles.controlLabel}>Locations</label>
+          <LocationFilter
+            locations={locations}
+            selectedIds={selectedLocationIds}
+            onChange={setSelectedLocationIds}
+          />
+        </div>
+        <div style={styles.control}>
+          <label style={styles.controlLabel}>Sort by</label>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortOption)}
+            style={styles.sortSelect}
+          >
+            {SORT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      <div style={styles.content}>
-        {/* Status counters */}
-        {stats && (
-          <div style={styles.statsRow}>
-            {(
-              [
-                ['OPEN', 'Open'],
-                ['IN_PROGRESS', 'In Progress'],
-                ['RESOLVED', 'Resolved'],
-                ['ARCHIVED', 'Archived'],
-              ] as const
-            ).map(([key, label]) => (
-              <button
-                key={key}
-                onClick={() => setStatusFilter(statusFilter === key ? 'ALL' : key)}
-                style={{
-                  ...styles.statTile,
-                  borderColor: statusColor(key),
-                  ...(statusFilter === key ? { backgroundColor: '#f0f7ff' } : {}),
-                }}
-              >
-                <span style={{ ...styles.statNumber, color: statusColor(key) }}>
-                  {stats[key]}
-                </span>
-                <span style={styles.statLabel}>{label}</span>
-              </button>
-            ))}
-          </div>
-        )}
+      {error && <div style={styles.error}>{error}</div>}
 
-        {/* Controls */}
-        <div style={styles.controls}>
-          <div style={styles.sortControl}>
-            <label style={styles.sortLabel}>Locations</label>
-            <LocationFilter
-              locations={locations}
-              selectedIds={selectedLocationIds}
-              onChange={setSelectedLocationIds}
-            />
-          </div>
-          <div style={styles.sortControl}>
-            <label style={styles.sortLabel}>Sort by</label>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortOption)}
-              style={styles.sortSelect}
+      {/* List */}
+      {isLoading ? (
+        <p style={styles.loading}>Loading tickets...</p>
+      ) : tickets.length === 0 ? (
+        <p style={styles.empty}>
+          {statusFilter === 'ALL'
+            ? 'No tickets yet.'
+            : `No ${STATUS_FILTERS.find((f) => f.value === statusFilter)?.label.toLowerCase()} tickets.`}
+        </p>
+      ) : (
+        <div style={styles.list}>
+          {tickets.map((ticket) => (
+            <div
+              key={ticket.id}
+              onClick={() => navigate(`/tickets/${ticket.id}`)}
+              style={{
+                ...styles.listItem,
+                borderLeftColor: urgencyColor(ticket.urgency),
+                opacity: ticket.status === 'RESOLVED' || ticket.status === 'ARCHIVED' ? 0.65 : 1,
+              }}
             >
-              {SORT_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {error && <div style={styles.error}>{error}</div>}
-
-        {/* List */}
-        {isLoading ? (
-          <p style={styles.loading}>Loading tickets...</p>
-        ) : tickets.length === 0 ? (
-          <p style={styles.empty}>
-            {statusFilter === 'ALL'
-              ? 'No tickets yet.'
-              : `No ${STATUS_FILTERS.find((f) => f.value === statusFilter)?.label.toLowerCase()} tickets.`}
-          </p>
-        ) : (
-          <div style={styles.list}>
-            {tickets.map((ticket) => (
-              <div
-                key={ticket.id}
-                onClick={() => navigate(`/tickets/${ticket.id}`)}
-                style={{
-                  ...styles.listItem,
-                  borderLeftColor: urgencyColor(ticket.urgency),
-                  opacity: ticket.status === 'RESOLVED' || ticket.status === 'ARCHIVED' ? 0.65 : 1,
-                }}
-              >
-                {ticket.photos && ticket.photos.length > 0 && (
-                  <img
-                    src={photoSrc(ticket.photos[0].url)}
-                    alt=""
-                    loading="lazy"
-                    style={styles.thumb}
-                    onError={(e) => {
-                      // Pre-R2 photos lived on ephemeral disk and are gone
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                )}
-                <div style={styles.itemBody}>
-                  <h3 style={styles.itemTitle}>{ticket.title}</h3>
-                  <div style={styles.itemMeta}>
-                    <span
-                      style={{ ...styles.badge, backgroundColor: statusColor(ticket.status) }}
-                    >
-                      {ticket.status.replace(/_/g, ' ')}
-                    </span>
-                    <span
-                      style={{ ...styles.badge, backgroundColor: urgencyColor(ticket.urgency) }}
-                    >
-                      {ticket.urgency}
-                    </span>
-                    <span style={styles.metaText}>📍 {ticket.location?.name}</span>
-                    <span style={styles.metaText}>
-                      {new Date(ticket.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-                <div style={styles.itemBadge}>
-                  {ticket.isPinnedGlobal && '📌'}
-                  {ticket.userHasPersonalPin && '⭐'}
+              {ticket.photos && ticket.photos.length > 0 && (
+                <img
+                  src={photoSrc(ticket.photos[0].url)}
+                  alt=""
+                  loading="lazy"
+                  style={styles.thumb}
+                  onError={(e) => {
+                    // Pre-R2 photos lived on ephemeral disk and are gone
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              )}
+              <div style={styles.itemBody}>
+                <h3 style={styles.itemTitle}>{ticket.title}</h3>
+                <div style={styles.itemMeta}>
+                  <span style={{ ...styles.badge, backgroundColor: statusColor(ticket.status) }}>
+                    {ticket.status.replace(/_/g, ' ')}
+                  </span>
+                  <span style={{ ...styles.badge, backgroundColor: urgencyColor(ticket.urgency) }}>
+                    {ticket.urgency}
+                  </span>
+                  <span style={styles.metaText}>📍 {ticket.location?.name}</span>
+                  <span style={styles.metaText}>
+                    {new Date(ticket.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+              <div style={styles.itemBadge}>
+                {ticket.isPinnedGlobal && '📌'}
+                {ticket.userHasPersonalPin && '⭐'}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-        {!isLoading && tickets.length > 0 && (
-          <p style={styles.count}>
-            Showing {tickets.length} of {total} ticket{total === 1 ? '' : 's'}
-          </p>
-        )}
-      </div>
+      {!isLoading && tickets.length > 0 && (
+        <p style={styles.count}>
+          Showing {tickets.length} of {total} ticket{total === 1 ? '' : 's'}
+        </p>
+      )}
     </div>
   );
 }
 
 const styles = {
-  container: {
-    minHeight: '100vh',
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    backgroundColor: 'white',
-    padding: '16px clamp(16px, 4vw, 40px)',
-    borderBottom: '1px solid #eee',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-    flexWrap: 'wrap' as const,
-  },
-  backBtn: {
-    fontSize: '14px',
-    color: '#007bff',
-    backgroundColor: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    fontWeight: '500' as const,
-    padding: 0,
-  },
-  title: {
-    fontSize: 'clamp(18px, 5vw, 24px)',
-    fontWeight: 'bold',
-    margin: 0,
-  },
-  content: {
-    maxWidth: '900px',
-    margin: '0 auto',
-    padding: 'clamp(16px, 4vw, 32px)',
-  },
   statsRow: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
@@ -290,12 +246,12 @@ const styles = {
     flexWrap: 'wrap' as const,
     marginBottom: '20px',
   },
-  sortControl: {
+  control: {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
   },
-  sortLabel: {
+  controlLabel: {
     fontSize: '13px',
     color: '#666',
     fontWeight: '600' as const,
