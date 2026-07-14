@@ -84,6 +84,56 @@ export function TicketsPanel() {
           ? '#28a745'
           : '#6c757d';
 
+  const renderTicket = (ticket: Ticket) => (
+    <div
+      key={ticket.id}
+      onClick={() => navigate(`/tickets/${ticket.id}`)}
+      style={{
+        ...styles.listItem,
+        borderLeftColor: urgencyColor(ticket.urgency),
+        opacity: ticket.status === 'RESOLVED' || ticket.status === 'ARCHIVED' ? 0.65 : 1,
+      }}
+    >
+      {ticket.photos && ticket.photos.length > 0 && (
+        <img
+          src={photoSrc(ticket.photos[0].url)}
+          alt=""
+          loading="lazy"
+          style={styles.thumb}
+          onError={(e) => {
+            // Pre-R2 photos lived on ephemeral disk and are gone
+            e.currentTarget.style.display = 'none';
+          }}
+        />
+      )}
+      <div style={styles.itemBody}>
+        <h3 style={styles.itemTitle}>{ticket.title}</h3>
+        <div style={styles.itemMeta}>
+          <span style={{ ...styles.badge, backgroundColor: statusColor(ticket.status) }}>
+            {ticket.status.replace(/_/g, ' ')}
+          </span>
+          <span style={{ ...styles.badge, backgroundColor: urgencyColor(ticket.urgency) }}>
+            {ticket.urgency}
+          </span>
+          <span style={styles.metaText}>📍 {ticket.location?.name}</span>
+          <span style={styles.metaText}>
+            {new Date(ticket.createdAt).toLocaleDateString()}
+          </span>
+        </div>
+      </div>
+      <div style={styles.itemBadge}>
+        {ticket.isPinnedGlobal && '📌'}
+        {ticket.userHasPersonalPin && '⭐'}
+      </div>
+    </div>
+  );
+
+  // A ticket appears in at most one group: pinned takes precedence over saved
+  const pinned = tickets.filter((t) => t.isPinnedGlobal);
+  const saved = tickets.filter((t) => t.userHasPersonalPin && !t.isPinnedGlobal);
+  const rest = tickets.filter((t) => !t.isPinnedGlobal && !t.userHasPersonalPin);
+  const hasGroups = pinned.length > 0 || saved.length > 0;
+
   return (
     <div>
       {/* Status counters */}
@@ -153,51 +203,26 @@ export function TicketsPanel() {
             : `No ${STATUS_FILTERS.find((f) => f.value === statusFilter)?.label.toLowerCase()} tickets.`}
         </p>
       ) : (
-        <div style={styles.list}>
-          {tickets.map((ticket) => (
-            <div
-              key={ticket.id}
-              onClick={() => navigate(`/tickets/${ticket.id}`)}
-              style={{
-                ...styles.listItem,
-                borderLeftColor: urgencyColor(ticket.urgency),
-                opacity: ticket.status === 'RESOLVED' || ticket.status === 'ARCHIVED' ? 0.65 : 1,
-              }}
-            >
-              {ticket.photos && ticket.photos.length > 0 && (
-                <img
-                  src={photoSrc(ticket.photos[0].url)}
-                  alt=""
-                  loading="lazy"
-                  style={styles.thumb}
-                  onError={(e) => {
-                    // Pre-R2 photos lived on ephemeral disk and are gone
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-              )}
-              <div style={styles.itemBody}>
-                <h3 style={styles.itemTitle}>{ticket.title}</h3>
-                <div style={styles.itemMeta}>
-                  <span style={{ ...styles.badge, backgroundColor: statusColor(ticket.status) }}>
-                    {ticket.status.replace(/_/g, ' ')}
-                  </span>
-                  <span style={{ ...styles.badge, backgroundColor: urgencyColor(ticket.urgency) }}>
-                    {ticket.urgency}
-                  </span>
-                  <span style={styles.metaText}>📍 {ticket.location?.name}</span>
-                  <span style={styles.metaText}>
-                    {new Date(ticket.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-              </div>
-              <div style={styles.itemBadge}>
-                {ticket.isPinnedGlobal && '📌'}
-                {ticket.userHasPersonalPin && '⭐'}
-              </div>
+        <>
+          {pinned.length > 0 && (
+            <div style={styles.group}>
+              <h3 style={styles.groupTitle}>📌 Pinned</h3>
+              <div style={styles.list}>{pinned.map(renderTicket)}</div>
             </div>
-          ))}
-        </div>
+          )}
+          {saved.length > 0 && (
+            <div style={styles.group}>
+              <h3 style={styles.groupTitle}>⭐ Saved</h3>
+              <div style={styles.list}>{saved.map(renderTicket)}</div>
+            </div>
+          )}
+          {rest.length > 0 && (
+            <div style={styles.group}>
+              {hasGroups && <h3 style={styles.groupTitle}>All Tickets</h3>}
+              <div style={styles.list}>{rest.map(renderTicket)}</div>
+            </div>
+          )}
+        </>
       )}
 
       {!isLoading && tickets.length > 0 && (
@@ -282,6 +307,15 @@ const styles = {
     color: '#999',
     fontStyle: 'italic',
     padding: '24px 0',
+  },
+  group: {
+    marginBottom: '24px',
+  },
+  groupTitle: {
+    fontSize: '14px',
+    fontWeight: '700' as const,
+    color: '#555',
+    margin: '0 0 10px 0',
   },
   list: {
     display: 'flex',
