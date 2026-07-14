@@ -4,7 +4,7 @@ import { api, photoSrc } from '../api';
 import { LocationFilter } from './LocationFilter';
 import type { Ticket, Location } from '../types';
 
-type SortOption = 'default' | 'recent' | 'urgency';
+type SortOption = 'urgency' | 'recent';
 type StatusFilter = 'ALL' | 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'ARCHIVED';
 
 const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
@@ -16,9 +16,8 @@ const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
 ];
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: 'default', label: 'Pinned & urgent first' },
+  { value: 'urgency', label: 'Most urgent' },
   { value: 'recent', label: 'Most recent' },
-  { value: 'urgency', label: 'Urgency' },
 ];
 
 type TicketStats = Record<'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'ARCHIVED', number>;
@@ -32,7 +31,7 @@ export function TicketsPanel() {
   const [stats, setStats] = useState<TicketStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<SortOption>('default');
+  const [sortBy, setSortBy] = useState<SortOption>('urgency');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [selectedLocationIds, setSelectedLocationIds] = useState<string[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
@@ -57,8 +56,7 @@ export function TicketsPanel() {
     setIsLoading(true);
     setError(null);
     try {
-      const filters: Record<string, string> = {};
-      if (sortBy !== 'default') filters.sortBy = sortBy;
+      const filters: Record<string, string> = { sortBy };
       if (statusFilter !== 'ALL') filters.status = statusFilter;
       if (selectedLocationIds.length > 0) filters.locationId = selectedLocationIds.join(',');
 
