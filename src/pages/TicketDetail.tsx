@@ -165,7 +165,11 @@ export function TicketDetail() {
                 />
               </div>
             </div>
-            <div style={styles.statusSection}>
+          </div>
+
+          {/* Status, Urgency and Pins Row */}
+          <div style={styles.controlRow}>
+            <div style={styles.leftControls}>
               <div style={styles.statusControl}>
                 <label style={styles.label}>Status</label>
                 {isAdminOrCore ? (
@@ -204,13 +208,8 @@ export function TicketDetail() {
                   </button>
                 )}
               </div>
-            </div>
-          </div>
-
-          {/* Urgency and Pins Row */}
-          <div style={styles.controlRow}>
-            <div style={styles.urgencyControl}>
-              <label style={styles.label}>Urgency</label>
+              <div style={styles.urgencyControl}>
+                <label style={styles.label}>Urgency</label>
               {canUpdateUrgency ? (
                 <select
                   value={ticket.urgency}
@@ -237,6 +236,7 @@ export function TicketDetail() {
                   {ticket.urgency}
                 </div>
               )}
+              </div>
             </div>
 
             <div style={styles.pinControls}>
@@ -480,6 +480,13 @@ const styles = {
     marginBottom: '24px',
     paddingBottom: '24px',
     borderBottom: '1px solid #eee',
+    flexWrap: 'wrap' as const,
+  },
+  leftControls: {
+    display: 'flex',
+    alignItems: 'flex-end',
+    gap: '20px',
+    flexWrap: 'wrap' as const,
   },
   urgencyControl: {
     display: 'flex',
