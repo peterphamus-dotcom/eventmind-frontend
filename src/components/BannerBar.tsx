@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { api, photoSrc } from '../api';
 
-const DISMISS_KEY = 'dismissedBanner';
-
 /**
  * Top-of-app header. Shows the admin-set cover photo (like a social
- * media header) and, below it, the announcement message. The photo is
- * always shown; the message can be dismissed until it changes.
+ * media header) and, below it, the announcement message. Both are
+ * re-fetched on every mount (each new session / page load) and cannot
+ * be dismissed by users — the message stays until an admin changes it.
  */
 export function BannerBar() {
   const [message, setMessage] = useState<string | null>(null);
@@ -20,9 +19,7 @@ export function BannerBar() {
         if (!data) return;
         setImageUrl(data.imageUrl || null);
         const msg = data.message?.trim();
-        if (msg && localStorage.getItem(DISMISS_KEY) !== msg) {
-          setMessage(msg);
-        }
+        setMessage(msg || null);
       })
       .catch(() => {
         /* no banner on failure */
@@ -31,11 +28,6 @@ export function BannerBar() {
 
   if (!message && !imageUrl) return null;
 
-  function dismiss() {
-    if (message) localStorage.setItem(DISMISS_KEY, message);
-    setMessage(null);
-  }
-
   return (
     <div>
       {imageUrl && <img src={photoSrc(imageUrl)} alt="" style={styles.headerImg} />}
@@ -43,9 +35,6 @@ export function BannerBar() {
         <div style={styles.bar}>
           <span style={styles.icon}>📢</span>
           <span style={styles.text}>{message}</span>
-          <button onClick={dismiss} style={styles.close} aria-label="Dismiss banner">
-            ✕
-          </button>
         </div>
       )}
     </div>
@@ -79,15 +68,5 @@ const styles = {
     fontWeight: '500' as const,
     whiteSpace: 'pre-wrap' as const,
     wordBreak: 'break-word' as const,
-  },
-  close: {
-    flexShrink: 0,
-    background: 'transparent',
-    border: 'none',
-    color: 'white',
-    cursor: 'pointer',
-    fontSize: '14px',
-    opacity: 0.8,
-    padding: '4px',
   },
 };
