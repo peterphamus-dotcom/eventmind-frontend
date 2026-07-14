@@ -88,16 +88,15 @@ export function TicketDetail() {
 
   async function handlePersonalPin() {
     if (!ticket || isUpdating) return;
+    const nowSaved = !ticket.userHasPersonalPin;
     setIsUpdating(true);
     setUpdateError(null);
     try {
       await api.pinTicketPersonal(ticket.id);
-      setTicket({
-        ...ticket,
-        userHasPersonalPin: !ticket.userHasPersonalPin,
-      });
+      setTicket({ ...ticket, userHasPersonalPin: nowSaved });
+      showToast(nowSaved ? 'Saved to Dashboard' : 'Removed from Dashboard');
     } catch (err: any) {
-      setUpdateError(err.response?.data?.error || 'Failed to update personal pin');
+      setUpdateError(err.response?.data?.error || 'Failed to update');
     } finally {
       setIsUpdating(false);
     }
@@ -247,9 +246,9 @@ export function TicketDetail() {
                   ...(ticket.userHasPersonalPin ? styles.pinBtnActive : {}),
                 }}
                 disabled={isUpdating}
-                title="Pin for yourself only"
+                title="Save to your dashboard"
               >
-                {ticket.userHasPersonalPin ? '⭐' : '☆'} Personal
+                {ticket.userHasPersonalPin ? '⭐ Saved' : '☆ Save'}
               </button>
               {(user?.role === 'ADMIN' || user?.role === 'CORE_TEAM') && (
                 <button
