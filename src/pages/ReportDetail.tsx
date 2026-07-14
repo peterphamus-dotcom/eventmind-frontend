@@ -153,12 +153,12 @@ export function ReportDetail() {
 const styles = {
   container: {
     minHeight: '100vh',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'var(--bg)',
   },
   header: {
-    backgroundColor: 'white',
+    backgroundColor: 'var(--surface)',
     padding: '20px 40px',
-    borderBottom: '1px solid #eee',
+    borderBottom: '1px solid var(--border)',
     display: 'flex',
     alignItems: 'center',
     gap: '20px',
@@ -183,34 +183,34 @@ const styles = {
     padding: '0 20px',
   },
   card: {
-    backgroundColor: 'white',
+    backgroundColor: 'var(--surface)',
     borderRadius: '8px',
     padding: '32px',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+    boxShadow: '0 2px 10px var(--shadow)',
   },
   section: {
     marginBottom: '32px',
     paddingBottom: '24px',
-    borderBottom: '1px solid #eee',
+    borderBottom: '1px solid var(--border)',
   },
   sectionTitle: {
     fontSize: '20px',
     fontWeight: '600',
     marginBottom: '16px',
-    color: '#333',
+    color: 'var(--text)',
     margin: '0 0 16px 0',
   },
   subtitle: {
     fontSize: '16px',
     fontWeight: '600',
     marginBottom: '12px',
-    color: '#333',
+    color: 'var(--text)',
     margin: '0 0 12px 0',
   },
   text: {
     fontSize: '15px',
     lineHeight: '1.6',
-    color: '#555',
+    color: 'var(--text-muted)',
     margin: 0,
     whiteSpace: 'pre-wrap' as const,
   },
@@ -226,7 +226,7 @@ const styles = {
   },
   detailLabel: {
     fontWeight: '600',
-    color: '#333',
+    color: 'var(--text)',
     minWidth: '150px',
   },
   tags: {
@@ -237,8 +237,8 @@ const styles = {
   tag: {
     display: 'inline-block',
     padding: '6px 12px',
-    backgroundColor: '#e3f2fd',
-    color: '#1976d2',
+    backgroundColor: 'var(--tag-bg)',
+    color: 'var(--tag-text)',
     borderRadius: '16px',
     fontSize: '13px',
     fontWeight: '500',
@@ -251,7 +251,7 @@ const styles = {
   photoContainer: {
     borderRadius: '4px',
     overflow: 'hidden',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'var(--bg)',
   },
   photo: {
     width: '100%',
@@ -261,13 +261,13 @@ const styles = {
   },
   photoCaption: {
     fontSize: '12px',
-    color: '#666',
+    color: 'var(--text-muted)',
     padding: '8px 12px',
     margin: 0,
   },
   photoDate: {
     fontSize: '11px',
-    color: '#999',
+    color: 'var(--text-faint)',
     padding: '0 12px 8px 12px',
     margin: 0,
   },
@@ -301,12 +301,12 @@ const styles = {
   loading: {
     padding: '20px',
     fontSize: '16px',
-    color: '#666',
+    color: 'var(--text-muted)',
   },
   error: {
     padding: '20px',
     fontSize: '16px',
-    color: '#c00',
-    backgroundColor: '#fee',
+    color: 'var(--danger-text)',
+    backgroundColor: 'var(--danger-bg)',
   },
 };

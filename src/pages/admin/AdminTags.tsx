@@ -112,8 +112,8 @@ export default function AdminTags() {
                     <span
                       style={{
                         ...styles.badge,
-                        backgroundColor: '#e2e3e5',
-                        color: '#383d41',
+                        backgroundColor: 'var(--border)',
+                        color: 'var(--text-muted)',
                       }}
                     >
                       System
@@ -160,21 +160,21 @@ export default function AdminTags() {
 
 const styles = {
   card: {
-    backgroundColor: 'white',
+    backgroundColor: 'var(--surface)',
     borderRadius: '8px',
     padding: '32px',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+    boxShadow: '0 2px 10px var(--shadow)',
   },
   title: {
     fontSize: '20px',
     fontWeight: '600',
     marginBottom: '24px',
-    color: '#333',
+    color: 'var(--text)',
   },
   error: {
     padding: '12px 16px',
-    backgroundColor: '#fee',
-    color: '#c00',
+    backgroundColor: 'var(--danger-bg)',
+    color: 'var(--danger-text)',
     borderRadius: '4px',
     fontSize: '14px',
     marginBottom: '16px',
@@ -189,9 +189,11 @@ const styles = {
   input: {
     flex: 1,
     padding: '10px 12px',
-    border: '1px solid #ddd',
+    border: '1px solid var(--border-strong)',
     borderRadius: '4px',
     fontSize: '14px',
+    backgroundColor: 'var(--input-bg)',
+    color: 'var(--text)',
   },
   btnPrimary: {
     padding: '10px 20px',
@@ -209,7 +211,7 @@ const styles = {
   sectionTitle: {
     fontSize: '16px',
     fontWeight: '600',
-    color: '#333',
+    color: 'var(--text)',
     marginBottom: '12px',
   },
   tagGrid: {
@@ -219,9 +221,9 @@ const styles = {
   },
   tagCard: {
     padding: '12px',
-    backgroundColor: '#f9f9f9',
+    backgroundColor: 'var(--bg)',
     borderRadius: '4px',
-    border: '1px solid #eee',
+    border: '1px solid var(--border)',
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '8px',
@@ -229,14 +231,14 @@ const styles = {
   tagName: {
     fontSize: '14px',
     fontWeight: '600',
-    color: '#333',
+    color: 'var(--text)',
     margin: 0,
   },
   badge: {
     display: 'inline-block',
     padding: '4px 8px',
-    backgroundColor: '#d4edda',
-    color: '#155724',
+    backgroundColor: 'var(--success-bg)',
+    color: 'var(--success-text)',
     borderRadius: '4px',
     fontSize: '12px',
     fontWeight: '600' as const,
@@ -253,12 +255,12 @@ const styles = {
   },
   empty: {
     fontSize: '14px',
-    color: '#999',
+    color: 'var(--text-faint)',
     fontStyle: 'italic',
   },
   info: {
     fontSize: '14px',
-    color: '#666',
+    color: 'var(--text-muted)',
     marginTop: '24px',
   },
 };

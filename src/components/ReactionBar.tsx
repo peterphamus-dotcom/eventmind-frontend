@@ -94,14 +94,15 @@ const styles = {
     gap: '4px',
     padding: '3px 8px',
     borderRadius: '14px',
-    border: '1px solid #ddd',
-    backgroundColor: 'white',
+    border: '1px solid var(--border-strong)',
+    backgroundColor: 'var(--surface)',
     cursor: 'pointer',
     fontSize: '13px',
     lineHeight: 1,
+    color: 'var(--text)',
   },
   chipActive: {
-    backgroundColor: '#e7f1ff',
+    backgroundColor: 'var(--surface-hover)',
     borderColor: '#007bff',
   },
   emoji: {
@@ -109,7 +110,7 @@ const styles = {
   },
   count: {
     fontWeight: '600' as const,
-    color: '#333',
+    color: 'var(--text)',
   },
   pickerAnchor: {
     position: 'relative' as const,
@@ -118,12 +119,12 @@ const styles = {
   addBtn: {
     padding: '3px 8px',
     borderRadius: '14px',
-    border: '1px dashed #bbb',
-    backgroundColor: 'white',
+    border: '1px dashed var(--border-strong)',
+    backgroundColor: 'var(--surface)',
     cursor: 'pointer',
     fontSize: '13px',
     lineHeight: 1,
-    color: '#666',
+    color: 'var(--text-muted)',
   },
   backdrop: {
     position: 'fixed' as const,
@@ -138,10 +139,10 @@ const styles = {
     display: 'flex',
     gap: '4px',
     padding: '6px 8px',
-    backgroundColor: 'white',
-    border: '1px solid #ddd',
+    backgroundColor: 'var(--surface)',
+    border: '1px solid var(--border-strong)',
     borderRadius: '8px',
-    boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+    boxShadow: '0 4px 16px var(--shadow)',
   },
   pickerEmoji: {
     fontSize: '20px',

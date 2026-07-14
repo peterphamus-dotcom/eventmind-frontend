@@ -92,12 +92,12 @@ export function Dashboard() {
 const styles = {
   container: {
     minHeight: '100vh',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'var(--bg)',
   },
   header: {
-    backgroundColor: 'white',
+    backgroundColor: 'var(--surface)',
     padding: '16px clamp(16px, 4vw, 40px)',
-    borderBottom: '1px solid #eee',
+    borderBottom: '1px solid var(--border)',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -152,7 +152,7 @@ const styles = {
     display: 'flex',
     gap: '8px',
     marginBottom: '24px',
-    borderBottom: '1px solid #ddd',
+    borderBottom: '1px solid var(--border-strong)',
   },
   tab: {
     padding: '12px 24px',
@@ -161,7 +161,7 @@ const styles = {
     cursor: 'pointer',
     fontSize: '15px',
     fontWeight: '600' as const,
-    color: '#666',
+    color: 'var(--text-muted)',
     borderBottom: '3px solid transparent',
     marginBottom: '-1px',
   },

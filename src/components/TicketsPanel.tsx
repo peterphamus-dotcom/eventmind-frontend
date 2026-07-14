@@ -152,7 +152,7 @@ export function TicketsPanel() {
               style={{
                 ...styles.statTile,
                 borderColor: statusColor(key),
-                ...(statusFilter === key ? { backgroundColor: '#f0f7ff' } : {}),
+                ...(statusFilter === key ? { backgroundColor: 'var(--surface-hover)' } : {}),
               }}
             >
               <span style={{ ...styles.statNumber, color: statusColor(key) }}>
@@ -248,7 +248,7 @@ const styles = {
     alignItems: 'center',
     gap: '4px',
     padding: '14px 8px',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--surface)',
     border: '1px solid',
     borderLeftWidth: '4px',
     borderRadius: '6px',
@@ -261,7 +261,7 @@ const styles = {
   },
   statLabel: {
     fontSize: '12px',
-    color: '#666',
+    color: 'var(--text-muted)',
     fontWeight: '600' as const,
   },
   controls: {
@@ -279,7 +279,7 @@ const styles = {
   },
   controlLabel: {
     fontSize: '14px',
-    color: '#666',
+    color: 'var(--text-muted)',
     fontWeight: '600' as const,
     whiteSpace: 'nowrap' as const,
   },
@@ -287,25 +287,26 @@ const styles = {
     flex: 1,
     minWidth: 0,
     padding: '8px 10px',
-    border: '1px solid #ccc',
+    border: '1px solid var(--border-strong)',
     borderRadius: '4px',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--input-bg)',
+    color: 'var(--text)',
     fontSize: '16px',
   },
   error: {
     padding: '12px 16px',
-    backgroundColor: '#fee',
-    color: '#c00',
+    backgroundColor: 'var(--danger-bg)',
+    color: 'var(--danger-text)',
     borderRadius: '4px',
     fontSize: '14px',
     marginBottom: '16px',
   },
   loading: {
-    color: '#666',
+    color: 'var(--text-muted)',
   },
   empty: {
     fontSize: '14px',
-    color: '#999',
+    color: 'var(--text-faint)',
     fontStyle: 'italic',
     padding: '24px 0',
   },
@@ -315,7 +316,7 @@ const styles = {
   groupTitle: {
     fontSize: '14px',
     fontWeight: '700' as const,
-    color: '#555',
+    color: 'var(--text-muted)',
     margin: '0 0 10px 0',
   },
   list: {
@@ -324,7 +325,7 @@ const styles = {
     gap: '8px',
   },
   listItem: {
-    backgroundColor: 'white',
+    backgroundColor: 'var(--surface)',
     padding: '16px',
     borderRadius: '4px',
     borderLeft: '4px solid #007bff',
@@ -340,7 +341,7 @@ const styles = {
     objectFit: 'cover' as const,
     borderRadius: '6px',
     flexShrink: 0,
-    backgroundColor: '#eee',
+    backgroundColor: 'var(--border)',
   },
   itemBody: {
     minWidth: 0,
@@ -350,7 +351,7 @@ const styles = {
     fontSize: '15px',
     fontWeight: '600' as const,
     margin: '0 0 8px 0',
-    color: '#333',
+    color: 'var(--text)',
   },
   itemMeta: {
     display: 'flex',
@@ -367,7 +368,7 @@ const styles = {
   },
   metaText: {
     fontSize: '12px',
-    color: '#666',
+    color: 'var(--text-muted)',
   },
   itemBadge: {
     fontSize: '16px',
@@ -375,7 +376,7 @@ const styles = {
   },
   count: {
     fontSize: '13px',
-    color: '#999',
+    color: 'var(--text-faint)',
     marginTop: '16px',
   },
 };

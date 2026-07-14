@@ -123,12 +123,12 @@ export function AdminPanel() {
 const styles = {
   container: {
     minHeight: '100vh',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'var(--bg)',
   },
   header: {
-    backgroundColor: 'white',
+    backgroundColor: 'var(--surface)',
     padding: '16px clamp(16px, 4vw, 40px)',
-    borderBottom: '1px solid #eee',
+    borderBottom: '1px solid var(--border)',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -139,7 +139,7 @@ const styles = {
     fontSize: 'clamp(20px, 5vw, 28px)',
     fontWeight: 'bold',
     margin: 0,
-    color: '#333',
+    color: 'var(--text)',
   },
   userInfo: {
     display: 'flex',
@@ -161,8 +161,8 @@ const styles = {
   tabs: {
     display: 'flex',
     gap: '0',
-    backgroundColor: 'white',
-    borderBottom: '1px solid #ddd',
+    backgroundColor: 'var(--surface)',
+    borderBottom: '1px solid var(--border-strong)',
     padding: '0 clamp(8px, 3vw, 40px)',
     overflowX: 'auto' as const,
   },
@@ -173,7 +173,7 @@ const styles = {
     cursor: 'pointer',
     fontSize: '14px',
     fontWeight: '500' as const,
-    color: '#666',
+    color: 'var(--text-muted)',
     borderBottom: '3px solid transparent',
     transition: 'all 0.2s',
     whiteSpace: 'nowrap' as const,
@@ -191,7 +191,7 @@ const styles = {
     maxWidth: '600px',
     margin: '80px auto',
     padding: '40px',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--surface)',
     borderRadius: '8px',
     textAlign: 'center' as const,
   },

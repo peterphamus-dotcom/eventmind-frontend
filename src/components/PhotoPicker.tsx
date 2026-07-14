@@ -128,7 +128,7 @@ const styles = {
   galleryBtn: {
     flex: '1 1 140px',
     padding: '12px 16px',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--surface)',
     color: '#007bff',
     border: '1px solid #007bff',
     borderRadius: '4px',
@@ -138,7 +138,7 @@ const styles = {
   },
   processing: {
     fontSize: '13px',
-    color: '#666',
+    color: 'var(--text-muted)',
     marginTop: '8px',
     marginBottom: 0,
   },
@@ -152,8 +152,8 @@ const styles = {
     position: 'relative' as const,
     borderRadius: '4px',
     overflow: 'hidden',
-    border: '1px solid #ddd',
-    backgroundColor: '#fafafa',
+    border: '1px solid var(--border-strong)',
+    backgroundColor: 'var(--bg)',
   },
   thumbImage: {
     width: '100%',
@@ -179,7 +179,7 @@ const styles = {
   },
   thumbSize: {
     fontSize: '11px',
-    color: '#999',
+    color: 'var(--text-faint)',
     textAlign: 'center' as const,
     padding: '4px 0',
   },

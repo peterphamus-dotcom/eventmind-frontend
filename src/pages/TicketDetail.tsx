@@ -389,12 +389,12 @@ export function TicketDetail() {
 const styles = {
   container: {
     minHeight: '100vh',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'var(--bg)',
   },
   header: {
-    backgroundColor: 'white',
+    backgroundColor: 'var(--surface)',
     padding: '20px 40px',
-    borderBottom: '1px solid #eee',
+    borderBottom: '1px solid var(--border)',
     display: 'flex',
     alignItems: 'center',
     gap: '20px',
@@ -419,10 +419,10 @@ const styles = {
     padding: '0 20px',
   },
   card: {
-    backgroundColor: 'white',
+    backgroundColor: 'var(--surface)',
     borderRadius: '8px',
     padding: '32px',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+    boxShadow: '0 2px 10px var(--shadow)',
   },
   titleRow: {
     display: 'flex',
@@ -430,18 +430,18 @@ const styles = {
     gap: '20px',
     marginBottom: '24px',
     paddingBottom: '24px',
-    borderBottom: '1px solid #eee',
+    borderBottom: '1px solid var(--border)',
   },
   ticketTitle: {
     fontSize: '22px',
     fontWeight: '600',
     margin: '0 0 8px 0',
-    color: '#333',
+    color: 'var(--text)',
   },
   ticketDescription: {
     fontSize: '14px',
     lineHeight: '1.6',
-    color: '#666',
+    color: 'var(--text-muted)',
     margin: 0,
     whiteSpace: 'pre-wrap' as const,
   },
@@ -459,7 +459,7 @@ const styles = {
   label: {
     fontSize: '12px',
     fontWeight: '600',
-    color: '#666',
+    color: 'var(--text-muted)',
     textTransform: 'uppercase' as const,
     letterSpacing: '0.5px',
   },
@@ -470,6 +470,8 @@ const styles = {
     fontSize: '13px',
     fontFamily: 'inherit',
     fontWeight: '500' as const,
+    backgroundColor: 'var(--input-bg)',
+    color: 'var(--text)',
   },
   controlRow: {
     display: 'flex',
@@ -478,7 +480,7 @@ const styles = {
     gap: '20px',
     marginBottom: '24px',
     paddingBottom: '24px',
-    borderBottom: '1px solid #eee',
+    borderBottom: '1px solid var(--border)',
     flexWrap: 'wrap' as const,
   },
   leftControls: {
@@ -500,6 +502,8 @@ const styles = {
     fontSize: '13px',
     fontFamily: 'inherit',
     fontWeight: '500' as const,
+    backgroundColor: 'var(--input-bg)',
+    color: 'var(--text)',
   },
   urgencyBadge: {
     padding: '8px 12px',
@@ -536,12 +540,13 @@ const styles = {
   pinBtn: {
     padding: '8px 12px',
     fontSize: '13px',
-    backgroundColor: '#f5f5f5',
-    border: '1px solid #ddd',
+    backgroundColor: 'var(--bg)',
+    border: '1px solid var(--border-strong)',
     borderRadius: '4px',
     cursor: 'pointer',
     fontWeight: '500' as const,
     transition: 'all 0.2s',
+    color: 'var(--text)',
   },
   pinBtnActive: {
     backgroundColor: '#fff3cd',
@@ -551,13 +556,13 @@ const styles = {
   section: {
     marginBottom: '32px',
     paddingBottom: '24px',
-    borderBottom: '1px solid #eee',
+    borderBottom: '1px solid var(--border)',
   },
   subtitle: {
     fontSize: '16px',
     fontWeight: '600',
     marginBottom: '12px',
-    color: '#333',
+    color: 'var(--text)',
     margin: '0 0 12px 0',
   },
   details: {
@@ -572,13 +577,13 @@ const styles = {
   },
   detailLabel: {
     fontWeight: '600',
-    color: '#333',
+    color: 'var(--text)',
     minWidth: '150px',
   },
   creatorBadge: {
     fontSize: '11px',
-    backgroundColor: '#d1ecf1',
-    color: '#0c5460',
+    backgroundColor: 'var(--tag-bg)',
+    color: 'var(--tag-text)',
     padding: '2px 6px',
     borderRadius: '3px',
     marginLeft: '8px',
@@ -592,8 +597,8 @@ const styles = {
   tag: {
     display: 'inline-block',
     padding: '6px 12px',
-    backgroundColor: '#e3f2fd',
-    color: '#1976d2',
+    backgroundColor: 'var(--tag-bg)',
+    color: 'var(--tag-text)',
     borderRadius: '16px',
     fontSize: '13px',
     fontWeight: '500' as const,
@@ -606,7 +611,7 @@ const styles = {
   photoContainer: {
     borderRadius: '4px',
     overflow: 'hidden',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'var(--bg)',
   },
   photo: {
     width: '100%',
@@ -616,13 +621,13 @@ const styles = {
   },
   photoCaption: {
     fontSize: '12px',
-    color: '#666',
+    color: 'var(--text-muted)',
     padding: '8px 12px',
     margin: 0,
   },
   photoDate: {
     fontSize: '11px',
-    color: '#999',
+    color: 'var(--text-faint)',
     padding: '0 12px 8px 12px',
     margin: 0,
   },
@@ -633,26 +638,26 @@ const styles = {
   },
   auditEntry: {
     padding: '12px',
-    backgroundColor: '#f9f9f9',
+    backgroundColor: 'var(--bg)',
     borderLeft: '3px solid #007bff',
     borderRadius: '4px',
   },
   auditTime: {
     fontSize: '11px',
-    color: '#999',
+    color: 'var(--text-faint)',
     marginBottom: '4px',
   },
   auditChange: {
     fontSize: '13px',
-    color: '#333',
+    color: 'var(--text)',
   },
   auditFrom: {
     fontWeight: '500' as const,
-    color: '#666',
+    color: 'var(--text-muted)',
   },
   auditTo: {
     fontWeight: '600' as const,
-    color: '#333',
+    color: 'var(--text)',
   },
   actions: {
     display: 'flex',
@@ -684,18 +689,18 @@ const styles = {
   loading: {
     padding: '20px',
     fontSize: '16px',
-    color: '#666',
+    color: 'var(--text-muted)',
   },
   error: {
     padding: '20px',
     fontSize: '16px',
-    color: '#c00',
-    backgroundColor: '#fee',
+    color: 'var(--danger-text)',
+    backgroundColor: 'var(--danger-bg)',
   },
   updateError: {
     padding: '12px 16px',
-    backgroundColor: '#fee',
-    color: '#c00',
+    backgroundColor: 'var(--danger-bg)',
+    color: 'var(--danger-text)',
     borderRadius: '4px',
     fontSize: '14px',
     marginBottom: '16px',

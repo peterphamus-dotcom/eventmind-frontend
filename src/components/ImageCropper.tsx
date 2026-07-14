@@ -238,7 +238,7 @@ const styles: Record<string, React.CSSProperties> = {
   overlay: {
     position: 'fixed',
     inset: 0,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'var(--overlay)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -246,21 +246,21 @@ const styles: Record<string, React.CSSProperties> = {
     zIndex: 1000,
   },
   modal: {
-    backgroundColor: 'white',
+    backgroundColor: 'var(--surface)',
     borderRadius: '10px',
     padding: '20px',
     width: 'min(92vw, 640px)',
-    boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+    boxShadow: '0 10px 40px var(--shadow)',
   },
   heading: {
     fontSize: '17px',
     fontWeight: 600,
-    color: '#333',
+    color: 'var(--text)',
     margin: '0 0 4px',
   },
   hint: {
     fontSize: '13px',
-    color: '#888',
+    color: 'var(--text-faint)',
     margin: '0 0 14px',
   },
   frame: {

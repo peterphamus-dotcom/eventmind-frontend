@@ -185,12 +185,12 @@ export function CreateReport() {
 const styles = {
   container: {
     minHeight: '100vh',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'var(--bg)',
   },
   header: {
-    backgroundColor: 'white',
+    backgroundColor: 'var(--surface)',
     padding: '16px clamp(16px, 4vw, 40px)',
-    borderBottom: '1px solid #eee',
+    borderBottom: '1px solid var(--border)',
     display: 'flex',
     alignItems: 'center',
     gap: '16px',
@@ -216,10 +216,10 @@ const styles = {
     padding: '0 clamp(12px, 3vw, 20px)',
   },
   form: {
-    backgroundColor: 'white',
+    backgroundColor: 'var(--surface)',
     borderRadius: '8px',
     padding: 'clamp(16px, 4vw, 32px)',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+    boxShadow: '0 2px 10px var(--shadow)',
   },
   formGroup: {
     marginBottom: '24px',
@@ -230,23 +230,27 @@ const styles = {
   label: {
     fontSize: '14px',
     fontWeight: '600',
-    color: '#333',
+    color: 'var(--text)',
   },
   textarea: {
     padding: '12px',
-    border: '1px solid #ddd',
+    border: '1px solid var(--border-strong)',
     borderRadius: '4px',
     fontSize: '14px',
     fontFamily: 'inherit',
     minHeight: '120px',
     resize: 'vertical' as const,
+    backgroundColor: 'var(--input-bg)',
+    color: 'var(--text)',
   },
   select: {
     padding: '10px 12px',
-    border: '1px solid #ddd',
+    border: '1px solid var(--border-strong)',
     borderRadius: '4px',
     fontSize: '14px',
     fontFamily: 'inherit',
+    backgroundColor: 'var(--input-bg)',
+    color: 'var(--text)',
   },
   tagGrid: {
     display: 'grid',
@@ -255,9 +259,10 @@ const styles = {
   },
   tagButton: {
     padding: '8px 12px',
-    border: '1px solid #ddd',
+    border: '1px solid var(--border-strong)',
     borderRadius: '4px',
-    backgroundColor: 'white',
+    backgroundColor: 'var(--surface)',
+    color: 'var(--text)',
     cursor: 'pointer',
     fontSize: '13px',
     transition: 'all 0.2s',
@@ -297,15 +302,15 @@ const styles = {
   },
   error: {
     padding: '12px 16px',
-    backgroundColor: '#fee',
-    color: '#c00',
+    backgroundColor: 'var(--danger-bg)',
+    color: 'var(--danger-text)',
     borderRadius: '4px',
     fontSize: '14px',
     marginBottom: '16px',
   },
   loadWarning: {
     fontSize: '13px',
-    color: '#c00',
+    color: 'var(--danger-text)',
     margin: 0,
   },
   retryBtn: {

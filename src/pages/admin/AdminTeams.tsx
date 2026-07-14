@@ -268,26 +268,26 @@ export default function AdminTeams() {
 
 const styles = {
   card: {
-    backgroundColor: 'white',
+    backgroundColor: 'var(--surface)',
     borderRadius: '8px',
     padding: '32px',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+    boxShadow: '0 2px 10px var(--shadow)',
   },
   title: {
     fontSize: '20px',
     fontWeight: '600',
     marginBottom: '4px',
-    color: '#333',
+    color: 'var(--text)',
   },
   subtitle: {
     fontSize: '13px',
-    color: '#888',
+    color: 'var(--text-faint)',
     marginBottom: '24px',
   },
   error: {
     padding: '12px 16px',
-    backgroundColor: '#fee',
-    color: '#c00',
+    backgroundColor: 'var(--danger-bg)',
+    color: 'var(--danger-text)',
     borderRadius: '4px',
     fontSize: '14px',
     marginBottom: '16px',
@@ -302,9 +302,11 @@ const styles = {
   input: {
     flex: 1,
     padding: '10px 12px',
-    border: '1px solid #ddd',
+    border: '1px solid var(--border-strong)',
     borderRadius: '4px',
     fontSize: '14px',
+    backgroundColor: 'var(--input-bg)',
+    color: 'var(--text)',
   },
   btnPrimary: {
     padding: '10px 20px',
@@ -323,9 +325,9 @@ const styles = {
   },
   teamCard: {
     padding: '16px',
-    backgroundColor: '#f9f9f9',
+    backgroundColor: 'var(--bg)',
     borderRadius: '6px',
-    border: '1px solid #eee',
+    border: '1px solid var(--border)',
   },
   teamHeader: {
     display: 'flex',
@@ -336,7 +338,7 @@ const styles = {
   teamName: {
     fontSize: '16px',
     fontWeight: '600',
-    color: '#333',
+    color: 'var(--text)',
     margin: 0,
   },
   teamActions: {
@@ -396,26 +398,26 @@ const styles = {
     fontSize: '13px',
   },
   metaLabel: {
-    color: '#666',
+    color: 'var(--text-muted)',
     fontWeight: '600' as const,
     minWidth: '70px',
   },
   metaEmpty: {
-    color: '#aaa',
+    color: 'var(--text-faint)',
     fontStyle: 'italic' as const,
   },
   tagBadge: {
     padding: '3px 10px',
-    backgroundColor: '#cce5ff',
-    color: '#004085',
+    backgroundColor: 'var(--tag-bg)',
+    color: 'var(--tag-text)',
     borderRadius: '12px',
     fontSize: '12px',
     fontWeight: '500' as const,
   },
   memberBadge: {
     padding: '3px 10px',
-    backgroundColor: '#d4edda',
-    color: '#155724',
+    backgroundColor: 'var(--success-bg)',
+    color: 'var(--success-text)',
     borderRadius: '12px',
     fontSize: '12px',
     fontWeight: '500' as const,
@@ -429,7 +431,7 @@ const styles = {
   editLabel: {
     fontSize: '13px',
     fontWeight: '600' as const,
-    color: '#666',
+    color: 'var(--text-muted)',
     marginBottom: '8px',
   },
   chipRow: {
@@ -439,9 +441,9 @@ const styles = {
   },
   chip: {
     padding: '6px 14px',
-    backgroundColor: 'white',
-    color: '#333',
-    border: '1px solid #ccc',
+    backgroundColor: 'var(--surface)',
+    color: 'var(--text)',
+    border: '1px solid var(--border-strong)',
     borderRadius: '16px',
     cursor: 'pointer',
     fontSize: '13px',
@@ -453,12 +455,12 @@ const styles = {
   },
   empty: {
     fontSize: '14px',
-    color: '#999',
+    color: 'var(--text-faint)',
     fontStyle: 'italic',
   },
   info: {
     fontSize: '14px',
-    color: '#666',
+    color: 'var(--text-muted)',
     marginTop: '24px',
   },
 };

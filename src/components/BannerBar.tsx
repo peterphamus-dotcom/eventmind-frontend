@@ -85,7 +85,7 @@ const styles = {
     width: '100%',
     height: 'clamp(120px, 26vw, 260px)',
     objectFit: 'cover' as const,
-    backgroundColor: '#e5e5e5',
+    backgroundColor: 'var(--border)',
   },
   bar: {
     display: 'flex',

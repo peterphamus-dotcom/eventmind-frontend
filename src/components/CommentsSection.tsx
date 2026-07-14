@@ -85,17 +85,17 @@ const styles = {
   section: {
     marginTop: '24px',
     paddingTop: '24px',
-    borderTop: '1px solid #eee',
+    borderTop: '1px solid var(--border)',
   },
   title: {
     fontSize: '16px',
     fontWeight: '600' as const,
-    color: '#333',
+    color: 'var(--text)',
     marginBottom: '16px',
   },
   empty: {
     fontSize: '14px',
-    color: '#999',
+    color: 'var(--text-faint)',
     fontStyle: 'italic',
     marginBottom: '16px',
   },
@@ -106,7 +106,7 @@ const styles = {
     marginBottom: '16px',
   },
   comment: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: 'var(--bg)',
     borderRadius: '6px',
     padding: '12px 14px',
   },
@@ -121,15 +121,15 @@ const styles = {
   author: {
     fontSize: '13px',
     fontWeight: '600' as const,
-    color: '#333',
+    color: 'var(--text)',
   },
   date: {
     fontSize: '12px',
-    color: '#999',
+    color: 'var(--text-faint)',
   },
   text: {
     fontSize: '14px',
-    color: '#333',
+    color: 'var(--text)',
     margin: 0,
     whiteSpace: 'pre-wrap' as const,
     wordBreak: 'break-word' as const,
@@ -139,8 +139,8 @@ const styles = {
   },
   error: {
     padding: '10px 12px',
-    backgroundColor: '#fee',
-    color: '#c00',
+    backgroundColor: 'var(--danger-bg)',
+    color: 'var(--danger-text)',
     borderRadius: '4px',
     fontSize: '13px',
     marginBottom: '12px',
@@ -154,10 +154,12 @@ const styles = {
   textarea: {
     width: '100%',
     padding: '10px 12px',
-    border: '1px solid #ddd',
+    border: '1px solid var(--border-strong)',
     borderRadius: '4px',
     fontFamily: 'inherit',
     resize: 'vertical' as const,
+    backgroundColor: 'var(--input-bg)',
+    color: 'var(--text)',
   },
   submitBtn: {
     padding: '10px 20px',

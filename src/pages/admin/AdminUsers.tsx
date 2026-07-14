@@ -153,21 +153,21 @@ export default function AdminUsers() {
 
 const styles = {
   card: {
-    backgroundColor: 'white',
+    backgroundColor: 'var(--surface)',
     borderRadius: '8px',
     padding: '32px',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+    boxShadow: '0 2px 10px var(--shadow)',
   },
   title: {
     fontSize: '20px',
     fontWeight: '600',
     marginBottom: '24px',
-    color: '#333',
+    color: 'var(--text)',
   },
   error: {
     padding: '12px 16px',
-    backgroundColor: '#fee',
-    color: '#c00',
+    backgroundColor: 'var(--danger-bg)',
+    color: 'var(--danger-text)',
     borderRadius: '4px',
     fontSize: '14px',
     marginBottom: '16px',
@@ -181,13 +181,15 @@ const styles = {
   label: {
     fontSize: '14px',
     fontWeight: '600',
-    color: '#333',
+    color: 'var(--text)',
   },
   select: {
     padding: '8px 12px',
-    border: '1px solid #ddd',
+    border: '1px solid var(--border-strong)',
     borderRadius: '4px',
     fontSize: '14px',
+    backgroundColor: 'var(--input-bg)',
+    color: 'var(--text)',
   },
   tableContainer: {
     overflowX: 'auto' as const,
@@ -197,23 +199,23 @@ const styles = {
     borderCollapse: 'collapse' as const,
   },
   headerRow: {
-    backgroundColor: '#f9f9f9',
-    borderBottom: '2px solid #ddd',
+    backgroundColor: 'var(--bg)',
+    borderBottom: '2px solid var(--border-strong)',
   },
   headerCell: {
     padding: '12px',
     textAlign: 'left' as const,
     fontSize: '14px',
     fontWeight: '600',
-    color: '#333',
+    color: 'var(--text)',
   },
   row: {
-    borderBottom: '1px solid #eee',
+    borderBottom: '1px solid var(--border)',
   },
   cell: {
     padding: '12px',
     fontSize: '14px',
-    color: '#333',
+    color: 'var(--text)',
   },
   badge: {
     display: 'inline-block',
@@ -229,9 +231,11 @@ const styles = {
   },
   selectSmall: {
     padding: '6px 8px',
-    border: '1px solid #ddd',
+    border: '1px solid var(--border-strong)',
     borderRadius: '4px',
     fontSize: '13px',
+    backgroundColor: 'var(--input-bg)',
+    color: 'var(--text)',
   },
   btnSmall: {
     padding: '6px 12px',
@@ -255,7 +259,7 @@ const styles = {
   },
   empty: {
     fontSize: '14px',
-    color: '#999',
+    color: 'var(--text-faint)',
     fontStyle: 'italic',
   },
 };
