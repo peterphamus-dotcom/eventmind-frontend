@@ -72,15 +72,21 @@ export function LocationFilter({ locations, selectedIds, onChange }: LocationFil
 const styles = {
   anchor: {
     position: 'relative' as const,
+    flex: 1,
+    minWidth: 0,
   },
   button: {
-    padding: '8px 12px',
+    width: '100%',
+    padding: '8px 10px',
     border: '1px solid #ccc',
     borderRadius: '4px',
     backgroundColor: 'white',
     cursor: 'pointer',
-    fontSize: '14px',
+    fontSize: '16px',
+    textAlign: 'left' as const,
     whiteSpace: 'nowrap' as const,
+    overflow: 'hidden' as const,
+    textOverflow: 'ellipsis' as const,
   },
   backdrop: {
     position: 'fixed' as const,
