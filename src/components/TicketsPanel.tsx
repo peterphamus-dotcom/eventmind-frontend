@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api, photoSrc } from '../api';
 import { LocationFilter } from './LocationFilter';
 import { CollapsibleSection } from './CollapsibleSection';
+import { SearchBar } from './SearchBar';
 import type { Ticket, Location } from '../types';
 
 type SortOption = 'urgency' | 'recent';
@@ -36,11 +37,19 @@ export function TicketsPanel() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [selectedLocationIds, setSelectedLocationIds] = useState<string[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Debounce the search box so we don't fire a request on every keystroke
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(id);
+  }, [search]);
 
   const locationKey = selectedLocationIds.join(',');
   useEffect(() => {
     loadTickets();
-  }, [sortBy, statusFilter, locationKey]);
+  }, [sortBy, statusFilter, locationKey, debouncedSearch]);
 
   useEffect(() => {
     api
@@ -60,6 +69,7 @@ export function TicketsPanel() {
       const filters: Record<string, string> = { sortBy };
       if (statusFilter !== 'ALL') filters.status = statusFilter;
       if (selectedLocationIds.length > 0) filters.locationId = selectedLocationIds.join(',');
+      if (debouncedSearch) filters.search = debouncedSearch;
 
       const response = await api.listTickets(1, 100, filters);
       setTickets(response.data.data?.items || []);
@@ -164,6 +174,13 @@ export function TicketsPanel() {
         </div>
       )}
 
+      {/* Search */}
+      <SearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Search tickets by title or description…"
+      />
+
       {/* Controls */}
       <div style={styles.controls}>
         <div style={styles.control}>
@@ -197,9 +214,11 @@ export function TicketsPanel() {
         <p style={styles.loading}>Loading tickets...</p>
       ) : tickets.length === 0 ? (
         <p style={styles.empty}>
-          {statusFilter === 'ALL'
-            ? 'No tickets yet.'
-            : `No ${STATUS_FILTERS.find((f) => f.value === statusFilter)?.label.toLowerCase()} tickets.`}
+          {debouncedSearch
+            ? `No tickets match “${debouncedSearch}”.`
+            : statusFilter === 'ALL'
+              ? 'No tickets yet.'
+              : `No ${STATUS_FILTERS.find((f) => f.value === statusFilter)?.label.toLowerCase()} tickets.`}
         </p>
       ) : (
         <>

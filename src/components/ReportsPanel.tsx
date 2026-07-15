@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api, photoSrc } from '../api';
 import { LocationFilter } from './LocationFilter';
 import { CollapsibleSection } from './CollapsibleSection';
+import { SearchBar } from './SearchBar';
 import type { Report, Location } from '../types';
 
 type SortOption = 'recent' | 'location';
@@ -23,11 +24,19 @@ export function ReportsPanel() {
   const [sortBy, setSortBy] = useState<SortOption>('recent');
   const [selectedLocationIds, setSelectedLocationIds] = useState<string[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Debounce the search box so we don't fire a request on every keystroke
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(id);
+  }, [search]);
 
   const locationKey = selectedLocationIds.join(',');
   useEffect(() => {
     loadReports();
-  }, [sortBy, locationKey]);
+  }, [sortBy, locationKey, debouncedSearch]);
 
   useEffect(() => {
     api
@@ -43,6 +52,7 @@ export function ReportsPanel() {
       const params: Record<string, string> = {};
       if (sortBy === 'location') params.sortBy = 'location';
       if (selectedLocationIds.length > 0) params.locationId = selectedLocationIds.join(',');
+      if (debouncedSearch) params.search = debouncedSearch;
 
       const response = await api.listReports(1, 100, params);
       setReports(response.data.data?.items || []);
@@ -56,6 +66,13 @@ export function ReportsPanel() {
 
   return (
     <div>
+      {/* Search */}
+      <SearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Search reports…"
+      />
+
       {/* Controls */}
       <div style={styles.controls}>
         <div style={styles.control}>
@@ -88,7 +105,9 @@ export function ReportsPanel() {
       {isLoading ? (
         <p style={styles.loading}>Loading reports...</p>
       ) : reports.length === 0 ? (
-        <p style={styles.empty}>No reports found.</p>
+        <p style={styles.empty}>
+          {debouncedSearch ? `No reports match “${debouncedSearch}”.` : 'No reports found.'}
+        </p>
       ) : (
         <CollapsibleSection title="Reports" count={reports.length} storageKey="reports-all">
           <div style={styles.list}>
