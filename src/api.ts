@@ -116,6 +116,14 @@ export const api = {
   deleteTeam: (id: string) =>
     client.delete<ApiResponse<{ message: string }>>(`/teams/${id}`),
 
+  // AI event summary
+  getEventSummary: () =>
+    client.get<ApiResponse<{
+      headline: string;
+      actions: { action: string; priority: 'HIGH' | 'MEDIUM' | 'LOW' }[];
+      generatedAt: string;
+    } | null>>('/summary'),
+
   // Banner
   getBanner: () =>
     client.get<ApiResponse<{ message: string; messages: string[]; isActive: boolean; imageUrl: string | null } | null>>('/banner'),

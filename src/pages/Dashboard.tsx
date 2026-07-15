@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { TicketsPanel } from '../components/TicketsPanel';
 import { ReportsPanel } from '../components/ReportsPanel';
+import { EventSummary } from '../components/EventSummary';
 
 type Tab = 'tickets' | 'reports';
 
@@ -59,6 +60,9 @@ export function Dashboard() {
             </button>
           )}
         </div>
+
+        {/* AI event brief */}
+        <EventSummary />
 
         {/* Tab switcher */}
         <div style={styles.tabs}>
