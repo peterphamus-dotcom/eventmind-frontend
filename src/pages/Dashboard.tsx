@@ -14,6 +14,8 @@ export function Dashboard() {
   const [activeTab, setActiveTab] = useState<Tab>(
     (sessionStorage.getItem('dashboardTab') as Tab) || 'tickets'
   );
+  const [menuOpen, setMenuOpen] = useState(false);
+  const canSeeAdminPanel = user?.role === 'ADMIN' || user?.role === 'CORE_TEAM';
 
   function selectTab(tab: Tab) {
     setActiveTab(tab);
@@ -38,6 +40,33 @@ export function Dashboard() {
           <span>
             {user?.name} ({user?.role})
           </span>
+          {canSeeAdminPanel && (
+            <div style={styles.menuAnchor}>
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                style={styles.hamburgerBtn}
+                aria-label="Menu"
+              >
+                ☰
+              </button>
+              {menuOpen && (
+                <>
+                  <div style={styles.menuBackdrop} onClick={() => setMenuOpen(false)} />
+                  <div style={styles.menuPopover}>
+                    <button
+                      onClick={() => {
+                        setMenuOpen(false);
+                        navigate('/admin');
+                      }}
+                      style={styles.menuItem}
+                    >
+                      ⚙️ Admin Panel
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
           <button onClick={handleLogout} style={styles.logoutBtn}>
             Logout
           </button>
@@ -46,21 +75,6 @@ export function Dashboard() {
 
       {/* Main Content */}
       <div style={styles.content}>
-        {/* Quick Actions */}
-        <div style={styles.actions}>
-          <button onClick={() => navigate('/reports/new')} style={styles.actionBtn}>
-            + Report Issue
-          </button>
-          <button onClick={() => navigate('/tickets/new')} style={styles.actionBtn}>
-            + Create Ticket
-          </button>
-          {(user?.role === 'ADMIN' || user?.role === 'CORE_TEAM') && (
-            <button onClick={() => navigate('/admin')} style={styles.actionBtn}>
-              ⚙️ Admin Panel
-            </button>
-          )}
-        </div>
-
         {/* AI event brief */}
         <EventSummary />
 
@@ -129,28 +143,52 @@ const styles = {
     cursor: 'pointer',
     fontSize: '14px',
   },
+  menuAnchor: {
+    position: 'relative' as const,
+  },
+  hamburgerBtn: {
+    padding: '8px 12px',
+    backgroundColor: 'transparent',
+    border: '1px solid var(--border-strong)',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '16px',
+    color: 'var(--text)',
+    lineHeight: 1,
+  },
+  menuBackdrop: {
+    position: 'fixed' as const,
+    inset: 0,
+    zIndex: 10,
+  },
+  menuPopover: {
+    position: 'absolute' as const,
+    top: 'calc(100% + 4px)',
+    right: 0,
+    zIndex: 11,
+    backgroundColor: 'var(--surface)',
+    border: '1px solid var(--border-strong)',
+    borderRadius: '6px',
+    boxShadow: '0 4px 16px var(--shadow)',
+    minWidth: '160px',
+    padding: '4px 0',
+  },
+  menuItem: {
+    display: 'block',
+    width: '100%',
+    textAlign: 'left' as const,
+    padding: '10px 14px',
+    backgroundColor: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '14px',
+    color: 'var(--text)',
+    whiteSpace: 'nowrap' as const,
+  },
   content: {
     padding: 'clamp(16px, 4vw, 40px)',
     maxWidth: '1000px',
     margin: '0 auto',
-  },
-  actions: {
-    display: 'flex',
-    gap: '12px',
-    marginBottom: '24px',
-    flexWrap: 'wrap' as const,
-  },
-  actionBtn: {
-    padding: '12px 20px',
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '500',
-    flex: '1 1 150px',
-    maxWidth: '300px',
   },
   tabs: {
     display: 'flex',

@@ -145,6 +145,11 @@ export function TicketsPanel() {
 
   return (
     <div>
+      {/* Add new */}
+      <div onClick={() => navigate('/tickets/new')} style={styles.addCard}>
+        + Create Ticket
+      </div>
+
       {/* Status counters */}
       {stats && (
         <div style={styles.statsRow}>
@@ -255,6 +260,20 @@ export function TicketsPanel() {
 }
 
 const styles = {
+  addCard: {
+    backgroundColor: 'transparent',
+    padding: '16px',
+    borderRadius: '4px',
+    border: '2px dashed var(--border-strong)',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'var(--text-muted)',
+    fontSize: '15px',
+    fontWeight: '600' as const,
+    marginBottom: '20px',
+  },
   statsRow: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
