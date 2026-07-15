@@ -1,6 +1,8 @@
 import axios from 'axios';
 import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse } from './types';
 
+type TeamPreview<T> = PaginatedResponse<T> & { team: { id: string; name: string; tags: Tag[] } };
+
 type ReactionsPayload = { reactions: ReactionSummary[] };
 
 // Production always uses the same-origin /api proxy (see server.js) so the
@@ -146,4 +148,8 @@ export const api = {
     client.get('/admin/export/tickets.csv', { responseType: 'blob' }),
   exportReportsCsv: () =>
     client.get('/admin/export/reports.csv', { responseType: 'blob' }),
+  previewTicketsAsTeam: (teamId: string) =>
+    client.get<ApiResponse<TeamPreview<Ticket>>>('/admin/preview/tickets', { params: { teamId, pageSize: 100 } }),
+  previewReportsAsTeam: (teamId: string) =>
+    client.get<ApiResponse<TeamPreview<Report>>>('/admin/preview/reports', { params: { teamId, pageSize: 100 } }),
 };
