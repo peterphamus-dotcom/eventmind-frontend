@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { api, photoSrc } from '../api';
 import { useAuth } from '../AuthContext';
 import { useToast } from '../Toast';
@@ -304,7 +304,14 @@ export function TicketDetail() {
               <div style={styles.detailRow}>
                 <span style={styles.detailLabel}>Reported by:</span>
                 <span>
-                  {ticket.submitter?.name} ({ticket.submitter?.email})
+                  {ticket.submitter?.id ? (
+                    <Link to={`/users/${ticket.submitter.id}`} style={styles.userLink}>
+                      {ticket.submitter.name}
+                    </Link>
+                  ) : (
+                    ticket.submitter?.name
+                  )}{' '}
+                  ({ticket.submitter?.email})
                   {isCreator && <span style={styles.creatorBadge}> (You)</span>}
                 </span>
               </div>
@@ -606,6 +613,11 @@ const styles = {
     fontWeight: '600',
     color: 'var(--text)',
     minWidth: '150px',
+  },
+  userLink: {
+    color: '#007bff',
+    textDecoration: 'none',
+    fontWeight: '500' as const,
   },
   creatorBadge: {
     fontSize: '11px',

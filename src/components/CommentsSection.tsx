@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import type { Comment, ReactionSummary } from '../types';
 import { ReactionBar } from './ReactionBar';
 
@@ -43,7 +44,9 @@ export function CommentsSection({ initialComments, onAdd, onReact }: CommentsSec
           {comments.map((c) => (
             <div key={c.id} style={styles.comment}>
               <div style={styles.commentHeader}>
-                <span style={styles.author}>{c.author.name}</span>
+                <Link to={`/users/${c.author.id}`} style={styles.author}>
+                  {c.author.name}
+                </Link>
                 <span style={styles.date}>{new Date(c.createdAt).toLocaleString()}</span>
               </div>
               <p style={styles.text}>{c.text}</p>
@@ -122,6 +125,7 @@ const styles = {
     fontSize: '13px',
     fontWeight: '600' as const,
     color: 'var(--text)',
+    textDecoration: 'none',
   },
   date: {
     fontSize: '12px',

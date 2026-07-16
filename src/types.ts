@@ -12,6 +12,18 @@ export interface User {
   bio?: string | null;
   avatarUrl?: string | null;
   lastReportAt?: string | null;
+  reportCount?: number;
+  createdAt: string;
+}
+
+export interface PublicUserProfile {
+  id: string;
+  name: string;
+  role: 'MEMBER' | 'CORE_TEAM' | 'ADMIN';
+  homeLocation?: Location;
+  teams?: Team[];
+  bio?: string | null;
+  avatarUrl?: string | null;
   createdAt: string;
 }
 
@@ -180,6 +192,21 @@ export interface SocialSighting {
   followerCount?: number | null;
   note?: string | null;
   loggedBy: { id: string; name: string };
+  createdAt: string;
+}
+
+export type UserReportReason = 'HARASSMENT' | 'INAPPROPRIATE_CONTENT' | 'SAFETY_CONCERN' | 'SPAM' | 'OTHER';
+export type UserReportStatus = 'OPEN' | 'RESOLVED' | 'DISMISSED';
+
+export interface UserReport {
+  id: string;
+  reason: UserReportReason;
+  details?: string | null;
+  status: UserReportStatus;
+  reporter: { id: string; name: string };
+  reportedUser: { id: string; name: string };
+  resolvedBy?: { id: string; name: string } | null;
+  resolvedAt?: string | null;
   createdAt: string;
 }
 

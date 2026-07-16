@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { api, photoSrc } from '../../api';
 import type { User } from '../../types';
 
@@ -87,6 +88,7 @@ export default function AdminUsers() {
                 <th style={styles.headerCell}>Phone</th>
                 <th style={styles.headerCell}>Bio</th>
                 <th style={styles.headerCell}>Last Report</th>
+                <th style={styles.headerCell}>Reports</th>
                 <th style={styles.headerCell}>Current Role</th>
                 <th style={styles.headerCell}>Actions</th>
               </tr>
@@ -95,7 +97,7 @@ export default function AdminUsers() {
               {users.map((user) => (
                 <tr key={user.id} style={styles.row}>
                   <td style={styles.cell}>
-                    <div style={styles.nameCell}>
+                    <Link to={`/users/${user.id}`} style={styles.nameCell}>
                       {user.avatarUrl ? (
                         <img src={photoSrc(user.avatarUrl)} alt="" style={styles.avatar} />
                       ) : (
@@ -104,7 +106,7 @@ export default function AdminUsers() {
                         </div>
                       )}
                       {user.name}
-                    </div>
+                    </Link>
                   </td>
                   <td style={styles.cell}>{user.email}</td>
                   <td style={styles.cell}>{user.phone || '—'}</td>
@@ -113,6 +115,13 @@ export default function AdminUsers() {
                   </td>
                   <td style={styles.cell} title={user.lastReportAt ? new Date(user.lastReportAt).toLocaleString() : undefined}>
                     {user.lastReportAt ? relativeTime(user.lastReportAt) : '—'}
+                  </td>
+                  <td style={styles.cell}>
+                    {user.reportCount ? (
+                      <span style={styles.reportBadge}>🚩 {user.reportCount}</span>
+                    ) : (
+                      '—'
+                    )}
                   </td>
                   <td style={styles.cell}>
                     <span
@@ -251,6 +260,17 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
+    color: 'var(--text)',
+    textDecoration: 'none',
+  },
+  reportBadge: {
+    display: 'inline-block',
+    padding: '3px 8px',
+    backgroundColor: 'var(--danger-bg)',
+    color: 'var(--danger-text)',
+    borderRadius: '10px',
+    fontSize: '12px',
+    fontWeight: '600' as const,
   },
   avatar: {
     width: '28px',

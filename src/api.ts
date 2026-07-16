@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus } from './types';
 
 type TeamPreview<T> = PaginatedResponse<T> & { team: { id: string; name: string; tags: Tag[] } };
 
@@ -37,6 +37,7 @@ export const api = {
   // Users
   getMe: () => client.get<ApiResponse<User>>('/users/me'),
   getUser: (id: string) => client.get<ApiResponse<User>>(`/users/${id}`),
+  getUserProfile: (id: string) => client.get<ApiResponse<PublicUserProfile>>(`/users/${id}/profile`),
   listUsers: (page = 1, pageSize = 20, filters?: any) =>
     client.get<ApiResponse<PaginatedResponse<User>>>('/users', { params: { page, pageSize, ...filters } }),
   updateUser: (id: string, role?: string, teamIds?: string[]) =>
@@ -233,4 +234,12 @@ export const api = {
   }) => client.post<ApiResponse<SocialSighting>>('/social-sightings', data),
   deleteSocialSighting: (id: string) =>
     client.delete<ApiResponse<{ message: string }>>(`/social-sightings/${id}`),
+
+  // User conduct reports
+  listUserReports: (filters?: { status?: UserReportStatus }) =>
+    client.get<ApiResponse<{ items: UserReport[]; total: number }>>('/user-reports', { params: filters }),
+  createUserReport: (data: { reportedUserId: string; reason: UserReportReason; details?: string }) =>
+    client.post<ApiResponse<UserReport>>('/user-reports', data),
+  updateUserReportStatus: (id: string, status: UserReportStatus) =>
+    client.patch<ApiResponse<UserReport>>(`/user-reports/${id}`, { status }),
 };

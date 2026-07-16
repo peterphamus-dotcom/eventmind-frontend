@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { api, photoSrc } from '../api';
 import { useToast } from '../Toast';
 import { CommentsSection } from '../components/CommentsSection';
@@ -100,7 +100,16 @@ export function ReportDetail() {
               </div>
               <div style={styles.detailRow}>
                 <span style={styles.detailLabel}>Reported by:</span>
-                <span>{report.submitter?.name} ({report.submitter?.email})</span>
+                <span>
+                  {report.submitter?.id ? (
+                    <Link to={`/users/${report.submitter.id}`} style={styles.userLink}>
+                      {report.submitter.name}
+                    </Link>
+                  ) : (
+                    report.submitter?.name
+                  )}{' '}
+                  ({report.submitter?.email})
+                </span>
               </div>
               <div style={styles.detailRow}>
                 <span style={styles.detailLabel}>Reported at:</span>
@@ -191,6 +200,11 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '20px',
+  },
+  userLink: {
+    color: '#007bff',
+    textDecoration: 'none',
+    fontWeight: '500' as const,
   },
   backBtn: {
     fontSize: '14px',
