@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform } from './types';
 
 type TeamPreview<T> = PaginatedResponse<T> & { team: { id: string; name: string; tags: Tag[] } };
 
@@ -217,4 +217,20 @@ export const api = {
     client.patch<ApiResponse<Reminder>>(`/reminders/${id}`, updates),
   deleteReminder: (id: string) =>
     client.delete<ApiResponse<{ message: string }>>(`/reminders/${id}`),
+
+  // Social intel (manually logged sightings)
+  listSocialSightings: (filters?: { type?: SocialSightingType; platform?: SocialPlatform }) =>
+    client.get<ApiResponse<{ items: SocialSighting[]; total: number }>>('/social-sightings', {
+      params: filters,
+    }),
+  createSocialSighting: (data: {
+    type: SocialSightingType;
+    platform: SocialPlatform;
+    url: string;
+    handle?: string;
+    followerCount?: number;
+    note?: string;
+  }) => client.post<ApiResponse<SocialSighting>>('/social-sightings', data),
+  deleteSocialSighting: (id: string) =>
+    client.delete<ApiResponse<{ message: string }>>(`/social-sightings/${id}`),
 };

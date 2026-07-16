@@ -168,6 +168,21 @@ export interface Reminder {
   createdAt: string;
 }
 
+export type SocialSightingType = 'TREND' | 'INFLUENCER';
+export type SocialPlatform = 'INSTAGRAM' | 'TWITTER' | 'TIKTOK' | 'FACEBOOK' | 'OTHER';
+
+export interface SocialSighting {
+  id: string;
+  type: SocialSightingType;
+  platform: SocialPlatform;
+  url: string;
+  handle?: string | null;
+  followerCount?: number | null;
+  note?: string | null;
+  loggedBy: { id: string; name: string };
+  createdAt: string;
+}
+
 export interface PaginatedResponse<T> {
   items: T[];
   total: number;
