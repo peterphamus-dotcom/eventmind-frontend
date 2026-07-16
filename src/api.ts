@@ -188,6 +188,10 @@ export const api = {
   unsubscribePush: (endpoint: string) =>
     client.post<ApiResponse<{ subscribed: boolean }>>('/notifications/push-unsubscribe', { endpoint }),
 
+  // Feedback
+  submitFeedback: (type: 'FEATURE' | 'ISSUE', message: string) =>
+    client.post<ApiResponse<{ message: string }>>('/feedback', { type, message }),
+
   // Report reminders
   listReminders: () =>
     client.get<ApiResponse<{ items: Reminder[]; total: number }>>('/reminders'),

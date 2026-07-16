@@ -5,6 +5,8 @@ import { TicketsPanel } from '../components/TicketsPanel';
 import { ReportsPanel } from '../components/ReportsPanel';
 import { EventSummary } from '../components/EventSummary';
 import { NotificationBell } from '../components/NotificationBell';
+import { AboutModal } from '../components/AboutModal';
+import { FeedbackModal } from '../components/FeedbackModal';
 
 type Tab = 'tickets' | 'reports';
 
@@ -16,6 +18,8 @@ export function Dashboard() {
     (sessionStorage.getItem('dashboardTab') as Tab) || 'tickets'
   );
   const [menuOpen, setMenuOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const canSeeAdminPanel = user?.role === 'ADMIN' || user?.role === 'CORE_TEAM';
 
   function selectTab(tab: Tab) {
@@ -74,6 +78,24 @@ export function Dashboard() {
                       ⚙️ Admin Panel
                     </button>
                   )}
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setFeedbackOpen(true);
+                    }}
+                    style={styles.menuItem}
+                  >
+                    💬 Feedback
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setAboutOpen(true);
+                    }}
+                    style={styles.menuItem}
+                  >
+                    ℹ️ About
+                  </button>
                 </div>
               </>
             )}
@@ -83,6 +105,9 @@ export function Dashboard() {
           </button>
         </div>
       </div>
+
+      {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
+      {aboutOpen && <AboutModal onClose={() => setAboutOpen(false)} />}
 
       {/* Main Content */}
       <div style={styles.content}>
