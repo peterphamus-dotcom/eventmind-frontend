@@ -21,6 +21,19 @@ function relativeTime(iso: string): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
+const PUSH_SUPPORTED = 'serviceWorker' in navigator && 'PushManager' in window;
+
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; i++) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
 /** Header bell icon: unread badge, dropdown feed, and per-trigger settings. */
 export function NotificationBell() {
   const navigate = useNavigate();
@@ -30,6 +43,8 @@ export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [settings, setSettings] = useState<NotificationSettings | null>(null);
+  const [pushSubscribed, setPushSubscribed] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
 
   useEffect(() => {
     loadUnreadCount();
@@ -99,6 +114,50 @@ export function NotificationBell() {
         setSettings(null);
       }
     }
+    if (PUSH_SUPPORTED) {
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
+        setPushSubscribed(!!sub);
+      } catch {
+        setPushSubscribed(false);
+      }
+    }
+  }
+
+  async function togglePush() {
+    if (!PUSH_SUPPORTED || pushLoading) return;
+    setPushLoading(true);
+    try {
+      const reg = await navigator.serviceWorker.ready;
+
+      if (pushSubscribed) {
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) {
+          await api.unsubscribePush(sub.endpoint);
+          await sub.unsubscribe();
+        }
+        setPushSubscribed(false);
+      } else {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') return;
+
+        const keyRes = await api.getVapidPublicKey();
+        const publicKey = keyRes.data.data?.publicKey;
+        if (!publicKey) return;
+
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey),
+        });
+        await api.subscribePush(sub.toJSON() as PushSubscriptionJSON);
+        setPushSubscribed(true);
+      }
+    } catch (err) {
+      console.error('Failed to toggle push notifications:', err);
+    } finally {
+      setPushLoading(false);
+    }
   }
 
   async function toggleSetting(key: keyof NotificationSettings) {
@@ -159,6 +218,24 @@ export function NotificationBell() {
                   ))
                 ) : (
                   <p style={styles.empty}>Loading settings…</p>
+                )}
+
+                <div style={styles.settingsDivider} />
+
+                {PUSH_SUPPORTED ? (
+                  <label style={styles.settingRow}>
+                    <input
+                      type="checkbox"
+                      checked={pushSubscribed}
+                      disabled={pushLoading}
+                      onChange={togglePush}
+                    />
+                    Push notifications on this device
+                  </label>
+                ) : (
+                  <p style={styles.pushUnsupported}>
+                    Push notifications aren't supported in this browser.
+                  </p>
                 )}
               </div>
             ) : isLoading ? (
@@ -307,5 +384,15 @@ const styles = {
     fontSize: '13px',
     color: 'var(--text)',
     cursor: 'pointer',
+  },
+  settingsDivider: {
+    borderTop: '1px solid var(--border)',
+    margin: '2px 0',
+  },
+  pushUnsupported: {
+    fontSize: '12px',
+    color: 'var(--text-faint)',
+    fontStyle: 'italic' as const,
+    margin: 0,
   },
 };

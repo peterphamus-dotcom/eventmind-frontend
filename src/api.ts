@@ -170,4 +170,10 @@ export const api = {
     client.get<ApiResponse<NotificationSettings>>('/notifications/settings'),
   updateNotificationSettings: (updates: Partial<NotificationSettings>) =>
     client.patch<ApiResponse<NotificationSettings>>('/notifications/settings', updates),
+  getVapidPublicKey: () =>
+    client.get<ApiResponse<{ publicKey: string }>>('/notifications/vapid-public-key'),
+  subscribePush: (subscription: PushSubscriptionJSON) =>
+    client.post<ApiResponse<{ subscribed: boolean }>>('/notifications/push-subscribe', subscription),
+  unsubscribePush: (endpoint: string) =>
+    client.post<ApiResponse<{ subscribed: boolean }>>('/notifications/push-unsubscribe', { endpoint }),
 };
