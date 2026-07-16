@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
-import { api } from '../../api';
+import { api, photoSrc } from '../../api';
+import { useToast } from '../../Toast';
 import type { Location } from '../../types';
 
 export default function AdminLocations() {
+  const showToast = useToast();
   const [locations, setLocations] = useState<Location[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [floorplanBusyId, setFloorplanBusyId] = useState<string | null>(null);
 
   useEffect(() => {
     loadLocations();
@@ -43,6 +46,43 @@ export default function AdminLocations() {
       setError(err.response?.data?.error || 'Failed to create location');
     } finally {
       setIsCreating(false);
+    }
+  }
+
+  async function handleFloorplanSelect(locationId: string, e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    setFloorplanBusyId(locationId);
+    setError(null);
+    try {
+      const response = await api.uploadLocationFloorplan(locationId, file);
+      const floorplanUrl = response.data.data!.floorplanUrl;
+      setLocations((prev) =>
+        prev.map((loc) => (loc.id === locationId ? { ...loc, floorplanUrl } : loc))
+      );
+      showToast('Floorplan uploaded ✓');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to upload floorplan');
+    } finally {
+      setFloorplanBusyId(null);
+    }
+  }
+
+  async function handleRemoveFloorplan(locationId: string) {
+    setFloorplanBusyId(locationId);
+    setError(null);
+    try {
+      await api.removeLocationFloorplan(locationId);
+      setLocations((prev) =>
+        prev.map((loc) => (loc.id === locationId ? { ...loc, floorplanUrl: null } : loc))
+      );
+      showToast('Floorplan removed');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to remove floorplan');
+    } finally {
+      setFloorplanBusyId(null);
     }
   }
 
@@ -82,11 +122,58 @@ export default function AdminLocations() {
         <div style={styles.list}>
           {locations.map((location) => (
             <div key={location.id} style={styles.listItem}>
-              <div>
-                <p style={styles.itemName}>{location.name}</p>
-                <p style={styles.itemId}>ID: {location.id}</p>
+              <div style={styles.listItemTop}>
+                <div>
+                  <p style={styles.itemName}>{location.name}</p>
+                  <p style={styles.itemId}>ID: {location.id}</p>
+                </div>
+                <span style={styles.badge}>Active</span>
               </div>
-              <span style={styles.badge}>Active</span>
+
+              <div style={styles.floorplanRow}>
+                {location.floorplanUrl ? (
+                  <img
+                    src={photoSrc(location.floorplanUrl)}
+                    alt={`${location.name} floorplan`}
+                    style={styles.floorplanThumb}
+                  />
+                ) : (
+                  <div style={styles.floorplanPlaceholder}>No floorplan</div>
+                )}
+                <div style={styles.floorplanActions}>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    id={`floorplan-input-${location.id}`}
+                    style={{ display: 'none' }}
+                    onChange={(e) => handleFloorplanSelect(location.id, e)}
+                    disabled={floorplanBusyId === location.id}
+                  />
+                  <label
+                    htmlFor={`floorplan-input-${location.id}`}
+                    style={{
+                      ...styles.floorplanBtn,
+                      ...(floorplanBusyId === location.id ? styles.floorplanBtnDisabled : {}),
+                    }}
+                  >
+                    {floorplanBusyId === location.id
+                      ? 'Working…'
+                      : location.floorplanUrl
+                        ? '🗺️ Replace floorplan'
+                        : '🗺️ Upload floorplan'}
+                  </label>
+                  {location.floorplanUrl && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveFloorplan(location.id)}
+                      style={styles.floorplanRemoveBtn}
+                      disabled={floorplanBusyId === location.id}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -154,12 +241,75 @@ const styles = {
   },
   listItem: {
     display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: 'column' as const,
+    gap: '12px',
     padding: '16px',
     backgroundColor: 'var(--bg)',
     borderRadius: '4px',
     border: '1px solid var(--border)',
+  },
+  listItemTop: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  floorplanRow: {
+    display: 'flex',
+    gap: '12px',
+    alignItems: 'center',
+    flexWrap: 'wrap' as const,
+  },
+  floorplanThumb: {
+    width: '80px',
+    height: '60px',
+    objectFit: 'cover' as const,
+    borderRadius: '4px',
+    border: '1px solid var(--border-strong)',
+    backgroundColor: 'var(--surface)',
+    flexShrink: 0,
+  },
+  floorplanPlaceholder: {
+    width: '80px',
+    height: '60px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '4px',
+    border: '1px dashed var(--border-strong)',
+    color: 'var(--text-faint)',
+    fontSize: '11px',
+    textAlign: 'center' as const,
+    flexShrink: 0,
+  },
+  floorplanActions: {
+    display: 'flex',
+    gap: '8px',
+    flexWrap: 'wrap' as const,
+  },
+  floorplanBtn: {
+    display: 'inline-block',
+    padding: '8px 14px',
+    backgroundColor: '#007bff',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: '500' as const,
+  },
+  floorplanBtnDisabled: {
+    opacity: 0.6,
+    cursor: 'default',
+  },
+  floorplanRemoveBtn: {
+    padding: '8px 14px',
+    backgroundColor: '#6c757d',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: '500' as const,
   },
   itemName: {
     fontSize: '14px',

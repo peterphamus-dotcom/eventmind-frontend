@@ -19,6 +19,7 @@ export interface Location {
   id: string;
   name: string;
   isActive?: boolean;
+  floorplanUrl?: string | null;
 }
 
 export interface Team {
@@ -87,6 +88,8 @@ export interface Ticket {
   isPinnedGlobal: boolean;
   pinnedBy?: { id: string; name: string };
   pinnedAt?: string;
+  pinX?: number | null;
+  pinY?: number | null;
   tags?: Tag[];
   photos?: Photo[];
   urgencyAudits?: UrgencyAudit[];

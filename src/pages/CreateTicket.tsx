@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../api';
+import { api, photoSrc } from '../api';
 import { useToast } from '../Toast';
 import { PhotoPicker } from '../components/PhotoPicker';
 import { useFormLists } from '../hooks/useFormLists';
@@ -17,6 +17,7 @@ export function CreateTicket() {
   const [urgency, setUrgency] = useState<Urgency>(UrgencyValues.MEDIUM);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [photos, setPhotos] = useState<File[]>([]);
+  const [pin, setPin] = useState<{ x: number; y: number } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,6 +27,20 @@ export function CreateTicket() {
       setLocationId(locations[0].id);
     }
   }, [locations, locationId]);
+
+  // A pin only makes sense on the floorplan it was dropped on
+  useEffect(() => {
+    setPin(null);
+  }, [locationId]);
+
+  const selectedLocation = locations.find((loc) => loc.id === locationId);
+
+  function handleFloorplanClick(e: React.MouseEvent<HTMLDivElement>) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    const y = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
+    setPin({ x, y });
+  }
 
   function toggleTag(tagId: string) {
     setSelectedTags((prev) =>
@@ -65,6 +80,11 @@ export function CreateTicket() {
       formData.append('locationId', locationId);
       formData.append('urgency', urgency);
       formData.append('tagIds', JSON.stringify(selectedTags));
+
+      if (pin) {
+        formData.append('pinX', String(pin.x));
+        formData.append('pinY', String(pin.y));
+      }
 
       photos.forEach((photo) => {
         formData.append('photos', photo);
@@ -188,6 +208,42 @@ export function CreateTicket() {
               ))}
             </div>
           </div>
+
+          {/* Floorplan pin */}
+          {selectedLocation?.floorplanUrl && (
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Pin exact location (optional)</label>
+              <p style={styles.pinHint}>Tap the floorplan to mark exactly where this is.</p>
+              <div style={styles.floorplanWrap} onClick={handleFloorplanClick}>
+                <img
+                  src={photoSrc(selectedLocation.floorplanUrl)}
+                  alt={`${selectedLocation.name} floorplan`}
+                  style={styles.floorplanImg}
+                />
+                {pin && (
+                  <div
+                    style={{
+                      ...styles.pinMarker,
+                      left: `${pin.x * 100}%`,
+                      top: `${pin.y * 100}%`,
+                    }}
+                  >
+                    📍
+                  </div>
+                )}
+              </div>
+              {pin && (
+                <button
+                  type="button"
+                  onClick={() => setPin(null)}
+                  style={styles.clearPinBtn}
+                  disabled={isLoading}
+                >
+                  Clear pin
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Photos */}
           <div style={styles.formGroup}>
@@ -358,6 +414,44 @@ const styles = {
     borderRadius: '4px',
     fontSize: '14px',
     marginBottom: '16px',
+  },
+  pinHint: {
+    fontSize: '13px',
+    color: 'var(--text-faint)',
+    margin: '0 0 4px 0',
+  },
+  floorplanWrap: {
+    position: 'relative' as const,
+    display: 'inline-block',
+    maxWidth: '100%',
+    cursor: 'crosshair',
+    border: '1px solid var(--border-strong)',
+    borderRadius: '4px',
+    overflow: 'hidden',
+  },
+  floorplanImg: {
+    display: 'block',
+    maxWidth: '100%',
+    width: '100%',
+    userSelect: 'none' as const,
+  },
+  pinMarker: {
+    position: 'absolute' as const,
+    transform: 'translate(-50%, -100%)',
+    fontSize: '28px',
+    pointerEvents: 'none' as const,
+    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))',
+  },
+  clearPinBtn: {
+    marginTop: '8px',
+    padding: '6px 12px',
+    backgroundColor: 'transparent',
+    border: '1px solid var(--border-strong)',
+    borderRadius: '4px',
+    color: 'var(--text-muted)',
+    cursor: 'pointer',
+    fontSize: '13px',
+    alignSelf: 'flex-start',
   },
   loadWarning: {
     fontSize: '13px',

@@ -60,6 +60,17 @@ export const api = {
     client.get<ApiResponse<Location>>(`/locations/${id}`),
   createLocation: (name: string) =>
     client.post<ApiResponse<Location>>('/locations', { name }),
+  uploadLocationFloorplan: (locationId: string, file: File) => {
+    const fd = new FormData();
+    fd.append('floorplan', file);
+    return client.post<ApiResponse<{ floorplanUrl: string }>>(
+      `/locations/${locationId}/floorplan`,
+      fd,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+  },
+  removeLocationFloorplan: (locationId: string) =>
+    client.delete<ApiResponse<{ floorplanUrl: null }>>(`/locations/${locationId}/floorplan`),
 
   // Tags
   listTags: (page = 1, pageSize = 50) =>

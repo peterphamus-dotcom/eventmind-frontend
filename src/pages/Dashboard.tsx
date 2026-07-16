@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { TicketsPanel } from '../components/TicketsPanel';
 import { ReportsPanel } from '../components/ReportsPanel';
+import { FloorplanPanel } from '../components/FloorplanPanel';
 import { EventSummary } from '../components/EventSummary';
 import { NotificationBell } from '../components/NotificationBell';
 import { AboutModal } from '../components/AboutModal';
 import { FeedbackModal } from '../components/FeedbackModal';
 
-type Tab = 'tickets' | 'reports';
+type Tab = 'tickets' | 'reports' | 'floorplan';
 
 export function Dashboard() {
   const { user, logout } = useAuth();
@@ -134,10 +135,21 @@ export function Dashboard() {
           >
             📋 Reports
           </button>
+          <button
+            onClick={() => selectTab('floorplan')}
+            style={{
+              ...styles.tab,
+              ...(activeTab === 'floorplan' ? styles.tabActive : {}),
+            }}
+          >
+            🗺️ Floorplan
+          </button>
         </div>
 
         {/* Active panel */}
-        {activeTab === 'tickets' ? <TicketsPanel /> : <ReportsPanel />}
+        {activeTab === 'tickets' && <TicketsPanel />}
+        {activeTab === 'reports' && <ReportsPanel />}
+        {activeTab === 'floorplan' && <FloorplanPanel />}
       </div>
     </div>
   );
