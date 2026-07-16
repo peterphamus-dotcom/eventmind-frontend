@@ -81,7 +81,9 @@ export function ReportsPanel() {
       {/* Controls */}
       <div style={styles.controls}>
         <div style={styles.control}>
-          <label style={styles.controlLabel}>Locations</label>
+          <span style={styles.controlLabel} role="img" aria-label="Locations" title="Locations">
+            📍
+          </span>
           <LocationFilter
             locations={locations}
             selectedIds={selectedLocationIds}
@@ -89,7 +91,9 @@ export function ReportsPanel() {
           />
         </div>
         <div style={styles.control}>
-          <label style={styles.controlLabel}>Sort by</label>
+          <span style={styles.controlLabel} role="img" aria-label="Sort by" title="Sort by">
+            ↕️
+          </span>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortOption)}
@@ -182,19 +186,18 @@ const styles = {
     alignItems: 'center',
     gap: '12px',
     marginBottom: '20px',
+    flexWrap: 'wrap' as const,
   },
   control: {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    flex: '1 1 0',
-    minWidth: 0,
+    flex: '1 1 180px',
+    minWidth: '160px',
   },
   controlLabel: {
-    fontSize: '14px',
-    color: 'var(--text-muted)',
-    fontWeight: '600' as const,
-    whiteSpace: 'nowrap' as const,
+    fontSize: '16px',
+    flexShrink: 0,
   },
   sortSelect: {
     flex: 1,
