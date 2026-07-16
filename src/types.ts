@@ -65,6 +65,7 @@ export interface Report {
   photos?: Photo[];
   comments?: Comment[];
   reactions?: ReactionSummary[];
+  isSubscribed?: boolean;
   submittedAt: string;
 }
 
@@ -88,6 +89,7 @@ export interface Ticket {
   comments?: Comment[];
   reactions?: ReactionSummary[];
   userHasPersonalPin?: boolean;
+  isSubscribed?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -119,6 +121,25 @@ export interface Comment {
   author: { id: string; name: string };
   reactions?: ReactionSummary[];
   createdAt: string;
+}
+
+export type NotificationType = 'COMMENT' | 'STATUS_CHANGE' | 'URGENCY_CHANGE' | 'REACTION';
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  message: string;
+  ticketId?: string | null;
+  reportId?: string | null;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface NotificationSettings {
+  notifyOnComment: boolean;
+  notifyOnStatusChange: boolean;
+  notifyOnUrgencyChange: boolean;
+  notifyOnReaction: boolean;
 }
 
 export interface PaginatedResponse<T> {

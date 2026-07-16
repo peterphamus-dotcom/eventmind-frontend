@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings } from './types';
 
 type TeamPreview<T> = PaginatedResponse<T> & { team: { id: string; name: string; tags: Tag[] } };
 
@@ -80,6 +80,8 @@ export const api = {
       `/reports/${reportId}/comments/${commentId}/reactions`,
       { emoji }
     ),
+  subscribeReport: (id: string) =>
+    client.post<ApiResponse<{ reportId: string; isSubscribed: boolean }>>(`/reports/${id}/subscribe`),
 
   // Tickets
   listTickets: (page = 1, pageSize = 20, filters?: any) =>
@@ -96,6 +98,8 @@ export const api = {
     client.post<ApiResponse<{ ticketId: string; isPinnedGlobal: boolean }>>(`/tickets/${id}/pin`),
   pinTicketPersonal: (id: string) =>
     client.post<ApiResponse<{ ticketId: string; isPinned: boolean }>>(`/tickets/${id}/personal-pin`),
+  subscribeTicket: (id: string) =>
+    client.post<ApiResponse<{ ticketId: string; isSubscribed: boolean }>>(`/tickets/${id}/subscribe`),
   addTicketComment: (id: string, text: string) =>
     client.post<ApiResponse<Comment>>(`/tickets/${id}/comments`, { text }),
   toggleTicketReaction: (id: string, emoji: string) =>
@@ -152,4 +156,18 @@ export const api = {
     client.get<ApiResponse<TeamPreview<Ticket>>>('/admin/preview/tickets', { params: { teamId, pageSize: 100 } }),
   previewReportsAsTeam: (teamId: string) =>
     client.get<ApiResponse<TeamPreview<Report>>>('/admin/preview/reports', { params: { teamId, pageSize: 100 } }),
+
+  // Notifications
+  listNotifications: (page = 1, pageSize = 20) =>
+    client.get<ApiResponse<PaginatedResponse<Notification>>>('/notifications', { params: { page, pageSize } }),
+  getUnreadNotificationCount: () =>
+    client.get<ApiResponse<{ count: number }>>('/notifications/unread-count'),
+  markNotificationRead: (id: string) =>
+    client.post<ApiResponse<Notification>>(`/notifications/${id}/read`),
+  markAllNotificationsRead: () =>
+    client.post<ApiResponse<{ updated: number }>>('/notifications/read-all'),
+  getNotificationSettings: () =>
+    client.get<ApiResponse<NotificationSettings>>('/notifications/settings'),
+  updateNotificationSettings: (updates: Partial<NotificationSettings>) =>
+    client.patch<ApiResponse<NotificationSettings>>('/notifications/settings', updates),
 };

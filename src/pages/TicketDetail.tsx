@@ -102,6 +102,22 @@ export function TicketDetail() {
     }
   }
 
+  async function handleSubscribeToggle() {
+    if (!ticket || isUpdating) return;
+    const nowSubscribed = !ticket.isSubscribed;
+    setIsUpdating(true);
+    setUpdateError(null);
+    try {
+      await api.subscribeTicket(ticket.id);
+      setTicket({ ...ticket, isSubscribed: nowSubscribed });
+      showToast(nowSubscribed ? 'Subscribed to updates' : 'Unsubscribed');
+    } catch (err: any) {
+      setUpdateError(err.response?.data?.error || 'Failed to update subscription');
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
   const urgencyColor = (urgency: Urgency) => {
     switch (urgency) {
       case 'HIGH':
@@ -239,6 +255,17 @@ export function TicketDetail() {
             </div>
 
             <div style={styles.pinControls}>
+              <button
+                onClick={handleSubscribeToggle}
+                style={{
+                  ...styles.pinBtn,
+                  ...(ticket.isSubscribed ? styles.pinBtnActive : {}),
+                }}
+                disabled={isUpdating}
+                title="Get notified about activity on this ticket"
+              >
+                {ticket.isSubscribed ? '🔔 Subscribed' : '🔕 Subscribe'}
+              </button>
               <button
                 onClick={handlePersonalPin}
                 style={{

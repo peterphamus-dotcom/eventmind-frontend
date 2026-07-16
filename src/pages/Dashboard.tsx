@@ -4,6 +4,7 @@ import { useAuth } from '../AuthContext';
 import { TicketsPanel } from '../components/TicketsPanel';
 import { ReportsPanel } from '../components/ReportsPanel';
 import { EventSummary } from '../components/EventSummary';
+import { NotificationBell } from '../components/NotificationBell';
 
 type Tab = 'tickets' | 'reports';
 
@@ -40,6 +41,7 @@ export function Dashboard() {
           <span>
             {user?.name} ({user?.role})
           </span>
+          <NotificationBell />
           {canSeeAdminPanel && (
             <div style={styles.menuAnchor}>
               <button

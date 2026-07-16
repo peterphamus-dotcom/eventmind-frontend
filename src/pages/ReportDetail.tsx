@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api, photoSrc } from '../api';
+import { useToast } from '../Toast';
 import { CommentsSection } from '../components/CommentsSection';
 import { ReactionBar } from '../components/ReactionBar';
 import type { Report } from '../types';
 
 export function ReportDetail() {
   const navigate = useNavigate();
+  const showToast = useToast();
   const { reportId } = useParams<{ reportId: string }>();
   const [report, setReport] = useState<Report | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     loadReport();
@@ -26,6 +29,21 @@ export function ReportDetail() {
       setError(err.response?.data?.error || 'Failed to load report');
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleSubscribeToggle() {
+    if (!report || isUpdating) return;
+    const nowSubscribed = !report.isSubscribed;
+    setIsUpdating(true);
+    try {
+      await api.subscribeReport(report.id);
+      setReport({ ...report, isSubscribed: nowSubscribed });
+      showToast(nowSubscribed ? 'Subscribed to updates' : 'Unsubscribed');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to update subscription');
+    } finally {
+      setIsUpdating(false);
     }
   }
 
@@ -50,7 +68,7 @@ export function ReportDetail() {
           <div style={styles.section}>
             <h2 style={styles.sectionTitle}>Report</h2>
             <p style={styles.text}>{report.text}</p>
-            <div style={{ marginTop: '12px' }}>
+            <div style={styles.reactionRow}>
               <ReactionBar
                 reactions={report.reactions || []}
                 onToggle={async (emoji) => {
@@ -58,6 +76,17 @@ export function ReportDetail() {
                   return res.data.data!.reactions;
                 }}
               />
+              <button
+                onClick={handleSubscribeToggle}
+                style={{
+                  ...styles.subscribeBtn,
+                  ...(report.isSubscribed ? styles.subscribeBtnActive : {}),
+                }}
+                disabled={isUpdating}
+                title="Get notified about activity on this report"
+              >
+                {report.isSubscribed ? '🔔 Subscribed' : '🔕 Subscribe'}
+              </button>
             </div>
           </div>
 
@@ -213,6 +242,28 @@ const styles = {
     color: 'var(--text-muted)',
     margin: 0,
     whiteSpace: 'pre-wrap' as const,
+  },
+  reactionRow: {
+    marginTop: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    flexWrap: 'wrap' as const,
+  },
+  subscribeBtn: {
+    padding: '8px 12px',
+    fontSize: '13px',
+    backgroundColor: 'var(--bg)',
+    border: '1px solid var(--border-strong)',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontWeight: '500' as const,
+    color: 'var(--text)',
+  },
+  subscribeBtnActive: {
+    backgroundColor: '#fff3cd',
+    borderColor: '#ffc107',
+    color: '#856404',
   },
   details: {
     display: 'flex',
