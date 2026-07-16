@@ -41,6 +41,17 @@ export const api = {
     client.get<ApiResponse<PaginatedResponse<User>>>('/users', { params: { page, pageSize, ...filters } }),
   updateUser: (id: string, role?: string, teamIds?: string[]) =>
     client.patch<ApiResponse<User>>(`/users/${id}`, { role, teamIds }),
+  updateMyProfile: (updates: { name?: string; phone?: string; bio?: string }) =>
+    client.patch<ApiResponse<User>>('/users/me', updates),
+  uploadMyAvatar: (file: File) => {
+    const fd = new FormData();
+    fd.append('avatar', file);
+    return client.post<ApiResponse<{ avatarUrl: string }>>('/users/me/avatar', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  removeMyAvatar: () =>
+    client.delete<ApiResponse<{ avatarUrl: null }>>('/users/me/avatar'),
 
   // Locations
   listLocations: () =>

@@ -12,6 +12,7 @@ import { ReportDetail } from './pages/ReportDetail';
 import { CreateTicket } from './pages/CreateTicket';
 import { TicketDetail } from './pages/TicketDetail';
 import { AdminPanel } from './pages/AdminPanel';
+import { Profile } from './pages/Profile';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -78,6 +79,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <AdminPanel />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
           </ProtectedRoute>
         }
       />

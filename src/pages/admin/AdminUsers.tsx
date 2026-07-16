@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../../api';
+import { api, photoSrc } from '../../api';
 import type { User } from '../../types';
 
 export default function AdminUsers() {
@@ -75,6 +75,8 @@ export default function AdminUsers() {
               <tr style={styles.headerRow}>
                 <th style={styles.headerCell}>Name</th>
                 <th style={styles.headerCell}>Email</th>
+                <th style={styles.headerCell}>Phone</th>
+                <th style={styles.headerCell}>Bio</th>
                 <th style={styles.headerCell}>Current Role</th>
                 <th style={styles.headerCell}>Actions</th>
               </tr>
@@ -82,8 +84,23 @@ export default function AdminUsers() {
             <tbody>
               {users.map((user) => (
                 <tr key={user.id} style={styles.row}>
-                  <td style={styles.cell}>{user.name}</td>
+                  <td style={styles.cell}>
+                    <div style={styles.nameCell}>
+                      {user.avatarUrl ? (
+                        <img src={photoSrc(user.avatarUrl)} alt="" style={styles.avatar} />
+                      ) : (
+                        <div style={styles.avatarPlaceholder}>
+                          {user.name.slice(0, 1).toUpperCase()}
+                        </div>
+                      )}
+                      {user.name}
+                    </div>
+                  </td>
                   <td style={styles.cell}>{user.email}</td>
+                  <td style={styles.cell}>{user.phone || '—'}</td>
+                  <td style={styles.cell} title={user.bio || undefined}>
+                    <span style={styles.bioText}>{user.bio || '—'}</span>
+                  </td>
                   <td style={styles.cell}>
                     <span
                       style={{
@@ -216,6 +233,39 @@ const styles = {
     padding: '12px',
     fontSize: '14px',
     color: 'var(--text)',
+  },
+  nameCell: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+  },
+  avatar: {
+    width: '28px',
+    height: '28px',
+    borderRadius: '50%',
+    objectFit: 'cover' as const,
+    flexShrink: 0,
+  },
+  avatarPlaceholder: {
+    width: '28px',
+    height: '28px',
+    borderRadius: '50%',
+    backgroundColor: 'var(--tag-bg)',
+    color: 'var(--text-muted)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '12px',
+    fontWeight: '700' as const,
+    flexShrink: 0,
+  },
+  bioText: {
+    display: 'inline-block',
+    maxWidth: '180px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap' as const,
+    verticalAlign: 'bottom',
   },
   badge: {
     display: 'inline-block',

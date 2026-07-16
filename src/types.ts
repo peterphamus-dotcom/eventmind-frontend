@@ -8,6 +8,9 @@ export interface User {
   homeLocationId: string;
   homeLocation?: Location;
   teams?: Team[];
+  phone?: string | null;
+  bio?: string | null;
+  avatarUrl?: string | null;
   createdAt: string;
 }
 

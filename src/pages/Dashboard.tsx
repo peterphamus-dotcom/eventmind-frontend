@@ -42,19 +42,28 @@ export function Dashboard() {
             {user?.name} ({user?.role})
           </span>
           <NotificationBell />
-          {canSeeAdminPanel && (
-            <div style={styles.menuAnchor}>
-              <button
-                onClick={() => setMenuOpen(!menuOpen)}
-                style={styles.hamburgerBtn}
-                aria-label="Menu"
-              >
-                ☰
-              </button>
-              {menuOpen && (
-                <>
-                  <div style={styles.menuBackdrop} onClick={() => setMenuOpen(false)} />
-                  <div style={styles.menuPopover}>
+          <div style={styles.menuAnchor}>
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              style={styles.hamburgerBtn}
+              aria-label="Menu"
+            >
+              ☰
+            </button>
+            {menuOpen && (
+              <>
+                <div style={styles.menuBackdrop} onClick={() => setMenuOpen(false)} />
+                <div style={styles.menuPopover}>
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      navigate('/profile');
+                    }}
+                    style={styles.menuItem}
+                  >
+                    👤 My Profile
+                  </button>
+                  {canSeeAdminPanel && (
                     <button
                       onClick={() => {
                         setMenuOpen(false);
@@ -64,11 +73,11 @@ export function Dashboard() {
                     >
                       ⚙️ Admin Panel
                     </button>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
+                  )}
+                </div>
+              </>
+            )}
+          </div>
           <button onClick={handleLogout} style={styles.logoutBtn}>
             Logout
           </button>
