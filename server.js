@@ -1,7 +1,7 @@
 import { createServer } from 'http';
 import { request as httpsRequest } from 'https';
 import { readFileSync, statSync } from 'fs';
-import { join } from 'path';
+import { join, sep } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -72,6 +72,16 @@ function proxyToApi(req, res) {
   });
 }
 
+// Vite content-hashes everything under /assets/, so those files can be
+// cached forever; index.html (and anything else, e.g. sw.js) must always
+// be revalidated or a stale tab can end up running old JS against a
+// freshly-deployed API and crash to a blank page.
+function cacheControlFor(filePath) {
+  return filePath.includes(`${sep}assets${sep}`)
+    ? 'public, max-age=31536000, immutable'
+    : 'no-cache';
+}
+
 const mimeTypes = {
   '.html': 'text/html',
   '.js': 'application/javascript',
@@ -113,13 +123,16 @@ const server = createServer((req, res) => {
 
     const content = readFileSync(filePath);
     const ext = filePath.substring(filePath.lastIndexOf('.'));
-    res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'application/octet-stream' });
+    res.writeHead(200, {
+      'Content-Type': mimeTypes[ext] || 'application/octet-stream',
+      'Cache-Control': cacheControlFor(filePath),
+    });
     res.end(content);
   } catch {
     // Route to index.html for SPA (client-side routing)
     try {
       const content = readFileSync(join(distDir, 'index.html'));
-      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'no-cache' });
       res.end(content);
     } catch {
       res.writeHead(404);
