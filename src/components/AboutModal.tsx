@@ -4,6 +4,11 @@ interface AboutModalProps {
   onClose: () => void;
 }
 
+const buildDateLabel = new Date(__BUILD_DATE__).toLocaleString(undefined, {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+});
+
 export function AboutModal({ onClose }: AboutModalProps) {
   return (
     <Modal title="About EventMind" onClose={onClose}>
@@ -15,6 +20,21 @@ export function AboutModal({ onClose }: AboutModalProps) {
       <div style={styles.row}>
         <span style={styles.label}>Build</span>
         <span style={styles.value}>{__APP_COMMIT__}</span>
+      </div>
+      <div style={styles.row}>
+        <span style={styles.label}>Build Date</span>
+        <span style={styles.value}>{buildDateLabel}</span>
+      </div>
+      <div style={{ ...styles.row, borderBottom: 'none' }}>
+        <span style={styles.label}>Developer</span>
+        <a
+          href="https://www.linkedin.com/in/peterhpham"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={styles.link}
+        >
+          Peter Pham
+        </a>
       </div>
     </Modal>
   );
@@ -29,6 +49,7 @@ const styles = {
   row: {
     display: 'flex',
     justifyContent: 'space-between',
+    alignItems: 'center',
     padding: '10px 0',
     borderBottom: '1px solid var(--border)',
     fontSize: '14px',
@@ -40,5 +61,10 @@ const styles = {
   value: {
     color: 'var(--text)',
     fontFamily: 'monospace',
+  },
+  link: {
+    color: '#007bff',
+    textDecoration: 'none',
+    fontWeight: '600' as const,
   },
 };

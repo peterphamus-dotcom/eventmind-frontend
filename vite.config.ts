@@ -19,5 +19,6 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
     __APP_COMMIT__: JSON.stringify(getCommitSha()),
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
   },
 })
