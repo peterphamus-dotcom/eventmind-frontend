@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType } from './types';
 
 type TeamPreview<T> = PaginatedResponse<T> & { team: { id: string; name: string; tags: Tag[] } };
 
@@ -187,4 +187,19 @@ export const api = {
     client.post<ApiResponse<{ subscribed: boolean }>>('/notifications/push-subscribe', subscription),
   unsubscribePush: (endpoint: string) =>
     client.post<ApiResponse<{ subscribed: boolean }>>('/notifications/push-unsubscribe', { endpoint }),
+
+  // Report reminders
+  listReminders: () =>
+    client.get<ApiResponse<{ items: Reminder[]; total: number }>>('/reminders'),
+  createReminder: (data: {
+    targetType: ReminderTargetType;
+    userId?: string;
+    teamId?: string;
+    locationId?: string;
+    intervalMinutes: number;
+  }) => client.post<ApiResponse<Reminder>>('/reminders', data),
+  updateReminder: (id: string, updates: { intervalMinutes?: number; isActive?: boolean }) =>
+    client.patch<ApiResponse<Reminder>>(`/reminders/${id}`, updates),
+  deleteReminder: (id: string) =>
+    client.delete<ApiResponse<{ message: string }>>(`/reminders/${id}`),
 };

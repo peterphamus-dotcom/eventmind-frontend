@@ -11,6 +11,7 @@ export interface User {
   phone?: string | null;
   bio?: string | null;
   avatarUrl?: string | null;
+  lastReportAt?: string | null;
   createdAt: string;
 }
 
@@ -126,7 +127,7 @@ export interface Comment {
   createdAt: string;
 }
 
-export type NotificationType = 'COMMENT' | 'STATUS_CHANGE' | 'URGENCY_CHANGE' | 'REACTION';
+export type NotificationType = 'COMMENT' | 'STATUS_CHANGE' | 'URGENCY_CHANGE' | 'REACTION' | 'REMINDER_OVERDUE';
 
 export interface Notification {
   id: string;
@@ -143,6 +144,25 @@ export interface NotificationSettings {
   notifyOnStatusChange: boolean;
   notifyOnUrgencyChange: boolean;
   notifyOnReaction: boolean;
+  notifyOnReminderOverdue: boolean;
+}
+
+export type ReminderTargetType = 'USER' | 'TEAM' | 'LOCATION';
+
+export interface Reminder {
+  id: string;
+  targetType: ReminderTargetType;
+  userId?: string | null;
+  teamId?: string | null;
+  locationId?: string | null;
+  targetName: string;
+  intervalMinutes: number;
+  isActive: boolean;
+  lastFulfilledAt: string;
+  dueAt: string;
+  isOverdue: boolean;
+  createdBy: { id: string; name: string };
+  createdAt: string;
 }
 
 export interface PaginatedResponse<T> {

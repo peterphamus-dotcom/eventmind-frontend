@@ -8,8 +8,9 @@ import AdminTeams from './admin/AdminTeams';
 import AdminBanner from './admin/AdminBanner';
 import AdminExport from './admin/AdminExport';
 import AdminViewAs from './admin/AdminViewAs';
+import AdminReminders from './admin/AdminReminders';
 
-type AdminTab = 'users' | 'teams' | 'locations' | 'tags' | 'banner' | 'export' | 'viewAs';
+type AdminTab = 'users' | 'teams' | 'locations' | 'tags' | 'banner' | 'export' | 'viewAs' | 'reminders';
 
 export function AdminPanel() {
   const navigate = useNavigate();
@@ -108,6 +109,15 @@ export function AdminPanel() {
         >
           👁️ View As
         </button>
+        <button
+          onClick={() => setActiveTab('reminders')}
+          style={{
+            ...styles.tab,
+            ...(activeTab === 'reminders' ? styles.tabActive : {}),
+          }}
+        >
+          ⏰ Reminders
+        </button>
         {user?.role === 'ADMIN' && (
           <button
             onClick={() => setActiveTab('banner')}
@@ -129,6 +139,7 @@ export function AdminPanel() {
         {activeTab === 'tags' && <AdminTags />}
         {activeTab === 'export' && <AdminExport />}
         {activeTab === 'viewAs' && <AdminViewAs />}
+        {activeTab === 'reminders' && <AdminReminders />}
         {activeTab === 'banner' && <AdminBanner />}
       </div>
 

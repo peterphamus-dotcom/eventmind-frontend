@@ -2,6 +2,15 @@ import { useState, useEffect } from 'react';
 import { api, photoSrc } from '../../api';
 import type { User } from '../../types';
 
+function relativeTime(iso: string): string {
+  const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.round(hours / 24)}d ago`;
+}
+
 export default function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -77,6 +86,7 @@ export default function AdminUsers() {
                 <th style={styles.headerCell}>Email</th>
                 <th style={styles.headerCell}>Phone</th>
                 <th style={styles.headerCell}>Bio</th>
+                <th style={styles.headerCell}>Last Report</th>
                 <th style={styles.headerCell}>Current Role</th>
                 <th style={styles.headerCell}>Actions</th>
               </tr>
@@ -100,6 +110,9 @@ export default function AdminUsers() {
                   <td style={styles.cell}>{user.phone || '—'}</td>
                   <td style={styles.cell} title={user.bio || undefined}>
                     <span style={styles.bioText}>{user.bio || '—'}</span>
+                  </td>
+                  <td style={styles.cell} title={user.lastReportAt ? new Date(user.lastReportAt).toLocaleString() : undefined}>
+                    {user.lastReportAt ? relativeTime(user.lastReportAt) : '—'}
                   </td>
                   <td style={styles.cell}>
                     <span

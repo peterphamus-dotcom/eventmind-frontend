@@ -10,6 +10,7 @@ const SETTINGS_META: { key: keyof NotificationSettings; label: string }[] = [
   { key: 'notifyOnStatusChange', label: 'Status changes' },
   { key: 'notifyOnUrgencyChange', label: 'Urgency changes' },
   { key: 'notifyOnReaction', label: 'Reactions to my comments' },
+  { key: 'notifyOnReminderOverdue', label: 'Overdue report reminders' },
 ];
 
 function relativeTime(iso: string): string {
