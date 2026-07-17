@@ -1,5 +1,7 @@
 // Type definitions matching backend API
 
+export type ViewDensity = 'COMPACT' | 'FULL';
+
 export interface User {
   id: string;
   email: string;
@@ -13,6 +15,7 @@ export interface User {
   avatarUrl?: string | null;
   lastReportAt?: string | null;
   reportCount?: number;
+  viewDensity?: ViewDensity;
   createdAt: string;
 }
 
@@ -208,6 +211,23 @@ export interface UserReport {
   resolvedBy?: { id: string; name: string } | null;
   resolvedAt?: string | null;
   createdAt: string;
+}
+
+export type LibraryDocumentKind = 'FILE' | 'TEXT';
+
+export interface LibraryDocument {
+  id: string;
+  title: string;
+  kind: LibraryDocumentKind;
+  content?: string | null;
+  fileUrl?: string | null;
+  fileName?: string | null;
+  fileSize?: number | null;
+  mimeType?: string | null;
+  tags: Tag[];
+  createdBy: { id: string; name: string };
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface PaginatedResponse<T> {

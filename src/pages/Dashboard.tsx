@@ -4,12 +4,14 @@ import { useAuth } from '../AuthContext';
 import { TicketsPanel } from '../components/TicketsPanel';
 import { ReportsPanel } from '../components/ReportsPanel';
 import { FloorplanPanel } from '../components/FloorplanPanel';
+import { LibraryPanel } from '../components/LibraryPanel';
 import { EventSummary } from '../components/EventSummary';
 import { NotificationBell } from '../components/NotificationBell';
 import { AboutModal } from '../components/AboutModal';
 import { FeedbackModal } from '../components/FeedbackModal';
+import { DisplaySettingsModal } from '../components/DisplaySettingsModal';
 
-type Tab = 'tickets' | 'reports' | 'floorplan';
+type Tab = 'tickets' | 'reports' | 'floorplan' | 'library';
 
 export function Dashboard() {
   const { user, logout } = useAuth();
@@ -21,6 +23,7 @@ export function Dashboard() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [displaySettingsOpen, setDisplaySettingsOpen] = useState(false);
   const canSeeAdminPanel = user?.role === 'ADMIN' || user?.role === 'CORE_TEAM';
 
   function selectTab(tab: Tab) {
@@ -82,6 +85,15 @@ export function Dashboard() {
                   <button
                     onClick={() => {
                       setMenuOpen(false);
+                      setDisplaySettingsOpen(true);
+                    }}
+                    style={styles.menuItem}
+                  >
+                    🖥️ Display Settings
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
                       setFeedbackOpen(true);
                     }}
                     style={styles.menuItem}
@@ -109,6 +121,7 @@ export function Dashboard() {
 
       {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
       {aboutOpen && <AboutModal onClose={() => setAboutOpen(false)} />}
+      {displaySettingsOpen && <DisplaySettingsModal onClose={() => setDisplaySettingsOpen(false)} />}
 
       {/* Main Content */}
       <div style={styles.content}>
@@ -144,12 +157,22 @@ export function Dashboard() {
           >
             🗺️ Floorplan
           </button>
+          <button
+            onClick={() => selectTab('library')}
+            style={{
+              ...styles.tab,
+              ...(activeTab === 'library' ? styles.tabActive : {}),
+            }}
+          >
+            📚 Library
+          </button>
         </div>
 
         {/* Active panel */}
         {activeTab === 'tickets' && <TicketsPanel />}
         {activeTab === 'reports' && <ReportsPanel />}
         {activeTab === 'floorplan' && <FloorplanPanel />}
+        {activeTab === 'library' && <LibraryPanel />}
       </div>
     </div>
   );

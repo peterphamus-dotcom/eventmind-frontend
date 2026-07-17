@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity } from './types';
 
 type TeamPreview<T> = PaginatedResponse<T> & { team: { id: string; name: string; tags: Tag[] } };
 
@@ -42,7 +42,7 @@ export const api = {
     client.get<ApiResponse<PaginatedResponse<User>>>('/users', { params: { page, pageSize, ...filters } }),
   updateUser: (id: string, role?: string, teamIds?: string[]) =>
     client.patch<ApiResponse<User>>(`/users/${id}`, { role, teamIds }),
-  updateMyProfile: (updates: { name?: string; phone?: string; bio?: string }) =>
+  updateMyProfile: (updates: { name?: string; phone?: string; bio?: string; viewDensity?: ViewDensity }) =>
     client.patch<ApiResponse<User>>('/users/me', updates),
   uploadMyAvatar: (file: File) => {
     const fd = new FormData();
@@ -242,4 +242,25 @@ export const api = {
     client.post<ApiResponse<UserReport>>('/user-reports', data),
   updateUserReportStatus: (id: string, status: UserReportStatus) =>
     client.patch<ApiResponse<UserReport>>(`/user-reports/${id}`, { status }),
+
+  // Document library (single source of truth docs)
+  listLibraryDocuments: (filters?: { search?: string; tagIds?: string[] }) =>
+    client.get<ApiResponse<{ items: LibraryDocument[]; total: number }>>('/library', {
+      params: {
+        search: filters?.search || undefined,
+        tagIds: filters?.tagIds && filters.tagIds.length > 0 ? filters.tagIds.join(',') : undefined,
+      },
+    }),
+  createLibraryTextDocument: (data: { title: string; content: string; tagIds?: string[] }) =>
+    client.post<ApiResponse<LibraryDocument>>('/library', data),
+  uploadLibraryDocument: (formData: FormData) =>
+    client.post<ApiResponse<LibraryDocument>>('/library/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  updateLibraryDocument: (
+    id: string,
+    updates: { title?: string; content?: string; tagIds?: string[] }
+  ) => client.patch<ApiResponse<LibraryDocument>>(`/library/${id}`, updates),
+  deleteLibraryDocument: (id: string) =>
+    client.delete<ApiResponse<{ message: string }>>(`/library/${id}`),
 };

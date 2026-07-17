@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, photoSrc } from '../api';
+import { useAuth } from '../AuthContext';
 import { LocationFilter } from './LocationFilter';
 import { CollapsibleSection } from './CollapsibleSection';
 import { SearchBar } from './SearchBar';
 import type { Ticket, Location } from '../types';
+
+const DEFAULT_VISIBLE_COUNT = 10;
 
 type SortOption = 'urgency' | 'recent';
 type StatusFilter = 'ALL' | 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'ARCHIVED';
@@ -28,6 +31,8 @@ type TicketStats = Record<'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'ARCHIVED', numb
  *  without a page header — embeddable in the dashboard or a standalone page. */
 export function TicketsPanel() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isCompact = user?.viewDensity === 'COMPACT';
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [total, setTotal] = useState(0);
   const [stats, setStats] = useState<TicketStats | null>(null);
@@ -39,6 +44,7 @@ export function TicketsPanel() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [showAllRest, setShowAllRest] = useState(false);
 
   // Debounce the search box so we don't fire a request on every keystroke
   useEffect(() => {
@@ -49,6 +55,7 @@ export function TicketsPanel() {
   const locationKey = selectedLocationIds.join(',');
   useEffect(() => {
     loadTickets();
+    setShowAllRest(false);
   }, [sortBy, statusFilter, locationKey, debouncedSearch]);
 
   useEffect(() => {
@@ -99,11 +106,12 @@ export function TicketsPanel() {
       onClick={() => navigate(`/tickets/${ticket.id}`)}
       style={{
         ...styles.listItem,
+        ...(isCompact ? styles.listItemCompact : {}),
         borderLeftColor: urgencyColor(ticket.urgency),
         opacity: ticket.status === 'RESOLVED' || ticket.status === 'ARCHIVED' ? 0.65 : 1,
       }}
     >
-      {ticket.photos && ticket.photos.length > 0 && (
+      {!isCompact && ticket.photos && ticket.photos.length > 0 && (
         <img
           src={photoSrc(ticket.photos[0].url)}
           alt=""
@@ -116,8 +124,10 @@ export function TicketsPanel() {
         />
       )}
       <div style={styles.itemBody}>
-        <h3 style={styles.itemTitle}>{ticket.title}</h3>
-        <div style={styles.itemMeta}>
+        <h3 style={{ ...styles.itemTitle, ...(isCompact ? styles.itemTitleCompact : {}) }}>
+          {ticket.title}
+        </h3>
+        <div style={{ ...styles.itemMeta, ...(isCompact ? styles.itemMetaCompact : {}) }}>
           <span style={{ ...styles.badge, backgroundColor: statusColor(ticket.status) }}>
             {ticket.status.replace(/_/g, ' ')}
           </span>
@@ -142,6 +152,8 @@ export function TicketsPanel() {
   const saved = tickets.filter((t) => t.userHasPersonalPin && !t.isPinnedGlobal);
   const rest = tickets.filter((t) => !t.isPinnedGlobal && !t.userHasPersonalPin);
   const hasGroups = pinned.length > 0 || saved.length > 0;
+  const visibleRest = showAllRest ? rest : rest.slice(0, DEFAULT_VISIBLE_COUNT);
+  const restHiddenCount = rest.length - visibleRest.length;
 
   return (
     <div>
@@ -244,11 +256,21 @@ export function TicketsPanel() {
           {rest.length > 0 &&
             (hasGroups ? (
               <CollapsibleSection title="All Tickets" count={rest.length} storageKey="tickets-all">
-                <div style={styles.list}>{rest.map(renderTicket)}</div>
+                <div style={styles.list}>{visibleRest.map(renderTicket)}</div>
+                {restHiddenCount > 0 && (
+                  <button onClick={() => setShowAllRest(true)} style={styles.showAllBtn}>
+                    Show all ({restHiddenCount} more)
+                  </button>
+                )}
               </CollapsibleSection>
             ) : (
               <div style={styles.group}>
-                <div style={styles.list}>{rest.map(renderTicket)}</div>
+                <div style={styles.list}>{visibleRest.map(renderTicket)}</div>
+                {restHiddenCount > 0 && (
+                  <button onClick={() => setShowAllRest(true)} style={styles.showAllBtn}>
+                    Show all ({restHiddenCount} more)
+                  </button>
+                )}
               </div>
             ))}
         </>
@@ -256,7 +278,7 @@ export function TicketsPanel() {
 
       {!isLoading && tickets.length > 0 && (
         <p style={styles.count}>
-          Showing {tickets.length} of {total} ticket{total === 1 ? '' : 's'}
+          Showing {pinned.length + saved.length + visibleRest.length} of {total} ticket{total === 1 ? '' : 's'}
         </p>
       )}
     </div>
@@ -376,6 +398,9 @@ const styles = {
     alignItems: 'center',
     gap: '8px',
   },
+  listItemCompact: {
+    padding: '8px 12px',
+  },
   thumb: {
     width: '56px',
     height: '56px',
@@ -394,11 +419,21 @@ const styles = {
     margin: '0 0 8px 0',
     color: 'var(--text)',
   },
+  itemTitleCompact: {
+    margin: '0 0 4px 0',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap' as const,
+  },
   itemMeta: {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
     flexWrap: 'wrap' as const,
+  },
+  itemMetaCompact: {
+    flexWrap: 'nowrap' as const,
+    overflow: 'hidden',
   },
   badge: {
     padding: '3px 8px',
@@ -419,5 +454,18 @@ const styles = {
     fontSize: '13px',
     color: 'var(--text-faint)',
     marginTop: '16px',
+  },
+  showAllBtn: {
+    display: 'block',
+    width: '100%',
+    padding: '10px',
+    marginTop: '8px',
+    backgroundColor: 'transparent',
+    border: '1px dashed var(--border-strong)',
+    borderRadius: '4px',
+    color: '#007bff',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: '600' as const,
   },
 };

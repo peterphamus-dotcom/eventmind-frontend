@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, photoSrc } from '../api';
+import { useAuth } from '../AuthContext';
 import { LocationFilter } from './LocationFilter';
 import { CollapsibleSection } from './CollapsibleSection';
 import { SearchBar } from './SearchBar';
 import type { Report, Location } from '../types';
 
 type SortOption = 'recent' | 'location';
+
+const DEFAULT_VISIBLE_COUNT = 10;
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'recent', label: 'Most recent' },
@@ -17,6 +20,8 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
  *  page header — embeddable in the dashboard or a standalone page. */
 export function ReportsPanel() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isCompact = user?.viewDensity === 'COMPACT';
   const [reports, setReports] = useState<Report[]>([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -26,6 +31,7 @@ export function ReportsPanel() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [showAll, setShowAll] = useState(false);
 
   // Debounce the search box so we don't fire a request on every keystroke
   useEffect(() => {
@@ -36,6 +42,7 @@ export function ReportsPanel() {
   const locationKey = selectedLocationIds.join(',');
   useEffect(() => {
     loadReports();
+    setShowAll(false);
   }, [sortBy, locationKey, debouncedSearch]);
 
   useEffect(() => {
@@ -120,13 +127,13 @@ export function ReportsPanel() {
       ) : (
         <CollapsibleSection title="Reports" count={reports.length} storageKey="reports-all">
           <div style={styles.list}>
-            {reports.map((report) => (
+            {(showAll ? reports : reports.slice(0, DEFAULT_VISIBLE_COUNT)).map((report) => (
               <div
                 key={report.id}
                 onClick={() => navigate(`/reports/${report.id}`)}
-                style={styles.listItem}
+                style={{ ...styles.listItem, ...(isCompact ? styles.listItemCompact : {}) }}
               >
-                {report.photos && report.photos.length > 0 && (
+                {!isCompact && report.photos && report.photos.length > 0 && (
                   <img
                     src={photoSrc(report.photos[0].url)}
                     alt=""
@@ -139,8 +146,10 @@ export function ReportsPanel() {
                   />
                 )}
                 <div style={styles.itemBody}>
-                  <h3 style={styles.itemTitle}>{report.text}</h3>
-                  <div style={styles.itemMeta}>
+                  <h3 style={{ ...styles.itemTitle, ...(isCompact ? styles.itemTitleCompact : {}) }}>
+                    {report.text}
+                  </h3>
+                  <div style={{ ...styles.itemMeta, ...(isCompact ? styles.itemMetaCompact : {}) }}>
                     <span style={styles.metaText}>📍 {report.location?.name}</span>
                     <span style={styles.metaText}>By {report.submitter?.name}</span>
                     <span style={styles.metaText}>
@@ -154,12 +163,17 @@ export function ReportsPanel() {
               </div>
             ))}
           </div>
+          {!showAll && reports.length > DEFAULT_VISIBLE_COUNT && (
+            <button onClick={() => setShowAll(true)} style={styles.showAllBtn}>
+              Show all ({reports.length - DEFAULT_VISIBLE_COUNT} more)
+            </button>
+          )}
         </CollapsibleSection>
       )}
 
       {!isLoading && reports.length > 0 && (
         <p style={styles.count}>
-          Showing {reports.length} of {total} report{total === 1 ? '' : 's'}
+          Showing {showAll ? reports.length : Math.min(reports.length, DEFAULT_VISIBLE_COUNT)} of {total} report{total === 1 ? '' : 's'}
         </p>
       )}
     </div>
@@ -240,6 +254,9 @@ const styles = {
     alignItems: 'center',
     gap: '12px',
   },
+  listItemCompact: {
+    padding: '8px 12px',
+  },
   thumb: {
     width: '56px',
     height: '56px',
@@ -262,11 +279,22 @@ const styles = {
     WebkitLineClamp: 2,
     WebkitBoxOrient: 'vertical' as const,
   },
+  itemTitleCompact: {
+    margin: '0 0 4px 0',
+    display: 'block',
+    WebkitLineClamp: 'unset',
+    whiteSpace: 'nowrap' as const,
+    textOverflow: 'ellipsis',
+  },
   itemMeta: {
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
     flexWrap: 'wrap' as const,
+  },
+  itemMetaCompact: {
+    flexWrap: 'nowrap' as const,
+    overflow: 'hidden',
   },
   metaText: {
     fontSize: '12px',
@@ -276,5 +304,18 @@ const styles = {
     fontSize: '13px',
     color: 'var(--text-faint)',
     marginTop: '16px',
+  },
+  showAllBtn: {
+    display: 'block',
+    width: '100%',
+    padding: '10px',
+    marginTop: '8px',
+    backgroundColor: 'transparent',
+    border: '1px dashed var(--border-strong)',
+    borderRadius: '4px',
+    color: '#007bff',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: '600' as const,
   },
 };
