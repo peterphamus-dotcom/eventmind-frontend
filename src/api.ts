@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, DraftScheduleItem, ScheduleImportSourceType } from './types';
 
 type TeamPreview<T> = PaginatedResponse<T> & { team: { id: string; name: string; tags: Tag[] } };
 
@@ -263,4 +263,44 @@ export const api = {
   ) => client.patch<ApiResponse<LibraryDocument>>(`/library/${id}`, updates),
   deleteLibraryDocument: (id: string) =>
     client.delete<ApiResponse<{ message: string }>>(`/library/${id}`),
+
+  // Schedule
+  listSchedule: (filters?: { search?: string; locationId?: string }) =>
+    client.get<ApiResponse<{ items: ScheduleItem[]; total: number }>>('/schedule', { params: filters }),
+  getScheduleItem: (id: string) =>
+    client.get<ApiResponse<ScheduleItem>>(`/schedule/${id}`),
+  createScheduleItem: (data: {
+    title: string;
+    description?: string;
+    startTime: string;
+    endTime?: string;
+    locationId?: string;
+  }) => client.post<ApiResponse<ScheduleItem>>('/schedule', data),
+  updateScheduleItem: (
+    id: string,
+    updates: { title?: string; description?: string | null; startTime?: string; endTime?: string | null; locationId?: string | null }
+  ) => client.patch<ApiResponse<ScheduleItem>>(`/schedule/${id}`, updates),
+  deleteScheduleItem: (id: string) =>
+    client.delete<ApiResponse<{ message: string }>>(`/schedule/${id}`),
+  addScheduleComment: (id: string, text: string) =>
+    client.post<ApiResponse<Comment>>(`/schedule/${id}/comments`, { text }),
+  toggleScheduleCommentReaction: (itemId: string, commentId: string, emoji: string) =>
+    client.post<ApiResponse<ReactionsPayload>>(`/schedule/${itemId}/comments/${commentId}/reactions`, { emoji }),
+  subscribeScheduleItem: (id: string) =>
+    client.post<ApiResponse<{ itemId: string; isSubscribed: boolean }>>(`/schedule/${id}/subscribe`),
+  setScheduleReminder: (id: string, offsetMinutes: number) =>
+    client.post<ApiResponse<{ itemId: string; offsetMinutes: number }>>(`/schedule/${id}/reminder`, { offsetMinutes }),
+  removeScheduleReminder: (id: string) =>
+    client.delete<ApiResponse<{ itemId: string; offsetMinutes: null }>>(`/schedule/${id}/reminder`),
+  previewScheduleImport: (file: File, sourceType: ScheduleImportSourceType) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('sourceType', sourceType);
+    return client.post<ApiResponse<{ items: DraftScheduleItem[]; total: number }>>('/schedule/import/preview', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  confirmScheduleImport: (
+    items: { title: string; description?: string | null; startTime: string; endTime?: string | null; locationId?: string | null }[]
+  ) => client.post<ApiResponse<{ created: number }>>('/schedule/import/confirm', { items }),
 };

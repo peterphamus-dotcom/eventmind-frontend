@@ -5,13 +5,14 @@ import { TicketsPanel } from '../components/TicketsPanel';
 import { ReportsPanel } from '../components/ReportsPanel';
 import { FloorplanPanel } from '../components/FloorplanPanel';
 import { LibraryPanel } from '../components/LibraryPanel';
+import { SchedulePanel } from '../components/SchedulePanel';
 import { EventSummary } from '../components/EventSummary';
 import { NotificationBell } from '../components/NotificationBell';
 import { AboutModal } from '../components/AboutModal';
 import { FeedbackModal } from '../components/FeedbackModal';
 import { DisplaySettingsModal } from '../components/DisplaySettingsModal';
 
-type Tab = 'tickets' | 'reports' | 'floorplan' | 'library';
+type Tab = 'tickets' | 'reports' | 'floorplan' | 'library' | 'schedule';
 
 export function Dashboard() {
   const { user, logout } = useAuth();
@@ -166,6 +167,15 @@ export function Dashboard() {
           >
             📚 Library
           </button>
+          <button
+            onClick={() => selectTab('schedule')}
+            style={{
+              ...styles.tab,
+              ...(activeTab === 'schedule' ? styles.tabActive : {}),
+            }}
+          >
+            🗓️ Schedule
+          </button>
         </div>
 
         {/* Active panel */}
@@ -173,6 +183,7 @@ export function Dashboard() {
         {activeTab === 'reports' && <ReportsPanel />}
         {activeTab === 'floorplan' && <FloorplanPanel />}
         {activeTab === 'library' && <LibraryPanel />}
+        {activeTab === 'schedule' && <SchedulePanel />}
       </div>
     </div>
   );

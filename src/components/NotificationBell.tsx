@@ -11,6 +11,7 @@ const SETTINGS_META: { key: keyof NotificationSettings; label: string }[] = [
   { key: 'notifyOnUrgencyChange', label: 'Urgency changes' },
   { key: 'notifyOnReaction', label: 'Reactions to my comments' },
   { key: 'notifyOnReminderOverdue', label: 'Overdue report reminders' },
+  { key: 'notifyOnScheduleReminder', label: 'Schedule reminders' },
 ];
 
 function relativeTime(iso: string): string {
@@ -93,6 +94,7 @@ export function NotificationBell() {
     }
     if (n.ticketId) navigate(`/tickets/${n.ticketId}`);
     else if (n.reportId) navigate(`/reports/${n.reportId}`);
+    else if (n.scheduleItemId) navigate(`/schedule/${n.scheduleItemId}`);
   }
 
   async function handleMarkAllRead() {

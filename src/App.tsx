@@ -14,6 +14,7 @@ import { TicketDetail } from './pages/TicketDetail';
 import { AdminPanel } from './pages/AdminPanel';
 import { Profile } from './pages/Profile';
 import { UserProfile } from './pages/UserProfile';
+import { ScheduleDetail } from './pages/ScheduleDetail';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -96,6 +97,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <UserProfile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/schedule/:itemId"
+        element={
+          <ProtectedRoute>
+            <ScheduleDetail />
           </ProtectedRoute>
         }
       />

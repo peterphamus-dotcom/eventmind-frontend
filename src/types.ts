@@ -145,7 +145,7 @@ export interface Comment {
   createdAt: string;
 }
 
-export type NotificationType = 'COMMENT' | 'STATUS_CHANGE' | 'URGENCY_CHANGE' | 'REACTION' | 'REMINDER_OVERDUE';
+export type NotificationType = 'COMMENT' | 'STATUS_CHANGE' | 'URGENCY_CHANGE' | 'REACTION' | 'REMINDER_OVERDUE' | 'SCHEDULE_REMINDER';
 
 export interface Notification {
   id: string;
@@ -153,6 +153,7 @@ export interface Notification {
   message: string;
   ticketId?: string | null;
   reportId?: string | null;
+  scheduleItemId?: string | null;
   read: boolean;
   createdAt: string;
 }
@@ -163,6 +164,7 @@ export interface NotificationSettings {
   notifyOnUrgencyChange: boolean;
   notifyOnReaction: boolean;
   notifyOnReminderOverdue: boolean;
+  notifyOnScheduleReminder: boolean;
 }
 
 export type ReminderTargetType = 'USER' | 'TEAM' | 'LOCATION';
@@ -228,6 +230,33 @@ export interface LibraryDocument {
   createdBy: { id: string; name: string };
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ScheduleItem {
+  id: string;
+  title: string;
+  description?: string | null;
+  startTime: string;
+  endTime?: string | null;
+  location?: { id: string; name: string } | null;
+  createdBy: { id: string; name: string };
+  commentCount?: number;
+  isSubscribed?: boolean;
+  myReminderOffsetMinutes?: number | null;
+  comments?: Comment[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ScheduleImportSourceType = 'ICS' | 'EXCEL' | 'PDF';
+
+export interface DraftScheduleItem {
+  title: string;
+  description: string | null;
+  startTime: string | null;
+  endTime: string | null;
+  locationName: string | null;
+  suggestedLocationId?: string | null;
 }
 
 export interface PaginatedResponse<T> {
