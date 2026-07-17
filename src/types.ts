@@ -248,7 +248,7 @@ export interface ScheduleItem {
   updatedAt: string;
 }
 
-export type ScheduleImportSourceType = 'ICS' | 'EXCEL' | 'PDF';
+export type ScheduleImportSourceType = 'ICS' | 'EXCEL' | 'PDF' | 'IMAGE';
 
 export interface DraftScheduleItem {
   title: string;

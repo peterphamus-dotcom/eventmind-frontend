@@ -22,6 +22,7 @@ const SOURCE_OPTIONS: { value: ScheduleImportSourceType; label: string; accept: 
   { value: 'ICS', label: '📅 Calendar (.ics)', accept: '.ics', hint: 'An .ics file exported from Google Calendar or similar.' },
   { value: 'EXCEL', label: '📊 Excel', accept: '.xls,.xlsx', hint: 'A spreadsheet with Title/Start/End/Location/Description columns.' },
   { value: 'PDF', label: '📄 PDF', accept: '.pdf', hint: 'AI-assisted extraction — always review before importing.' },
+  { value: 'IMAGE', label: '🖼️ Image', accept: 'image/jpeg,image/png', hint: 'A JPG or PNG photo of a printed schedule, whiteboard, or screenshot — AI-assisted extraction, always review before importing.' },
 ];
 
 function toLocalInputValue(iso?: string | null): string {
