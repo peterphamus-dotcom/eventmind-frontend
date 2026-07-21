@@ -182,7 +182,16 @@ export function SchedulePanel() {
       {isLoading ? (
         <p>Loading…</p>
       ) : items.length === 0 ? (
-        <p style={styles.empty}>No schedule items found.</p>
+        <div style={styles.empty}>
+          <p>🗓️ No schedule items yet.</p>
+          {isAdmin ? (
+            <p style={styles.emptyHint}>
+              Import a schedule from Google Calendar (.ics), Excel, PDF, or a photo. Or manually add events.
+            </p>
+          ) : (
+            <p style={styles.emptyHint}>The event schedule will appear here once published by an admin.</p>
+          )}
+        </div>
       ) : (
         <div style={styles.list}>
           {items.map((item) => (
@@ -425,9 +434,14 @@ const styles = {
     fontWeight: '500' as const,
   },
   empty: {
+    textAlign: 'center' as const,
+    padding: '40px 20px',
+    color: 'var(--text-muted)',
+  },
+  emptyHint: {
     fontSize: '14px',
     color: 'var(--text-faint)',
-    fontStyle: 'italic' as const,
+    margin: '8px 0 0 0',
   },
   section: {
     marginBottom: '16px',

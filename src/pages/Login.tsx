@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 
 export function Login() {
-  const [email, setEmail] = useState('dev@example.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login, error } = useAuth();
   const navigate = useNavigate();
@@ -36,8 +36,9 @@ export function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               style={styles.input}
-              placeholder="dev@example.com"
+              placeholder="your@email.com"
               disabled={isLoading}
+              autoComplete="email"
             />
           </div>
 
@@ -60,11 +61,13 @@ export function Login() {
           </button>
         </form>
 
-        <div style={styles.info}>
-          <p style={styles.infoText}>Demo credentials:</p>
-          <p style={styles.infoText}>👤 Member: dev@example.com / password123</p>
-          <p style={styles.infoText}>🔐 Admin: admin@example.com / admin123</p>
-        </div>
+        {import.meta.env.MODE === 'development' && (
+          <div style={styles.info}>
+            <p style={styles.infoText}>Demo credentials (dev only):</p>
+            <p style={styles.infoText}>👤 Member: dev@example.com / password123</p>
+            <p style={styles.infoText}>🔐 Admin: admin@example.com / admin123</p>
+          </div>
+        )}
       </div>
     </div>
   );

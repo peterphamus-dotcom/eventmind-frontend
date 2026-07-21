@@ -199,7 +199,14 @@ export function LibraryPanel() {
       {isLoading ? (
         <p>Loading…</p>
       ) : documents.length === 0 ? (
-        <p style={styles.empty}>No documents found.</p>
+        <div style={styles.empty}>
+          <p>📚 No documents yet.</p>
+          {isAdmin ? (
+            <p style={styles.emptyHint}>Admins can share SOPs, emergency procedures, setup docs, or any reference materials here.</p>
+          ) : (
+            <p style={styles.emptyHint}>Shared documents will appear here. Check back soon or ask an admin to upload something!</p>
+          )}
+        </div>
       ) : (
         <div style={styles.list}>
           {documents.map((doc) => (
@@ -503,9 +510,14 @@ const styles = {
     fontWeight: '500' as const,
   },
   empty: {
+    textAlign: 'center' as const,
+    padding: '40px 20px',
+    color: 'var(--text-muted)',
+  },
+  emptyHint: {
     fontSize: '14px',
     color: 'var(--text-faint)',
-    fontStyle: 'italic' as const,
+    margin: '8px 0 0 0',
   },
   section: {
     marginBottom: '16px',
