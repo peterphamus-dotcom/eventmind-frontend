@@ -22,7 +22,10 @@ export function AdminPanel() {
   const [activeTab, setActiveTab] = useState<AdminTab>('approvals');
   const [pendingCount, setPendingCount] = useState(0);
 
-  // Badge the Approvals tab with how many people are waiting.
+  // Badge the Approvals tab with how many people are waiting. This fetch keeps
+  // the badge right while the admin is on other tabs; once the Approvals panel
+  // is open it reports its own count via onCountChange, so approving or
+  // rejecting updates the badge immediately rather than on the next tab switch.
   useEffect(() => {
     let active = true;
     api
@@ -179,7 +182,7 @@ export function AdminPanel() {
 
       {/* Content */}
       <div style={styles.content}>
-        {activeTab === 'approvals' && <AdminApprovals />}
+        {activeTab === 'approvals' && <AdminApprovals onCountChange={setPendingCount} />}
         {activeTab === 'users' && <AdminUsers />}
         {activeTab === 'teams' && <AdminTeams />}
         {activeTab === 'locations' && <AdminLocations />}
