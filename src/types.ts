@@ -2,13 +2,16 @@
 
 export type ViewDensity = 'COMPACT' | 'FULL';
 
+export type UserStatus = 'UNVERIFIED' | 'PENDING' | 'ACTIVE' | 'REJECTED';
+
 export interface User {
   id: string;
   email: string;
   name: string;
   role: 'MEMBER' | 'CORE_TEAM' | 'ADMIN';
-  homeLocationId: string;
-  homeLocation?: Location;
+  status: UserStatus;
+  homeLocationId: string | null;
+  homeLocation?: Location | null;
   teams?: Team[];
   phone?: string | null;
   bio?: string | null;
@@ -16,6 +19,18 @@ export interface User {
   lastReportAt?: string | null;
   reportCount?: number;
   viewDensity?: ViewDensity;
+  createdAt: string;
+}
+
+/** A user awaiting admin approval, as shown in the admin queue. */
+export interface PendingUser {
+  id: string;
+  email: string;
+  name: string;
+  bio?: string | null;
+  avatarUrl?: string | null;
+  phone?: string | null;
+  invitedBy?: { id: string; name: string } | null;
   createdAt: string;
 }
 
@@ -145,7 +160,7 @@ export interface Comment {
   createdAt: string;
 }
 
-export type NotificationType = 'COMMENT' | 'STATUS_CHANGE' | 'URGENCY_CHANGE' | 'REACTION' | 'REMINDER_OVERDUE' | 'SCHEDULE_REMINDER';
+export type NotificationType = 'COMMENT' | 'STATUS_CHANGE' | 'URGENCY_CHANGE' | 'REACTION' | 'REMINDER_OVERDUE' | 'SCHEDULE_REMINDER' | 'NEW_SIGNUP' | 'ACCOUNT_STATUS';
 
 export interface Notification {
   id: string;

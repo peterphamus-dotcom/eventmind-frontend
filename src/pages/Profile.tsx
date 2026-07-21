@@ -17,6 +17,12 @@ export function Profile() {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isChangingPw, setIsChangingPw] = useState(false);
+  const [pwError, setPwError] = useState<string | null>(null);
+
   useEffect(() => {
     if (user) {
       setName(user.name);
@@ -58,6 +64,31 @@ export function Profile() {
       setError(err.response?.data?.error || 'Failed to upload photo');
     } finally {
       setIsUploadingAvatar(false);
+    }
+  }
+
+  async function handleChangePassword() {
+    if (isChangingPw) return;
+    setPwError(null);
+    if (newPassword.length < 8) {
+      setPwError('New password must be at least 8 characters');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPwError('New passwords do not match');
+      return;
+    }
+    setIsChangingPw(true);
+    try {
+      await api.changeMyPassword(currentPassword, newPassword);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      showToast('Password updated');
+    } catch (err: any) {
+      setPwError(err.response?.data?.error || 'Failed to change password');
+    } finally {
+      setIsChangingPw(false);
     }
   }
 
@@ -181,6 +212,44 @@ export function Profile() {
           >
             {isSaving ? 'Saving…' : 'Save Changes'}
           </button>
+
+          {/* Change password */}
+          <div style={styles.divider} />
+          <div style={styles.section}>
+            <h3 style={styles.subtitle}>Change password</h3>
+            {pwError && <div style={styles.error}>{pwError}</div>}
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              style={{ ...styles.input, marginBottom: '10px' }}
+              placeholder="Current password"
+              autoComplete="current-password"
+            />
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              style={{ ...styles.input, marginBottom: '10px' }}
+              placeholder="New password (min 8 characters)"
+              autoComplete="new-password"
+            />
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              style={{ ...styles.input, marginBottom: '14px' }}
+              placeholder="Confirm new password"
+              autoComplete="new-password"
+            />
+            <button
+              onClick={handleChangePassword}
+              style={styles.secondaryWideBtn}
+              disabled={isChangingPw || !currentPassword || !newPassword}
+            >
+              {isChangingPw ? 'Updating…' : 'Update password'}
+            </button>
+          </div>
 
           {/* Read-only teams/locations */}
           <div style={styles.divider} />
@@ -376,6 +445,17 @@ const styles = {
     fontSize: '13px',
     fontWeight: '500' as const,
     color: 'var(--text)',
+  },
+  secondaryWideBtn: {
+    padding: '10px 20px',
+    backgroundColor: 'var(--bg)',
+    border: '1px solid var(--border-strong)',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '600' as const,
+    color: 'var(--text)',
+    width: '100%',
   },
   dangerLinkBtn: {
     background: 'none',

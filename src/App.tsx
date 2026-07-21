@@ -6,6 +6,9 @@ import { BannerBar } from './components/BannerBar';
 import { ScrollToTopButton } from './components/ScrollToTopButton';
 import { ThemeToggle } from './components/ThemeToggle';
 import { Login } from './pages/Login';
+import { Signup } from './pages/Signup';
+import { VerifyEmail } from './pages/VerifyEmail';
+import { AcceptInvite } from './pages/AcceptInvite';
 import { Dashboard } from './pages/Dashboard';
 import { CreateReport } from './pages/CreateReport';
 import { ReportDetail } from './pages/ReportDetail';
@@ -33,6 +36,9 @@ function AppRoutes() {
       {user && <BannerBar />}
       <Routes>
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+      <Route path="/signup" element={user ? <Navigate to="/dashboard" replace /> : <Signup />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/invite/:token" element={<AcceptInvite />} />
       <Route
         path="/dashboard"
         element={
