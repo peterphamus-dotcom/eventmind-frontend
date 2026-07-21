@@ -2,6 +2,24 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { api } from '../api';
+import { AuthCard, AuthSpinner, styles } from '../components/AuthCard';
+
+const UsersIcon = (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);
+
+const XCircleIcon = (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <line x1="15" y1="9" x2="9" y2="15" />
+    <line x1="9" y1="9" x2="15" y2="15" />
+  </svg>
+);
 
 export function AcceptInvite() {
   const { token } = useParams<{ token: string }>();
@@ -50,8 +68,9 @@ export function AcceptInvite() {
   if (loading) {
     return (
       <div style={styles.container}>
-        <div style={styles.card}>
-          <p style={styles.subtitle}>Loading your invite…</p>
+        <div style={{ ...styles.card, ...styles.cardCentered }}>
+          <AuthSpinner />
+          <p style={{ ...styles.subtitle, margin: 0 }}>Loading your invite…</p>
         </div>
       </div>
     );
@@ -59,137 +78,67 @@ export function AcceptInvite() {
 
   if (invalid) {
     return (
-      <div style={styles.container}>
-        <div style={styles.card}>
-          <h1 style={styles.title}>Invite invalid or expired</h1>
-          <p style={styles.subtitle}>This invite link is no longer valid. Ask whoever invited you to send a new one.</p>
-          <Link to="/login" style={styles.link}>Back to login</Link>
-        </div>
-      </div>
+      <AuthCard
+        icon={XCircleIcon}
+        tone="danger"
+        centered
+        title="Invite invalid or expired"
+        titleSize={20}
+        subtitle="This invite link is no longer valid. Ask whoever invited you to send a new one."
+      >
+        <Link to="/login" style={{ ...styles.link, fontSize: '14px' }}>
+          Back to login
+        </Link>
+      </AuthCard>
     );
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h1 style={styles.title}>You're invited 🎉</h1>
-        <p style={styles.subtitle}>
+    <AuthCard
+      icon={UsersIcon}
+      tone="soft"
+      title="You're invited"
+      subtitle={
+        <>
           {inviterName ? `${inviterName} invited you` : 'You were invited'} to join EventMind as{' '}
-          <strong>{email}</strong>. Set up your account below — an admin will approve your access next.
-        </p>
+          <b style={{ color: 'var(--text)' }}>{email}</b>. Set up your account below — an admin will
+          approve your access next.
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} style={styles.form}>
+        <div style={styles.formGroup}>
+          <label style={styles.label}>Your name</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            style={styles.input}
+            placeholder="Your name"
+            disabled={submitting}
+            autoComplete="name"
+          />
+        </div>
 
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Your name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              style={styles.input}
-              placeholder="Your name"
-              disabled={submitting}
-              autoComplete="name"
-            />
-          </div>
+        <div style={styles.formGroup}>
+          <label style={styles.label}>Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={styles.input}
+            placeholder="At least 8 characters"
+            disabled={submitting}
+            autoComplete="new-password"
+          />
+        </div>
 
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={styles.input}
-              placeholder="At least 8 characters"
-              disabled={submitting}
-              autoComplete="new-password"
-            />
-          </div>
+        {error && <div style={styles.error}>{error}</div>}
 
-          {error && <div style={styles.error}>{error}</div>}
-
-          <button type="submit" style={styles.button} disabled={submitting}>
-            {submitting ? 'Setting up…' : 'Create account'}
-          </button>
-        </form>
-      </div>
-    </div>
+        <button type="submit" style={styles.button} disabled={submitting}>
+          {submitting ? 'Setting up…' : 'Create account'}
+        </button>
+      </form>
+    </AuthCard>
   );
 }
-
-const styles = {
-  container: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: '100vh',
-    backgroundColor: 'var(--bg)',
-    padding: '20px',
-  },
-  card: {
-    backgroundColor: 'var(--surface)',
-    borderRadius: '8px',
-    boxShadow: '0 2px 10px var(--shadow)',
-    padding: '40px',
-    maxWidth: '400px',
-    width: '100%',
-  },
-  title: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    marginBottom: '8px',
-    color: 'var(--text)',
-  },
-  subtitle: {
-    fontSize: '14px',
-    color: 'var(--text-muted)',
-    marginBottom: '24px',
-    lineHeight: 1.5,
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '16px',
-  },
-  formGroup: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '6px',
-  },
-  label: {
-    fontSize: '14px',
-    fontWeight: '500',
-    color: 'var(--text)',
-  },
-  input: {
-    padding: '10px 12px',
-    border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    fontSize: '14px',
-    fontFamily: 'inherit',
-    backgroundColor: 'var(--input-bg)',
-    color: 'var(--text)',
-  },
-  button: {
-    padding: '10px 16px',
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    fontSize: '14px',
-    fontWeight: '500',
-    cursor: 'pointer',
-    marginTop: '8px',
-  },
-  error: {
-    padding: '10px 12px',
-    backgroundColor: 'var(--danger-bg)',
-    color: 'var(--danger-text)',
-    borderRadius: '4px',
-    fontSize: '14px',
-  },
-  link: {
-    color: '#007bff',
-    fontWeight: 600,
-    textDecoration: 'none',
-  },
-};
