@@ -259,13 +259,17 @@ const styles = {
     fontSize: '14px',
     fontWeight: '500' as const,
     color: 'var(--text-muted)',
-    borderBottom: '3px solid transparent',
+    // Longhand: React warns when a shorthand and its longhand are swapped
+    // across renders, which is exactly what tabActive does below.
+    borderBottomWidth: '3px',
+    borderBottomStyle: 'solid' as const,
+    borderBottomColor: 'transparent',
     transition: 'all 0.2s',
     whiteSpace: 'nowrap' as const,
   },
   tabActive: {
-    color: '#007bff',
-    borderBottomColor: '#007bff',
+    color: 'var(--accent)',
+    borderBottomColor: 'var(--accent)',
   },
   content: {
     maxWidth: '1200px',

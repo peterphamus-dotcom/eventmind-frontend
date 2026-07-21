@@ -178,7 +178,10 @@ export function NotificationBell() {
   return (
     <div style={styles.anchor}>
       <button onClick={toggleOpen} style={styles.bellBtn} aria-label="Notifications">
-        🔔
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
         {unreadCount > 0 && (
           <span style={styles.badge}>{unreadCount > 99 ? '99+' : unreadCount}</span>
         )}
@@ -201,7 +204,17 @@ export function NotificationBell() {
                   aria-label="Notification settings"
                   title="Notification settings"
                 >
-                  {settingsOpen ? '✕' : '⚙️'}
+                  {settingsOpen ? (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  ) : (
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="3" />
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
+                  )}
                 </button>
               </div>
             </div>
@@ -272,28 +285,29 @@ const styles = {
   },
   bellBtn: {
     position: 'relative' as const,
-    padding: '8px 12px',
+    padding: '8px 10px',
     backgroundColor: 'transparent',
     border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
+    borderRadius: '8px',
     cursor: 'pointer',
-    fontSize: '16px',
     color: 'var(--text)',
+    display: 'flex',
+    alignItems: 'center',
     lineHeight: 1,
   },
   badge: {
     position: 'absolute' as const,
-    top: '-6px',
-    right: '-6px',
-    backgroundColor: '#dc3545',
+    top: '-5px',
+    right: '-5px',
+    backgroundColor: 'var(--danger)',
     color: 'white',
     fontSize: '10px',
     fontWeight: '700' as const,
     borderRadius: '999px',
-    padding: '2px 5px',
-    minWidth: '16px',
+    padding: '1px 5px',
+    minWidth: '15px',
     textAlign: 'center' as const,
-    lineHeight: 1.2,
+    lineHeight: 1.3,
   },
   backdrop: {
     position: 'fixed' as const,
@@ -302,13 +316,13 @@ const styles = {
   },
   popover: {
     position: 'absolute' as const,
-    top: 'calc(100% + 4px)',
+    top: 'calc(100% + 6px)',
     right: 0,
     zIndex: 11,
     backgroundColor: 'var(--surface)',
     border: '1px solid var(--border-strong)',
-    borderRadius: '6px',
-    boxShadow: '0 4px 16px var(--shadow)',
+    borderRadius: '10px',
+    boxShadow: '0 4px 20px oklch(0% 0 0 / 0.1)',
     width: '320px',
     maxWidth: '90vw',
   },
@@ -316,24 +330,25 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '10px 14px',
+    padding: '12px 16px',
     borderBottom: '1px solid var(--border)',
   },
   popoverTitle: {
-    fontSize: '14px',
+    fontSize: '13.5px',
     fontWeight: '700' as const,
     color: 'var(--text)',
   },
   headerActions: {
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
+    gap: '12px',
   },
   linkBtn: {
     background: 'none',
     border: 'none',
-    color: '#007bff',
+    color: 'var(--accent)',
     fontSize: '12px',
+    fontWeight: '600' as const,
     cursor: 'pointer',
     padding: 0,
   },
@@ -350,17 +365,17 @@ const styles = {
     overflowY: 'auto' as const,
   },
   item: {
-    padding: '10px 14px',
+    padding: '12px 16px',
     borderBottom: '1px solid var(--border)',
     cursor: 'pointer',
   },
   itemUnread: {
-    backgroundColor: 'var(--tag-bg)',
+    backgroundColor: 'var(--accent-soft-translucent)',
   },
   itemMessage: {
     fontSize: '13px',
     color: 'var(--text)',
-    margin: '0 0 4px 0',
+    margin: '0 0 3px 0',
   },
   itemTime: {
     fontSize: '11px',
@@ -375,15 +390,15 @@ const styles = {
     margin: 0,
   },
   settingsPanel: {
-    padding: '12px 14px',
+    padding: '14px 16px',
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '10px',
+    gap: '11px',
   },
   settingRow: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
+    gap: '9px',
     fontSize: '13px',
     color: 'var(--text)',
     cursor: 'pointer',
