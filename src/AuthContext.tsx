@@ -8,7 +8,9 @@ interface AuthContextType {
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  register: (email: string, password: string, name: string, homeLocationId: string) => Promise<void>;
+  register: (email: string, password: string, name: string) => Promise<{ needsVerification: boolean; email: string; message: string }>;
+  verifyEmail: (token: string) => Promise<void>;
+  acceptInvite: (token: string, name: string, password: string) => Promise<void>;
   clearError: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -62,17 +64,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  async function register(email: string, password: string, name: string, homeLocationId: string) {
-    setIsLoading(true);
+  async function register(email: string, password: string, name: string) {
     setError(null);
     try {
-      const response = await api.register(email, password, name, homeLocationId);
-      setUser(response.data.data || null);
+      const response = await api.register(email, password, name);
+      // Self-signup does NOT log in — the user must verify their email first.
+      return response.data.data as { needsVerification: boolean; email: string; message: string };
     } catch (err: any) {
       setError(err.response?.data?.error || 'Registration failed');
       throw err;
-    } finally {
-      setIsLoading(false);
+    }
+  }
+
+  async function verifyEmail(token: string) {
+    setError(null);
+    try {
+      const response = await api.verifyEmail(token);
+      setUser(response.data.data || null);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Verification failed');
+      throw err;
+    }
+  }
+
+  async function acceptInvite(token: string, name: string, password: string) {
+    setError(null);
+    try {
+      const response = await api.acceptInvite(token, name, password);
+      setUser(response.data.data || null);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to accept invite');
+      throw err;
     }
   }
 
@@ -87,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, error, login, logout, register, clearError: () => setError(null), refreshUser }}
+      value={{ user, isLoading, error, login, logout, register, verifyEmail, acceptInvite, clearError: () => setError(null), refreshUser }}
     >
       {children}
     </AuthContext.Provider>

@@ -1,52 +1,83 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { api } from '../api';
 
-export function Login() {
+export function Signup() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [needsVerification, setNeedsVerification] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
   const [resendMsg, setResendMsg] = useState<string | null>(null);
-  const { login, error } = useAuth();
-  const navigate = useNavigate();
+  const { register, error } = useAuth();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
-    setNeedsVerification(false);
-    setResendMsg(null);
     try {
-      await login(email, password);
-      navigate('/dashboard');
-    } catch (err: any) {
-      // Surface the "verify your email" path with a resend affordance.
-      if (err?.response?.data?.code === 'EMAIL_UNVERIFIED') {
-        setNeedsVerification(true);
-      }
+      const result = await register(email, password, name);
+      setSentTo(result.email);
+    } catch {
+      // error surfaced via context
     } finally {
       setIsLoading(false);
     }
   }
 
   async function handleResend() {
+    if (!sentTo) return;
     setResendMsg(null);
     try {
-      const res = await api.resendVerification(email);
+      const res = await api.resendVerification(sentTo);
       setResendMsg(res.data.data?.message || 'Verification email sent.');
     } catch {
       setResendMsg('Could not resend right now. Please try again later.');
     }
   }
 
+  // Post-signup confirmation screen.
+  if (sentTo) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.card}>
+          <h1 style={styles.title}>Check your email 📬</h1>
+          <p style={styles.subtitle}>
+            We sent a confirmation link to <strong>{sentTo}</strong>. Click it to confirm your
+            address — then an admin will review your request for access.
+          </p>
+          <button type="button" onClick={handleResend} style={styles.secondaryButton}>
+            Resend confirmation email
+          </button>
+          {resendMsg && <p style={styles.noticeText}>{resendMsg}</p>}
+          <p style={styles.footer}>
+            <Link to="/login" style={styles.link}>Back to login</Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>EventMind</h1>
-        <p style={styles.subtitle}>Live Event Intelligence Tracker</p>
+        <h1 style={styles.title}>Create your account</h1>
+        <p style={styles.subtitle}>Join your team on EventMind. Access is granted after an admin approves you.</p>
 
         <form onSubmit={handleSubmit} style={styles.form}>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              style={styles.input}
+              placeholder="Your name"
+              disabled={isLoading}
+              autoComplete="name"
+            />
+          </div>
+
           <div style={styles.formGroup}>
             <label style={styles.label}>Email</label>
             <input
@@ -67,30 +98,21 @@ export function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               style={styles.input}
-              placeholder="••••••••"
+              placeholder="At least 8 characters"
               disabled={isLoading}
-              autoComplete="current-password"
+              autoComplete="new-password"
             />
           </div>
 
           {error && <div style={styles.error}>{error}</div>}
 
-          {needsVerification && (
-            <div style={styles.notice}>
-              <button type="button" onClick={handleResend} style={styles.linkButton}>
-                Resend confirmation email
-              </button>
-              {resendMsg && <p style={styles.noticeText}>{resendMsg}</p>}
-            </div>
-          )}
-
           <button type="submit" style={styles.button} disabled={isLoading}>
-            {isLoading ? 'Logging in...' : 'Login'}
+            {isLoading ? 'Creating account…' : 'Sign up'}
           </button>
         </form>
 
         <p style={styles.footer}>
-          New here? <Link to="/signup" style={styles.link}>Create an account</Link>
+          Already have an account? <Link to="/login" style={styles.link}>Log in</Link>
         </p>
       </div>
     </div>
@@ -115,7 +137,7 @@ const styles = {
     width: '100%',
   },
   title: {
-    fontSize: '28px',
+    fontSize: '26px',
     fontWeight: 'bold',
     marginBottom: '8px',
     color: 'var(--text)',
@@ -123,7 +145,8 @@ const styles = {
   subtitle: {
     fontSize: '14px',
     color: 'var(--text-muted)',
-    marginBottom: '30px',
+    marginBottom: '24px',
+    lineHeight: 1.5,
   },
   form: {
     display: 'flex',
@@ -160,6 +183,17 @@ const styles = {
     cursor: 'pointer',
     marginTop: '8px',
   },
+  secondaryButton: {
+    padding: '10px 16px',
+    backgroundColor: 'transparent',
+    color: '#007bff',
+    border: '1px solid var(--border-strong)',
+    borderRadius: '4px',
+    fontSize: '14px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    marginTop: '8px',
+  },
   error: {
     padding: '10px 12px',
     backgroundColor: 'var(--danger-bg)',
@@ -167,25 +201,10 @@ const styles = {
     borderRadius: '4px',
     fontSize: '14px',
   },
-  notice: {
-    padding: '10px 12px',
-    backgroundColor: 'var(--bg)',
-    borderRadius: '4px',
-    borderLeft: '4px solid #007bff',
-  },
   noticeText: {
     fontSize: '13px',
     color: 'var(--text-muted)',
-    margin: '8px 0 0 0',
-  },
-  linkButton: {
-    background: 'none',
-    border: 'none',
-    color: '#007bff',
-    cursor: 'pointer',
-    fontSize: '14px',
-    padding: 0,
-    textDecoration: 'underline',
+    margin: '12px 0 0 0',
   },
   footer: {
     marginTop: '24px',

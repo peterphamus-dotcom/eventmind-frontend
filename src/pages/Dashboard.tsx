@@ -11,6 +11,8 @@ import { NotificationBell } from '../components/NotificationBell';
 import { AboutModal } from '../components/AboutModal';
 import { FeedbackModal } from '../components/FeedbackModal';
 import { DisplaySettingsModal } from '../components/DisplaySettingsModal';
+import { InviteModal } from '../components/InviteModal';
+import { AwaitingApproval } from '../components/AwaitingApproval';
 
 type Tab = 'tickets' | 'reports' | 'floorplan' | 'library' | 'schedule';
 
@@ -25,7 +27,10 @@ export function Dashboard() {
   const [aboutOpen, setAboutOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [displaySettingsOpen, setDisplaySettingsOpen] = useState(false);
-  const canSeeAdminPanel = user?.role === 'ADMIN' || user?.role === 'CORE_TEAM';
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const isActive = user?.status === 'ACTIVE';
+  const isPending = !!user && user.status !== 'ACTIVE';
+  const canSeeAdminPanel = isActive && (user?.role === 'ADMIN' || user?.role === 'CORE_TEAM');
 
   function selectTab(tab: Tab) {
     setActiveTab(tab);
@@ -72,6 +77,17 @@ export function Dashboard() {
                   >
                     👤 My Profile
                   </button>
+                  {isActive && (
+                    <button
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setInviteOpen(true);
+                      }}
+                      style={styles.menuItem}
+                    >
+                      ✉️ Invite Someone
+                    </button>
+                  )}
                   {canSeeAdminPanel && (
                     <button
                       onClick={() => {
@@ -123,8 +139,14 @@ export function Dashboard() {
       {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
       {aboutOpen && <AboutModal onClose={() => setAboutOpen(false)} />}
       {displaySettingsOpen && <DisplaySettingsModal onClose={() => setDisplaySettingsOpen(false)} />}
+      {inviteOpen && <InviteModal onClose={() => setInviteOpen(false)} />}
 
-      {/* Main Content */}
+      {/* Pending users get the waiting room instead of the app tabs */}
+      {isPending ? (
+        <div style={styles.content}>
+          <AwaitingApproval onOpenDisplaySettings={() => setDisplaySettingsOpen(true)} />
+        </div>
+      ) : (
       <div style={styles.content}>
         {/* AI event brief */}
         <EventSummary />
@@ -185,6 +207,7 @@ export function Dashboard() {
         {activeTab === 'library' && <LibraryPanel />}
         {activeTab === 'schedule' && <SchedulePanel />}
       </div>
+      )}
     </div>
   );
 }

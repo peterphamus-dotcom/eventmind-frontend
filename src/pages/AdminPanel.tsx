@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
+import { api } from '../api';
+import AdminApprovals from './admin/AdminApprovals';
 import AdminUsers from './admin/AdminUsers';
 import AdminLocations from './admin/AdminLocations';
 import AdminTags from './admin/AdminTags';
@@ -12,12 +14,27 @@ import AdminReminders from './admin/AdminReminders';
 import AdminSocialIntel from './admin/AdminSocialIntel';
 import AdminUserReports from './admin/AdminUserReports';
 
-type AdminTab = 'users' | 'teams' | 'locations' | 'tags' | 'banner' | 'export' | 'viewAs' | 'reminders' | 'socialIntel' | 'userReports';
+type AdminTab = 'approvals' | 'users' | 'teams' | 'locations' | 'tags' | 'banner' | 'export' | 'viewAs' | 'reminders' | 'socialIntel' | 'userReports';
 
 export function AdminPanel() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<AdminTab>('users');
+  const [activeTab, setActiveTab] = useState<AdminTab>('approvals');
+  const [pendingCount, setPendingCount] = useState(0);
+
+  // Badge the Approvals tab with how many people are waiting.
+  useEffect(() => {
+    let active = true;
+    api
+      .listPendingUsers()
+      .then((res) => {
+        if (active) setPendingCount(res.data.data?.total || 0);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [activeTab]);
 
   if (user?.role !== 'ADMIN' && user?.role !== 'CORE_TEAM') {
     return (
@@ -57,6 +74,15 @@ export function AdminPanel() {
 
       {/* Tabs */}
       <div style={styles.tabs}>
+        <button
+          onClick={() => setActiveTab('approvals')}
+          style={{
+            ...styles.tab,
+            ...(activeTab === 'approvals' ? styles.tabActive : {}),
+          }}
+        >
+          ✅ Approvals{pendingCount > 0 ? ` (${pendingCount})` : ''}
+        </button>
         <button
           onClick={() => setActiveTab('users')}
           style={{
@@ -153,6 +179,7 @@ export function AdminPanel() {
 
       {/* Content */}
       <div style={styles.content}>
+        {activeTab === 'approvals' && <AdminApprovals />}
         {activeTab === 'users' && <AdminUsers />}
         {activeTab === 'teams' && <AdminTeams />}
         {activeTab === 'locations' && <AdminLocations />}

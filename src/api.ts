@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, DraftScheduleItem, ScheduleImportSourceType } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, DraftScheduleItem, ScheduleImportSourceType, PendingUser } from './types';
 
 type TeamPreview<T> = PaginatedResponse<T> & { team: { id: string; name: string; tags: Tag[] } };
 
@@ -31,8 +31,23 @@ export const api = {
   login: (email: string, password: string) =>
     client.post<ApiResponse<User>>('/auth/login', { email, password }),
   logout: () => client.post<ApiResponse<{ message: string }>>('/auth/logout'),
-  register: (email: string, password: string, name: string, homeLocationId: string) =>
-    client.post<ApiResponse<User>>('/auth/register', { email, password, name, homeLocationId }),
+  register: (email: string, password: string, name: string) =>
+    client.post<ApiResponse<{ needsVerification: boolean; email: string; message: string }>>(
+      '/auth/register',
+      { email, password, name }
+    ),
+  verifyEmail: (token: string) =>
+    client.post<ApiResponse<User>>('/auth/verify-email', { token }),
+  resendVerification: (email: string) =>
+    client.post<ApiResponse<{ message: string }>>('/auth/resend-verification', { email }),
+  acceptInvite: (token: string, name: string, password: string) =>
+    client.post<ApiResponse<User>>('/auth/accept-invite', { token, name, password }),
+
+  // Invites
+  getInvite: (token: string) =>
+    client.get<ApiResponse<{ email: string; inviterName: string | null }>>(`/invites/${token}`),
+  sendInvite: (email: string) =>
+    client.post<ApiResponse<{ message: string; email: string }>>('/invites', { email }),
 
   // Users
   getMe: () => client.get<ApiResponse<User>>('/users/me'),
@@ -53,6 +68,8 @@ export const api = {
   },
   removeMyAvatar: () =>
     client.delete<ApiResponse<{ avatarUrl: null }>>('/users/me/avatar'),
+  changeMyPassword: (currentPassword: string, newPassword: string) =>
+    client.post<ApiResponse<{ message: string }>>('/users/me/password', { currentPassword, newPassword }),
 
   // Locations
   listLocations: () =>
@@ -179,6 +196,14 @@ export const api = {
     client.get<ApiResponse<TeamPreview<Ticket>>>('/admin/preview/tickets', { params: { teamId, pageSize: 100 } }),
   previewReportsAsTeam: (teamId: string) =>
     client.get<ApiResponse<TeamPreview<Report>>>('/admin/preview/reports', { params: { teamId, pageSize: 100 } }),
+
+  // Pending user approvals
+  listPendingUsers: () =>
+    client.get<ApiResponse<{ items: PendingUser[]; total: number }>>('/admin/pending-users'),
+  approvePendingUser: (id: string, data: { role: string; homeLocationId: string; teamIds?: string[] }) =>
+    client.post<ApiResponse<{ id: string; status: string }>>(`/admin/pending-users/${id}/approve`, data),
+  rejectPendingUser: (id: string, reason?: string) =>
+    client.post<ApiResponse<{ id: string; status: string }>>(`/admin/pending-users/${id}/reject`, { reason }),
 
   // Notifications
   listNotifications: (page = 1, pageSize = 20) =>
