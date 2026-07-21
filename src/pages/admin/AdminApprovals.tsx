@@ -12,7 +12,12 @@ function relativeTime(iso: string): string {
   return `${Math.round(hours / 24)}d ago`;
 }
 
-export default function AdminApprovals() {
+interface AdminApprovalsProps {
+  /** Reports the live pending count so the parent's tab badge stays in sync. */
+  onCountChange?: (count: number) => void;
+}
+
+export default function AdminApprovals({ onCountChange }: AdminApprovalsProps) {
   const showToast = useToast();
   const [pending, setPending] = useState<PendingUser[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
@@ -40,7 +45,9 @@ export default function AdminApprovals() {
         api.listLocations(),
         api.listTeams(),
       ]);
-      setPending(pendingRes.data.data?.items || []);
+      const items = pendingRes.data.data?.items || [];
+      setPending(items);
+      onCountChange?.(items.length);
       setLocations(locRes.data.data?.items || []);
       setTeams(teamRes.data.data?.items || []);
     } catch (err: any) {
@@ -74,7 +81,9 @@ export default function AdminApprovals() {
         homeLocationId: formLocationId,
         teamIds: formTeamIds,
       });
-      setPending((prev) => prev.filter((u) => u.id !== user.id));
+      const next = pending.filter((u) => u.id !== user.id);
+      setPending(next);
+      onCountChange?.(next.length);
       setExpandedId(null);
       showToast(`${user.name} approved`);
     } catch (err: any) {
@@ -90,7 +99,9 @@ export default function AdminApprovals() {
     setError(null);
     try {
       await api.rejectPendingUser(user.id);
-      setPending((prev) => prev.filter((u) => u.id !== user.id));
+      const next = pending.filter((u) => u.id !== user.id);
+      setPending(next);
+      onCountChange?.(next.length);
       showToast(`${user.name} rejected`);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to reject user');
