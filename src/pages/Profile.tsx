@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { useToast } from '../Toast';
 import { api, photoSrc } from '../api';
+import { DetailPage, styles as detail } from '../components/DetailPage';
+import { styles as form } from '../components/FormPage';
 
 export function Profile() {
-  const navigate = useNavigate();
   const { user, refreshUser } = useAuth();
   const showToast = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -31,7 +31,7 @@ export function Profile() {
     }
   }, [user]);
 
-  if (!user) return <div style={styles.loading}>Loading...</div>;
+  if (!user) return <div style={detail.loading}>Loading…</div>;
 
   const isDirty = name !== user.name || phone !== (user.phone || '') || bio !== (user.bio || '');
 
@@ -115,252 +115,198 @@ export function Profile() {
     .toUpperCase();
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <button onClick={() => navigate('/dashboard')} style={styles.backBtn}>
-          ← Back to Dashboard
-        </button>
-        <h1 style={styles.title}>My Profile</h1>
-      </div>
+    <DetailPage title="My Profile" maxWidth="560px">
+      {error && <div style={detail.error}>{error}</div>}
 
-      <div style={styles.content}>
-        <div style={styles.card}>
-          {error && <div style={styles.error}>{error}</div>}
-
-          {/* Avatar */}
-          <div style={styles.avatarSection}>
-            <div style={styles.avatarWrap} onClick={() => fileInputRef.current?.click()}>
-              {user.avatarUrl ? (
-                <img src={photoSrc(user.avatarUrl)} alt="" style={styles.avatarImg} />
-              ) : (
-                <div style={styles.avatarPlaceholder}>{initials}</div>
-              )}
-            </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              style={{ display: 'none' }}
-              onChange={handleAvatarChange}
-            />
-            <div style={styles.avatarActions}>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                style={styles.secondaryBtn}
-                disabled={isUploadingAvatar}
-              >
-                {isUploadingAvatar ? 'Uploading…' : 'Change Photo'}
-              </button>
-              {user.avatarUrl && (
-                <button
-                  onClick={handleRemoveAvatar}
-                  style={styles.dangerLinkBtn}
-                  disabled={isUploadingAvatar}
-                >
-                  Remove
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Editable fields */}
-          <div style={styles.section}>
-            <label style={styles.label}>Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              style={styles.input}
-              maxLength={100}
-            />
-          </div>
-
-          <div style={styles.section}>
-            <label style={styles.label}>Email</label>
-            <div style={styles.readOnlyValue}>{user.email}</div>
-          </div>
-
-          <div style={styles.section}>
-            <label style={styles.label}>Contact number</label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              style={styles.input}
-              placeholder="e.g. (555) 123-4567"
-              maxLength={30}
-            />
-          </div>
-
-          <div style={styles.section}>
-            <label style={styles.label}>Bio</label>
-            <textarea
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              style={styles.textarea}
-              maxLength={500}
-              rows={4}
-              placeholder="Say a little about yourself…"
-            />
-            <div style={styles.charCount}>{bio.length}/500</div>
-          </div>
-
+      {/* Avatar */}
+      <div style={styles.avatarSection}>
+        <div style={styles.avatarWrap} onClick={() => fileInputRef.current?.click()}>
+          {user.avatarUrl ? (
+            <img src={photoSrc(user.avatarUrl)} alt="" style={styles.avatarImg} />
+          ) : (
+            <div style={styles.avatarPlaceholder}>{initials}</div>
+          )}
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          style={{ display: 'none' }}
+          onChange={handleAvatarChange}
+        />
+        <div style={styles.avatarActions}>
           <button
-            onClick={handleSave}
-            style={{ ...styles.primaryBtn, opacity: isDirty ? 1 : 0.5 }}
-            disabled={!isDirty || isSaving}
+            onClick={() => fileInputRef.current?.click()}
+            style={styles.secondaryBtn}
+            disabled={isUploadingAvatar}
           >
-            {isSaving ? 'Saving…' : 'Save Changes'}
+            {isUploadingAvatar ? 'Uploading…' : 'Change Photo'}
           </button>
-
-          {/* Change password */}
-          <div style={styles.divider} />
-          <div style={styles.section}>
-            <h3 style={styles.subtitle}>Change password</h3>
-            {pwError && <div style={styles.error}>{pwError}</div>}
-            <input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              style={{ ...styles.input, marginBottom: '10px' }}
-              placeholder="Current password"
-              autoComplete="current-password"
-            />
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              style={{ ...styles.input, marginBottom: '10px' }}
-              placeholder="New password (min 8 characters)"
-              autoComplete="new-password"
-            />
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              style={{ ...styles.input, marginBottom: '14px' }}
-              placeholder="Confirm new password"
-              autoComplete="new-password"
-            />
+          {user.avatarUrl && (
             <button
-              onClick={handleChangePassword}
-              style={styles.secondaryWideBtn}
-              disabled={isChangingPw || !currentPassword || !newPassword}
+              onClick={handleRemoveAvatar}
+              style={styles.dangerLinkBtn}
+              disabled={isUploadingAvatar}
             >
-              {isChangingPw ? 'Updating…' : 'Update password'}
+              Remove
             </button>
-          </div>
-
-          {/* Read-only teams/locations */}
-          <div style={styles.divider} />
-          <div style={styles.section}>
-            <h3 style={styles.subtitle}>Teams &amp; Locations</h3>
-            <p style={styles.hint}>
-              This determines which tickets and reports you can see, in addition to your own submissions.
-            </p>
-
-            <div style={styles.detailRow}>
-              <span style={styles.detailLabel}>Home location:</span>
-              <span>{user.homeLocation?.name || 'Unknown'}</span>
-            </div>
-
-            {user.teams && user.teams.length > 0 ? (
-              <div style={styles.teamsList}>
-                {user.teams.map((team) => (
-                  <div key={team.id} style={styles.teamCard}>
-                    <div style={styles.teamName}>{team.name}</div>
-                    <div style={styles.tags}>
-                      {team.tags && team.tags.length > 0 ? (
-                        team.tags.map((tag) => (
-                          <span key={tag.id} style={styles.tag}>
-                            {tag.name}
-                          </span>
-                        ))
-                      ) : (
-                        <span style={styles.noTags}>No tags</span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p style={styles.noTags}>Not assigned to any team yet.</p>
-            )}
-          </div>
+          )}
         </div>
       </div>
-    </div>
+
+      {/* Editable fields */}
+      <div style={styles.field}>
+        <label style={form.uppercaseLabel}>Name</label>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          style={form.input}
+          maxLength={100}
+        />
+      </div>
+
+      <div style={styles.field}>
+        <label style={form.uppercaseLabel}>Email</label>
+        <div style={form.readOnlyValue}>{user.email}</div>
+      </div>
+
+      <div style={styles.field}>
+        <label style={form.uppercaseLabel}>Contact number</label>
+        <input
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          style={form.input}
+          placeholder="e.g. (555) 123-4567"
+          maxLength={30}
+        />
+      </div>
+
+      <div style={styles.fieldLast}>
+        <label style={form.uppercaseLabel}>Bio</label>
+        <textarea
+          value={bio}
+          onChange={(e) => setBio(e.target.value)}
+          style={{ ...form.textarea, minHeight: '76px' }}
+          maxLength={500}
+          rows={3}
+          placeholder="Say a little about yourself…"
+        />
+        <div style={styles.charCount}>{bio.length}/500</div>
+      </div>
+
+      <button
+        onClick={handleSave}
+        style={{ ...styles.primaryBtn, opacity: isDirty ? 1 : 0.5 }}
+        disabled={!isDirty || isSaving}
+      >
+        {isSaving ? 'Saving…' : 'Save Changes'}
+      </button>
+
+      {/* Change password */}
+      <div style={styles.divider} />
+      <div>
+        <h3 style={styles.subtitle}>Change password</h3>
+        {pwError && <div style={{ ...detail.error, marginBottom: '10px' }}>{pwError}</div>}
+        <div style={styles.pwFields}>
+          <input
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            style={form.input}
+            placeholder="Current password"
+            autoComplete="current-password"
+          />
+          <input
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            style={form.input}
+            placeholder="New password (min 8 characters)"
+            autoComplete="new-password"
+          />
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            style={form.input}
+            placeholder="Confirm new password"
+            autoComplete="new-password"
+          />
+          <button
+            onClick={handleChangePassword}
+            style={styles.secondaryWideBtn}
+            disabled={isChangingPw || !currentPassword || !newPassword}
+          >
+            {isChangingPw ? 'Updating…' : 'Update password'}
+          </button>
+        </div>
+      </div>
+
+      {/* Read-only teams/locations */}
+      <div style={styles.divider} />
+      <div>
+        <h3 style={styles.subtitle}>Teams &amp; Locations</h3>
+        <p style={styles.hint}>
+          This determines which tickets and reports you can see, in addition to your own submissions.
+        </p>
+
+        <div style={styles.detailRow}>
+          <span style={styles.detailLabel}>Home location:</span>
+          <span>{user.homeLocation?.name || 'Unknown'}</span>
+        </div>
+
+        {user.teams && user.teams.length > 0 ? (
+          <div style={styles.teamsList}>
+            {user.teams.map((team) => (
+              <div key={team.id} style={styles.teamCard}>
+                <div style={styles.teamName}>{team.name}</div>
+                <div style={styles.tags}>
+                  {team.tags && team.tags.length > 0 ? (
+                    team.tags.map((tag) => (
+                      <span key={tag.id} style={styles.tag}>
+                        {tag.name}
+                      </span>
+                    ))
+                  ) : (
+                    <span style={styles.noTags}>No tags</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={styles.noTags}>Not assigned to any team yet.</p>
+        )}
+      </div>
+    </DetailPage>
   );
 }
 
-const styles = {
-  container: {
-    minHeight: '100vh',
-    backgroundColor: 'var(--bg)',
-  },
-  header: {
-    backgroundColor: 'var(--surface)',
-    padding: '20px 40px',
-    borderBottom: '1px solid var(--border)',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '20px',
-  },
-  backBtn: {
-    fontSize: '14px',
-    color: '#007bff',
-    backgroundColor: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    fontWeight: '500' as const,
-    padding: 0,
-  },
-  title: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    margin: 0,
-  },
-  content: {
-    maxWidth: '600px',
-    margin: '40px auto',
-    padding: '0 20px',
-  },
-  card: {
-    backgroundColor: 'var(--surface)',
-    borderRadius: '8px',
-    padding: '32px',
-    boxShadow: '0 2px 10px var(--shadow)',
-  },
-  error: {
-    padding: '12px 16px',
-    backgroundColor: 'var(--danger-bg)',
-    color: 'var(--danger-text)',
-    borderRadius: '4px',
-    fontSize: '14px',
-    marginBottom: '20px',
-  },
+const styles: Record<string, React.CSSProperties> = {
   avatarSection: {
     display: 'flex',
-    flexDirection: 'column' as const,
+    flexDirection: 'column',
     alignItems: 'center',
-    gap: '12px',
-    marginBottom: '28px',
-    paddingBottom: '28px',
+    gap: '10px',
+    marginBottom: '26px',
+    paddingBottom: '26px',
     borderBottom: '1px solid var(--border)',
   },
   avatarWrap: {
-    width: '96px',
-    height: '96px',
+    width: '88px',
+    height: '88px',
     borderRadius: '50%',
     overflow: 'hidden',
     cursor: 'pointer',
-    backgroundColor: 'var(--bg)',
+    backgroundColor: 'var(--accent-soft)',
     flexShrink: 0,
   },
   avatarImg: {
     width: '100%',
     height: '100%',
-    objectFit: 'cover' as const,
+    objectFit: 'cover',
   },
   avatarPlaceholder: {
     width: '100%',
@@ -368,166 +314,132 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '32px',
-    fontWeight: '700' as const,
-    color: 'var(--text-muted)',
-    backgroundColor: 'var(--tag-bg)',
+    fontSize: '28px',
+    fontWeight: 700,
+    color: 'var(--accent-text)',
+    backgroundColor: 'var(--accent-soft)',
   },
   avatarActions: {
     display: 'flex',
     alignItems: 'center',
     gap: '14px',
   },
-  section: {
+  field: {
+    marginBottom: '18px',
+  },
+  fieldLast: {
     marginBottom: '20px',
-  },
-  label: {
-    display: 'block',
-    fontSize: '12px',
-    fontWeight: '600' as const,
-    color: 'var(--text-muted)',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.5px',
-    marginBottom: '6px',
-  },
-  input: {
-    width: '100%',
-    padding: '10px 12px',
-    border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    backgroundColor: 'var(--input-bg)',
-    color: 'var(--text)',
-    fontSize: '14px',
-    boxSizing: 'border-box' as const,
-  },
-  textarea: {
-    width: '100%',
-    padding: '10px 12px',
-    border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    backgroundColor: 'var(--input-bg)',
-    color: 'var(--text)',
-    fontSize: '14px',
-    fontFamily: 'inherit',
-    resize: 'vertical' as const,
-    boxSizing: 'border-box' as const,
   },
   charCount: {
     fontSize: '11px',
     color: 'var(--text-faint)',
-    textAlign: 'right' as const,
+    textAlign: 'right',
     marginTop: '4px',
   },
-  readOnlyValue: {
-    padding: '10px 12px',
-    fontSize: '14px',
-    color: 'var(--text-muted)',
-    backgroundColor: 'var(--bg)',
-    borderRadius: '4px',
-  },
   primaryBtn: {
-    padding: '10px 20px',
-    backgroundColor: '#007bff',
+    width: '100%',
+    padding: '11px 18px',
+    backgroundColor: 'var(--accent)',
     color: 'white',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '9px',
     cursor: 'pointer',
     fontSize: '14px',
-    fontWeight: '600' as const,
-    width: '100%',
+    fontWeight: 600,
   },
   secondaryBtn: {
-    padding: '8px 16px',
+    padding: '8px 15px',
     backgroundColor: 'var(--bg)',
     border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
+    borderRadius: '8px',
     cursor: 'pointer',
-    fontSize: '13px',
-    fontWeight: '500' as const,
+    fontSize: '12.5px',
+    fontWeight: 600,
     color: 'var(--text)',
   },
   secondaryWideBtn: {
-    padding: '10px 20px',
+    width: '100%',
+    padding: '11px 18px',
     backgroundColor: 'var(--bg)',
     border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
+    borderRadius: '9px',
     cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '600' as const,
+    fontSize: '13.5px',
+    fontWeight: 600,
     color: 'var(--text)',
-    width: '100%',
   },
   dangerLinkBtn: {
     background: 'none',
     border: 'none',
-    color: '#dc3545',
-    fontSize: '13px',
+    color: 'var(--danger-text)',
+    fontSize: '12.5px',
     cursor: 'pointer',
     padding: 0,
   },
   divider: {
     borderTop: '1px solid var(--border)',
-    margin: '28px 0 20px 0',
+    margin: '26px 0 22px',
   },
   subtitle: {
-    fontSize: '16px',
-    fontWeight: '600' as const,
-    margin: '0 0 6px 0',
+    fontSize: '15px',
+    fontWeight: 700,
+    margin: '0 0 6px',
     color: 'var(--text)',
   },
   hint: {
-    fontSize: '13px',
+    fontSize: '12.5px',
     color: 'var(--text-faint)',
-    margin: '0 0 16px 0',
+    margin: '0 0 16px',
+    lineHeight: 1.5,
+  },
+  pwFields: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
   },
   detailRow: {
     display: 'flex',
     gap: '8px',
-    fontSize: '14px',
+    fontSize: '13.5px',
     marginBottom: '16px',
   },
   detailLabel: {
-    fontWeight: '600' as const,
+    fontWeight: 600,
     color: 'var(--text)',
   },
   teamsList: {
     display: 'flex',
-    flexDirection: 'column' as const,
+    flexDirection: 'column',
     gap: '10px',
   },
   teamCard: {
-    padding: '12px',
+    padding: '13px 15px',
     backgroundColor: 'var(--bg)',
-    borderRadius: '6px',
+    borderRadius: '9px',
   },
   teamName: {
-    fontSize: '14px',
-    fontWeight: '600' as const,
+    fontSize: '13.5px',
+    fontWeight: 700,
     color: 'var(--text)',
-    marginBottom: '6px',
+    marginBottom: '7px',
   },
   tags: {
     display: 'flex',
-    flexWrap: 'wrap' as const,
+    flexWrap: 'wrap',
     gap: '6px',
   },
   tag: {
     display: 'inline-block',
-    padding: '4px 10px',
-    backgroundColor: 'var(--tag-bg)',
-    color: 'var(--tag-text)',
-    borderRadius: '14px',
-    fontSize: '12px',
-    fontWeight: '500' as const,
+    padding: '3px 10px',
+    backgroundColor: 'var(--accent-soft)',
+    color: 'var(--accent-text)',
+    borderRadius: '12px',
+    fontSize: '11.5px',
+    fontWeight: 600,
   },
   noTags: {
     fontSize: '13px',
     color: 'var(--text-faint)',
-    fontStyle: 'italic' as const,
-  },
-  loading: {
-    padding: '20px',
-    fontSize: '16px',
-    color: 'var(--text-muted)',
+    fontStyle: 'italic',
   },
 };

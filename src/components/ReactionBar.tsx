@@ -94,7 +94,11 @@ const styles = {
     gap: '4px',
     padding: '3px 9px',
     borderRadius: '14px',
-    border: '1px solid var(--border-strong)',
+    // Longhand: chipActive overrides borderColor alone, and mixing that
+    // with the border shorthand makes React warn on every toggle.
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: 'var(--border-strong)',
     backgroundColor: 'var(--surface)',
     cursor: 'pointer',
     fontSize: '12.5px',

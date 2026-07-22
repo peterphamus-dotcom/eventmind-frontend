@@ -261,7 +261,11 @@ export const styles: Record<string, CSSProperties> = {
     fontSize: '12.5px',
     fontWeight: 600,
     backgroundColor: 'transparent',
-    border: '1px solid var(--border-strong)',
+    // Longhand: subscribeBtnActive overrides borderColor alone, and mixing
+    // that with the border shorthand makes React warn on every toggle.
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: 'var(--border-strong)',
     borderRadius: '14px',
     cursor: 'pointer',
     color: 'var(--text-muted)',

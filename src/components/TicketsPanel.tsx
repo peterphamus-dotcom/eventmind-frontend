@@ -320,7 +320,12 @@ const styles = {
     gap: '5px',
     padding: '14px 8px',
     backgroundColor: 'var(--surface)',
-    border: '1px solid var(--border)',
+    // Longhand: the active-filter variant overrides borderColor alone,
+    // and mixing that with the border shorthand makes React warn on
+    // every filter change.
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: 'var(--border)',
     borderRadius: '10px',
     cursor: 'pointer',
   },

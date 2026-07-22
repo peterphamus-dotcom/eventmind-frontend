@@ -438,7 +438,12 @@ const styles: Record<string, React.CSSProperties> = {
   },
   select: {
     padding: '8px 11px',
-    border: '1.5px solid var(--border-strong)',
+    // Longhand: borderColor is overridden per-status/urgency at the call
+    // site, and mixing that with the border shorthand makes React warn
+    // about conflicting style properties on every value change.
+    borderWidth: '1.5px',
+    borderStyle: 'solid',
+    borderColor: 'var(--border-strong)',
     borderRadius: '8px',
     backgroundColor: 'var(--surface)',
     color: 'var(--text)',
@@ -468,7 +473,11 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '6px',
     padding: '8px 13px',
     backgroundColor: 'transparent',
-    border: '1px solid var(--border-strong)',
+    // Longhand: pinBtnActive overrides borderColor alone, and mixing that
+    // with the border shorthand makes React warn on every toggle.
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: 'var(--border-strong)',
     borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '12.5px',
