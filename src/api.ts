@@ -45,9 +45,20 @@ export const api = {
 
   // Invites
   getInvite: (token: string) =>
-    client.get<ApiResponse<{ email: string; inviterName: string | null }>>(`/invites/${token}`),
-  sendInvite: (email: string) =>
-    client.post<ApiResponse<{ message: string; email: string }>>('/invites', { email }),
+    client.get<
+      ApiResponse<{
+        email: string;
+        inviterName: string | null;
+        team: { id: string; name: string } | null;
+        location: { id: string; name: string } | null;
+      }>
+    >(`/invites/${token}`),
+  sendInvite: (email: string, teamId?: string, homeLocationId?: string) =>
+    client.post<ApiResponse<{ message: string; email: string }>>('/invites', {
+      email,
+      teamId,
+      homeLocationId,
+    }),
 
   // Users
   getMe: () => client.get<ApiResponse<User>>('/users/me'),

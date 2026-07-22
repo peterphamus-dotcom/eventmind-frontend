@@ -21,6 +21,16 @@ const XCircleIcon = (
   </svg>
 );
 
+const calloutStyle: React.CSSProperties = {
+  padding: '10px 14px',
+  backgroundColor: 'var(--accent-soft)',
+  color: 'var(--accent-text)',
+  borderRadius: '8px',
+  fontSize: '13px',
+  lineHeight: 1.5,
+  marginBottom: '16px',
+};
+
 export function AcceptInvite() {
   const { token } = useParams<{ token: string }>();
   const { acceptInvite, error } = useAuth();
@@ -30,6 +40,8 @@ export function AcceptInvite() {
   const [invalid, setInvalid] = useState(false);
   const [email, setEmail] = useState('');
   const [inviterName, setInviterName] = useState<string | null>(null);
+  const [team, setTeam] = useState<{ id: string; name: string } | null>(null);
+  const [location, setLocation] = useState<{ id: string; name: string } | null>(null);
 
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
@@ -46,6 +58,8 @@ export function AcceptInvite() {
       .then((res) => {
         setEmail(res.data.data?.email || '');
         setInviterName(res.data.data?.inviterName || null);
+        setTeam(res.data.data?.team || null);
+        setLocation(res.data.data?.location || null);
       })
       .catch(() => setInvalid(true))
       .finally(() => setLoading(false));
@@ -106,6 +120,14 @@ export function AcceptInvite() {
         </>
       }
     >
+      {(team || location) && (
+        <div style={calloutStyle}>
+          You're joining {team ? team.name : ''}
+          {team && location ? ' at ' : ''}
+          {location ? location.name : ''}.
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} style={styles.form}>
         <div style={styles.formGroup}>
           <label style={styles.label}>Your name</label>
