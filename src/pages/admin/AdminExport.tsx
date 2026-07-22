@@ -1,8 +1,23 @@
 import { useState } from 'react';
 import { api } from '../../api';
 import { useToast } from '../../Toast';
+import { styles as shared } from '../../components/AdminShared';
 
 type Which = 'tickets' | 'reports';
+
+const TicketIcon = (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z" />
+  </svg>
+);
+
+const ReportIcon = (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="6" y="4" width="12" height="16" rx="2" />
+    <line x1="9" y1="10" x2="15" y2="10" />
+    <line x1="9" y1="14" x2="15" y2="14" />
+  </svg>
+);
 
 /** Admin data export: pull every ticket / report as a CSV download. */
 export default function AdminExport() {
@@ -39,7 +54,7 @@ export default function AdminExport() {
 
       <div style={styles.grid}>
         <div style={styles.tile}>
-          <div style={styles.tileIcon}>🎫</div>
+          {TicketIcon}
           <div style={styles.tileBody}>
             <h3 style={styles.tileTitle}>All Tickets</h3>
             <p style={styles.tileText}>
@@ -52,12 +67,12 @@ export default function AdminExport() {
             style={styles.btn}
             disabled={busy !== null}
           >
-            {busy === 'tickets' ? 'Preparing…' : '⬇ Download CSV'}
+            {busy === 'tickets' ? 'Preparing…' : 'Download CSV'}
           </button>
         </div>
 
         <div style={styles.tile}>
-          <div style={styles.tileIcon}>📋</div>
+          {ReportIcon}
           <div style={styles.tileBody}>
             <h3 style={styles.tileTitle}>All Reports</h3>
             <p style={styles.tileText}>
@@ -70,7 +85,7 @@ export default function AdminExport() {
             style={styles.btn}
             disabled={busy !== null}
           >
-            {busy === 'reports' ? 'Preparing…' : '⬇ Download CSV'}
+            {busy === 'reports' ? 'Preparing…' : 'Download CSV'}
           </button>
         </div>
       </div>
@@ -91,73 +106,60 @@ function triggerDownload(blob: Blob, filename: string) {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  card: {
-    backgroundColor: 'var(--surface)',
-    borderRadius: '8px',
-    padding: '32px',
-    boxShadow: '0 2px 10px var(--shadow)',
-  },
-  title: {
-    fontSize: '20px',
-    fontWeight: 600,
-    marginBottom: '4px',
-    color: 'var(--text)',
-  },
+  card: shared.card,
+  title: shared.titleTight,
   subtitle: {
-    fontSize: '13px',
+    fontSize: '12.5px',
     color: 'var(--text-faint)',
-    marginBottom: '24px',
-    maxWidth: '620px',
+    marginBottom: '20px',
+    maxWidth: '600px',
     lineHeight: 1.5,
   },
   error: {
-    padding: '12px 16px',
-    backgroundColor: 'var(--danger-bg)',
+    padding: '11px 14px',
+    backgroundColor: 'var(--danger-soft)',
     color: 'var(--danger-text)',
-    borderRadius: '4px',
+    borderRadius: '9px',
     fontSize: '14px',
     marginBottom: '16px',
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
     gap: '16px',
   },
   tile: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px',
+    gap: '10px',
     padding: '20px',
     backgroundColor: 'var(--bg)',
     border: '1px solid var(--border)',
-    borderRadius: '8px',
-  },
-  tileIcon: {
-    fontSize: '28px',
+    borderRadius: '10px',
   },
   tileBody: {
     flex: 1,
   },
   tileTitle: {
-    fontSize: '16px',
-    fontWeight: 600,
+    fontSize: '15px',
+    fontWeight: 700,
     color: 'var(--text)',
-    margin: '0 0 6px',
+    margin: 0,
   },
   tileText: {
-    fontSize: '13px',
+    fontSize: '12.5px',
     color: 'var(--text-muted)',
     margin: 0,
     lineHeight: 1.5,
   },
   btn: {
     padding: '10px 16px',
-    backgroundColor: '#28a745',
+    backgroundColor: 'var(--success)',
     color: 'white',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '8px',
     cursor: 'pointer',
-    fontSize: '14px',
+    fontSize: '13.5px',
     fontWeight: 600,
   },
 };

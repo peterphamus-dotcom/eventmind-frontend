@@ -1,7 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api, photoSrc } from '../../api';
+import { styles as shared, roleBadge } from '../../components/AdminShared';
 import type { User } from '../../types';
+
+const FlagIcon = (
+  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: '-1px' }}>
+    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+    <line x1="4" y1="22" x2="4" y2="15" />
+  </svg>
+);
 
 function relativeTime(iso: string): string {
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
@@ -118,25 +126,13 @@ export default function AdminUsers() {
                   </td>
                   <td style={styles.cell}>
                     {user.reportCount ? (
-                      <span style={styles.reportBadge}>🚩 {user.reportCount}</span>
+                      <span style={styles.reportBadge}>{FlagIcon} {user.reportCount}</span>
                     ) : (
                       '—'
                     )}
                   </td>
                   <td style={styles.cell}>
-                    <span
-                      style={{
-                        ...styles.badge,
-                        backgroundColor:
-                          user.role === 'ADMIN'
-                            ? '#dc3545'
-                            : user.role === 'CORE_TEAM'
-                              ? '#007bff'
-                              : '#6c757d',
-                      }}
-                    >
-                      {user.role}
-                    </span>
+                    <span style={roleBadge(user.role)}>{user.role}</span>
                   </td>
                   <td style={styles.cell}>
                     {editingId === user.id ? (
@@ -160,10 +156,7 @@ export default function AdminUsers() {
                         </button>
                         <button
                           onClick={() => setEditingId(null)}
-                          style={{
-                            ...styles.btnSmall,
-                            backgroundColor: '#6c757d',
-                          }}
+                          style={{ ...styles.btnSmall, backgroundColor: 'var(--neutral)' }}
                         >
                           Cancel
                         </button>
@@ -191,107 +184,51 @@ export default function AdminUsers() {
 }
 
 const styles = {
-  card: {
-    backgroundColor: 'var(--surface)',
-    borderRadius: '8px',
-    padding: '32px',
-    boxShadow: '0 2px 10px var(--shadow)',
-  },
-  title: {
-    fontSize: '20px',
-    fontWeight: '600',
-    marginBottom: '24px',
-    color: 'var(--text)',
-  },
+  card: shared.card,
+  title: shared.title,
   error: {
-    padding: '12px 16px',
-    backgroundColor: 'var(--danger-bg)',
+    padding: '11px 14px',
+    backgroundColor: 'var(--danger-soft)',
     color: 'var(--danger-text)',
-    borderRadius: '4px',
+    borderRadius: '9px',
     fontSize: '14px',
     marginBottom: '16px',
   },
-  filterRow: {
-    display: 'flex',
-    gap: '12px',
-    alignItems: 'center',
-    marginBottom: '24px',
-  },
-  label: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: 'var(--text)',
-  },
-  select: {
-    padding: '8px 12px',
-    border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    fontSize: '14px',
-    backgroundColor: 'var(--input-bg)',
-    color: 'var(--text)',
-  },
+  filterRow: shared.filterRow,
+  label: shared.filterLabel,
+  select: shared.selectSmall,
   tableContainer: {
     overflowX: 'auto' as const,
   },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse' as const,
-  },
-  headerRow: {
-    backgroundColor: 'var(--bg)',
-    borderBottom: '2px solid var(--border-strong)',
-  },
-  headerCell: {
-    padding: '12px',
-    textAlign: 'left' as const,
-    fontSize: '14px',
-    fontWeight: '600',
-    color: 'var(--text)',
-  },
-  row: {
-    borderBottom: '1px solid var(--border)',
-  },
-  cell: {
-    padding: '12px',
-    fontSize: '14px',
-    color: 'var(--text)',
-  },
+  table: shared.table,
+  headerRow: shared.thead,
+  headerCell: shared.th,
+  row: shared.tr,
+  cell: shared.td,
   nameCell: {
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
+    gap: '9px',
     color: 'var(--text)',
     textDecoration: 'none',
   },
   reportBadge: {
     display: 'inline-block',
     padding: '3px 8px',
-    backgroundColor: 'var(--danger-bg)',
+    backgroundColor: 'var(--danger-soft)',
     color: 'var(--danger-text)',
     borderRadius: '10px',
     fontSize: '12px',
     fontWeight: '600' as const,
   },
   avatar: {
-    width: '28px',
-    height: '28px',
+    width: '26px',
+    height: '26px',
     borderRadius: '50%',
     objectFit: 'cover' as const,
     flexShrink: 0,
   },
-  avatarPlaceholder: {
-    width: '28px',
-    height: '28px',
-    borderRadius: '50%',
-    backgroundColor: 'var(--tag-bg)',
-    color: 'var(--text-muted)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '12px',
-    fontWeight: '700' as const,
-    flexShrink: 0,
-  },
+  avatarPlaceholder: shared.avatarSm,
   bioText: {
     display: 'inline-block',
     maxWidth: '180px',
@@ -300,49 +237,38 @@ const styles = {
     whiteSpace: 'nowrap' as const,
     verticalAlign: 'bottom',
   },
-  badge: {
-    display: 'inline-block',
-    padding: '4px 8px',
-    borderRadius: '4px',
-    color: 'white',
-    fontSize: '12px',
-    fontWeight: '600' as const,
-  },
   editRow: {
     display: 'flex',
-    gap: '8px',
+    gap: '6px',
+    alignItems: 'center',
   },
   selectSmall: {
-    padding: '6px 8px',
+    padding: '5px 7px',
     border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    fontSize: '13px',
-    backgroundColor: 'var(--input-bg)',
+    borderRadius: '5px',
+    fontSize: '12px',
+    backgroundColor: 'var(--surface)',
     color: 'var(--text)',
   },
   btnSmall: {
-    padding: '6px 12px',
-    backgroundColor: '#007bff',
+    padding: '6px 10px',
+    backgroundColor: 'var(--accent)',
     color: 'white',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '5px',
     cursor: 'pointer',
-    fontSize: '13px',
-    fontWeight: '500' as const,
+    fontSize: '12px',
+    fontWeight: '600' as const,
   },
   btnEdit: {
     padding: '6px 12px',
-    backgroundColor: '#007bff',
+    backgroundColor: 'var(--accent)',
     color: 'white',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '6px',
     cursor: 'pointer',
-    fontSize: '13px',
-    fontWeight: '500' as const,
+    fontSize: '12.5px',
+    fontWeight: '600' as const,
   },
-  empty: {
-    fontSize: '14px',
-    color: 'var(--text-faint)',
-    fontStyle: 'italic',
-  },
+  empty: shared.empty,
 };

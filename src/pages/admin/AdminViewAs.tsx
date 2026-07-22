@@ -1,19 +1,29 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../api';
+import { styles as shared } from '../../components/AdminShared';
+import { urgencyBadge, statusBadge, LocationIcon } from '../../components/badges';
 import type { Team, Ticket, Report, Tag } from '../../types';
 
-const URGENCY_COLORS: Record<string, string> = {
-  HIGH: '#dc3545',
-  MEDIUM: '#ffc107',
-  LOW: '#28a745',
-};
+const TicketIcon = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: '-2px', marginRight: '6px' }}>
+    <path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z" />
+  </svg>
+);
 
-const STATUS_COLORS: Record<string, string> = {
-  OPEN: '#007bff',
-  IN_PROGRESS: '#ffc107',
-  RESOLVED: '#28a745',
-  ARCHIVED: '#6c757d',
-};
+const ReportIcon = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: '-2px', marginRight: '6px' }}>
+    <rect x="6" y="4" width="12" height="16" rx="2" />
+    <line x1="9" y1="10" x2="15" y2="10" />
+    <line x1="9" y1="14" x2="15" y2="14" />
+  </svg>
+);
+
+const EyeIcon = (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: '-2px', marginRight: '4px' }}>
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
 
 /**
  * Read-only "view as team" preview: lets an admin pick any team and see
@@ -100,7 +110,7 @@ export default function AdminViewAs() {
 
       {selectedTeamId && (
         <div style={styles.banner}>
-          👁️ Viewing as a MEMBER of <strong>{selectedTeam?.name}</strong>
+          {EyeIcon} Viewing as a MEMBER of <strong>{selectedTeam?.name}</strong>
           {teamTags.length > 0 ? (
             <>
               {' '}
@@ -122,7 +132,7 @@ export default function AdminViewAs() {
       {!isLoadingPreview && selectedTeamId && (
         <div style={styles.columns}>
           <div>
-            <h3 style={styles.sectionTitle}>🎫 Tickets ({tickets.length})</h3>
+            <h3 style={styles.sectionTitle}>{TicketIcon}Tickets ({tickets.length})</h3>
             {tickets.length === 0 ? (
               <p style={styles.empty}>No tickets visible to this team.</p>
             ) : (
@@ -130,13 +140,11 @@ export default function AdminViewAs() {
                 {tickets.map((t) => (
                   <div key={t.id} style={styles.itemCard}>
                     <div style={styles.itemHeader}>
-                      <span style={{ ...styles.badge, backgroundColor: URGENCY_COLORS[t.urgency] }}>
-                        {t.urgency}
+                      <span style={urgencyBadge(t.urgency)}>{t.urgency}</span>
+                      <span style={statusBadge(t.status)}>{t.status.replace('_', ' ')}</span>
+                      <span style={styles.itemLocation}>
+                        <LocationIcon size={11} /> {t.location?.name}
                       </span>
-                      <span style={{ ...styles.badge, backgroundColor: STATUS_COLORS[t.status] }}>
-                        {t.status.replace('_', ' ')}
-                      </span>
-                      <span style={styles.itemLocation}>📍 {t.location?.name}</span>
                     </div>
                     <p style={styles.itemTitle}>{t.title}</p>
                     <p style={styles.itemMeta}>
@@ -150,7 +158,7 @@ export default function AdminViewAs() {
           </div>
 
           <div>
-            <h3 style={styles.sectionTitle}>📋 Reports ({reports.length})</h3>
+            <h3 style={styles.sectionTitle}>{ReportIcon}Reports ({reports.length})</h3>
             {reports.length === 0 ? (
               <p style={styles.empty}>No reports visible to this team.</p>
             ) : (
@@ -158,7 +166,9 @@ export default function AdminViewAs() {
                 {reports.map((r) => (
                   <div key={r.id} style={styles.itemCard}>
                     <div style={styles.itemHeader}>
-                      <span style={styles.itemLocation}>📍 {r.location?.name}</span>
+                      <span style={styles.itemLocation}>
+                        <LocationIcon size={11} /> {r.location?.name}
+                      </span>
                     </div>
                     <p style={styles.itemTitle}>{r.text}</p>
                     <p style={styles.itemMeta}>
@@ -177,30 +187,20 @@ export default function AdminViewAs() {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  card: {
-    backgroundColor: 'var(--surface)',
-    borderRadius: '8px',
-    padding: '32px',
-    boxShadow: '0 2px 10px var(--shadow)',
-  },
-  title: {
-    fontSize: '20px',
-    fontWeight: 600,
-    marginBottom: '4px',
-    color: 'var(--text)',
-  },
+  card: shared.card,
+  title: shared.titleTight,
   subtitle: {
-    fontSize: '13px',
+    fontSize: '12.5px',
     color: 'var(--text-faint)',
-    marginBottom: '24px',
-    maxWidth: '620px',
+    marginBottom: '18px',
+    maxWidth: '600px',
     lineHeight: 1.5,
   },
   error: {
-    padding: '12px 16px',
-    backgroundColor: 'var(--danger-bg)',
+    padding: '11px 14px',
+    backgroundColor: 'var(--danger-soft)',
     color: 'var(--danger-text)',
-    borderRadius: '4px',
+    borderRadius: '9px',
     fontSize: '14px',
     marginBottom: '16px',
   },
@@ -208,30 +208,30 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
-    marginBottom: '16px',
+    marginBottom: '18px',
     flexWrap: 'wrap',
   },
   label: {
-    fontSize: '13px',
-    fontWeight: 600,
+    fontSize: '12.5px',
+    fontWeight: 700,
     color: 'var(--text-muted)',
   },
   select: {
-    padding: '10px 12px',
+    padding: '9px 12px',
     border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    fontSize: '14px',
-    backgroundColor: 'var(--input-bg)',
+    borderRadius: '8px',
+    fontSize: '13.5px',
+    backgroundColor: 'var(--surface)',
     color: 'var(--text)',
-    minWidth: '220px',
+    minWidth: '200px',
   },
   banner: {
     padding: '12px 16px',
     backgroundColor: 'var(--bg)',
     border: '1px solid var(--border)',
-    borderLeft: '4px solid #7c5cff',
-    borderRadius: '6px',
-    fontSize: '13px',
+    borderLeft: '4px solid var(--purple)',
+    borderRadius: '8px',
+    fontSize: '12.5px',
     color: 'var(--text)',
     marginBottom: '20px',
     lineHeight: 1.6,
@@ -240,11 +240,11 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'inline-block',
     padding: '2px 8px',
     marginLeft: '4px',
-    backgroundColor: 'var(--tag-bg)',
-    color: 'var(--tag-text)',
+    backgroundColor: 'var(--accent-soft)',
+    color: 'var(--accent-text)',
     borderRadius: '10px',
-    fontSize: '12px',
-    fontWeight: 500,
+    fontSize: '11.5px',
+    fontWeight: 600,
   },
   loading: {
     fontSize: '14px',
@@ -253,25 +253,27 @@ const styles: Record<string, React.CSSProperties> = {
   },
   columns: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-    gap: '24px',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+    gap: '20px',
   },
   sectionTitle: {
-    fontSize: '15px',
-    fontWeight: 600,
+    fontSize: '14px',
+    fontWeight: 700,
     color: 'var(--text)',
-    marginBottom: '12px',
+    marginBottom: '10px',
+    display: 'flex',
+    alignItems: 'center',
   },
   list: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '10px',
+    gap: '9px',
   },
   itemCard: {
-    padding: '12px 14px',
+    padding: '11px 13px',
     backgroundColor: 'var(--bg)',
     border: '1px solid var(--border)',
-    borderRadius: '6px',
+    borderRadius: '7px',
   },
   itemHeader: {
     display: 'flex',
@@ -280,33 +282,25 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: '6px',
     flexWrap: 'wrap',
   },
-  badge: {
-    padding: '2px 8px',
-    borderRadius: '10px',
-    color: 'white',
-    fontSize: '10px',
-    fontWeight: 700,
-  },
   itemLocation: {
     fontSize: '12px',
     color: 'var(--text-faint)',
     marginLeft: 'auto',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '3px',
   },
   itemTitle: {
-    fontSize: '14px',
-    fontWeight: 500,
+    fontSize: '13.5px',
+    fontWeight: 600,
     color: 'var(--text)',
     margin: '0 0 4px',
     lineHeight: 1.4,
   },
   itemMeta: {
-    fontSize: '12px',
+    fontSize: '11.5px',
     color: 'var(--text-muted)',
     margin: 0,
   },
-  empty: {
-    fontSize: '13px',
-    color: 'var(--text-faint)',
-    fontStyle: 'italic',
-  },
+  empty: shared.empty,
 };

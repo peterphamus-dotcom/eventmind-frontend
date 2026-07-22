@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../api';
+import { styles as shared } from '../../components/AdminShared';
 import type { Tag } from '../../types';
 
 export default function AdminTags() {
@@ -109,15 +110,7 @@ export default function AdminTags() {
                 {predefinedTags.map((tag) => (
                   <div key={tag.id} style={styles.tagCard}>
                     <p style={styles.tagName}>{tag.name}</p>
-                    <span
-                      style={{
-                        ...styles.badge,
-                        backgroundColor: 'var(--border)',
-                        color: 'var(--text-muted)',
-                      }}
-                    >
-                      System
-                    </span>
+                    <span style={styles.systemBadge}>System</span>
                   </div>
                 ))}
               </div>
@@ -139,7 +132,7 @@ export default function AdminTags() {
                       style={styles.deleteBtn}
                       disabled={deletingId === tag.id}
                     >
-                      {deletingId === tag.id ? 'Deleting...' : '✕ Delete'}
+                      {deletingId === tag.id ? 'Deleting…' : 'Delete'}
                     </button>
                   </div>
                 ))}
@@ -159,108 +152,71 @@ export default function AdminTags() {
 }
 
 const styles = {
-  card: {
-    backgroundColor: 'var(--surface)',
-    borderRadius: '8px',
-    padding: '32px',
-    boxShadow: '0 2px 10px var(--shadow)',
-  },
-  title: {
-    fontSize: '20px',
-    fontWeight: '600',
-    marginBottom: '24px',
-    color: 'var(--text)',
-  },
+  card: shared.card,
+  title: shared.title,
   error: {
-    padding: '12px 16px',
-    backgroundColor: 'var(--danger-bg)',
+    padding: '11px 14px',
+    backgroundColor: 'var(--danger-soft)',
     color: 'var(--danger-text)',
-    borderRadius: '4px',
+    borderRadius: '9px',
     fontSize: '14px',
     marginBottom: '16px',
   },
   form: {
-    marginBottom: '24px',
+    marginBottom: '22px',
   },
-  formRow: {
-    display: 'flex',
-    gap: '12px',
-  },
-  input: {
-    flex: 1,
-    padding: '10px 12px',
-    border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    fontSize: '14px',
-    backgroundColor: 'var(--input-bg)',
-    color: 'var(--text)',
-  },
-  btnPrimary: {
-    padding: '10px 20px',
-    backgroundColor: '#28a745',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '500' as const,
-  },
+  formRow: shared.addRow,
+  input: shared.addInput,
+  btnPrimary: shared.addBtn,
   section: {
-    marginBottom: '32px',
+    marginBottom: '22px',
   },
-  sectionTitle: {
-    fontSize: '16px',
-    fontWeight: '600',
-    color: 'var(--text)',
-    marginBottom: '12px',
-  },
+  sectionTitle: shared.sectionTitle,
   tagGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-    gap: '12px',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+    gap: '10px',
   },
   tagCard: {
-    padding: '12px',
+    padding: '11px 13px',
     backgroundColor: 'var(--bg)',
-    borderRadius: '4px',
+    borderRadius: '8px',
     border: '1px solid var(--border)',
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '8px',
+    gap: '6px',
   },
   tagName: {
-    fontSize: '14px',
-    fontWeight: '600',
+    fontSize: '13.5px',
+    fontWeight: '600' as const,
     color: 'var(--text)',
     margin: 0,
   },
-  badge: {
+  systemBadge: {
+    alignSelf: 'flex-start' as const,
     display: 'inline-block',
-    padding: '4px 8px',
-    backgroundColor: 'var(--success-bg)',
-    color: 'var(--success-text)',
-    borderRadius: '4px',
-    fontSize: '12px',
-    fontWeight: '600' as const,
+    padding: '2px 8px',
+    backgroundColor: 'var(--border)',
+    color: 'var(--text-muted)',
+    borderRadius: '6px',
+    fontSize: '10.5px',
+    fontWeight: '700' as const,
   },
   deleteBtn: {
-    padding: '6px 8px',
-    backgroundColor: '#dc3545',
+    alignSelf: 'flex-start' as const,
+    padding: '4px 9px',
+    backgroundColor: 'var(--danger)',
     color: 'white',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '6px',
     cursor: 'pointer',
-    fontSize: '12px',
-    fontWeight: '500' as const,
+    fontSize: '11px',
+    fontWeight: '600' as const,
   },
-  empty: {
-    fontSize: '14px',
-    color: 'var(--text-faint)',
-    fontStyle: 'italic',
-  },
+  empty: shared.empty,
   info: {
-    fontSize: '14px',
+    fontSize: '13px',
     color: 'var(--text-muted)',
-    marginTop: '24px',
+    marginTop: '20px',
   },
 };

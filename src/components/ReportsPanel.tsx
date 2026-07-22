@@ -5,7 +5,21 @@ import { useAuth } from '../AuthContext';
 import { LocationFilter } from './LocationFilter';
 import { CollapsibleSection } from './CollapsibleSection';
 import { SearchBar } from './SearchBar';
+import {
+  LocationIcon,
+  PlusIcon,
+  SortIcon,
+  MapPinOutlineIcon,
+  addCardStyle,
+} from './badges';
 import type { Report, Location } from '../types';
+
+const CameraIcon = (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+    <circle cx="12" cy="13" r="4" />
+  </svg>
+);
 
 type SortOption = 'recent' | 'location';
 
@@ -74,8 +88,9 @@ export function ReportsPanel() {
   return (
     <div>
       {/* Add new */}
-      <div onClick={() => navigate('/reports/new')} style={styles.addCard}>
-        + Report Issue
+      <div onClick={() => navigate('/reports/new')} style={addCardStyle}>
+        <PlusIcon />
+        Report Issue
       </div>
 
       {/* Search */}
@@ -88,8 +103,8 @@ export function ReportsPanel() {
       {/* Controls */}
       <div style={styles.controls}>
         <div style={styles.control}>
-          <span style={styles.controlLabel} role="img" aria-label="Locations" title="Locations">
-            📍
+          <span style={styles.controlLabel} aria-label="Locations" title="Locations">
+            <MapPinOutlineIcon />
           </span>
           <LocationFilter
             locations={locations}
@@ -98,8 +113,8 @@ export function ReportsPanel() {
           />
         </div>
         <div style={styles.control}>
-          <span style={styles.controlLabel} role="img" aria-label="Sort by" title="Sort by">
-            ↕️
+          <span style={styles.controlLabel} aria-label="Sort by" title="Sort by">
+            <SortIcon />
           </span>
           <select
             value={sortBy}
@@ -150,13 +165,19 @@ export function ReportsPanel() {
                     {report.text}
                   </h3>
                   <div style={{ ...styles.itemMeta, ...(isCompact ? styles.itemMetaCompact : {}) }}>
-                    <span style={styles.metaText}>📍 {report.location?.name}</span>
+                    <span style={styles.metaText}>
+                      <LocationIcon />
+                      {report.location?.name}
+                    </span>
                     <span style={styles.metaText}>By {report.submitter?.name}</span>
                     <span style={styles.metaText}>
                       {new Date(report.submittedAt).toLocaleDateString()}
                     </span>
                     {report.photos && report.photos.length > 1 && (
-                      <span style={styles.metaText}>📷 {report.photos.length}+</span>
+                      <span style={styles.metaText}>
+                        {CameraIcon}
+                        {report.photos.length}+
+                      </span>
                     )}
                   </div>
                 </div>
@@ -181,20 +202,6 @@ export function ReportsPanel() {
 }
 
 const styles = {
-  addCard: {
-    backgroundColor: 'transparent',
-    padding: '16px',
-    borderRadius: '4px',
-    border: '2px dashed var(--border-strong)',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'var(--text-muted)',
-    fontSize: '15px',
-    fontWeight: '600' as const,
-    marginBottom: '20px',
-  },
   controls: {
     display: 'flex',
     alignItems: 'center',
@@ -210,24 +217,24 @@ const styles = {
     minWidth: '160px',
   },
   controlLabel: {
-    fontSize: '16px',
+    display: 'flex',
     flexShrink: 0,
   },
   sortSelect: {
     flex: 1,
     minWidth: 0,
-    padding: '8px 10px',
+    padding: '9px 11px',
     border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    backgroundColor: 'var(--input-bg)',
+    borderRadius: '8px',
+    backgroundColor: 'var(--surface)',
     color: 'var(--text)',
-    fontSize: '16px',
+    fontSize: '14px',
   },
   error: {
     padding: '12px 16px',
-    backgroundColor: 'var(--danger-bg)',
+    backgroundColor: 'var(--danger-soft)',
     color: 'var(--danger-text)',
-    borderRadius: '4px',
+    borderRadius: '9px',
     fontSize: '14px',
     marginBottom: '16px',
   },
@@ -238,7 +245,8 @@ const styles = {
     fontSize: '14px',
     color: 'var(--text-faint)',
     fontStyle: 'italic',
-    padding: '24px 0',
+    padding: '28px 0',
+    textAlign: 'center' as const,
   },
   list: {
     display: 'flex',
@@ -247,21 +255,22 @@ const styles = {
   },
   listItem: {
     backgroundColor: 'var(--surface)',
-    padding: '16px',
-    borderRadius: '4px',
+    padding: '15px 16px',
+    border: '1px solid var(--border)',
+    borderRadius: '10px',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
   },
   listItemCompact: {
-    padding: '8px 12px',
+    padding: '9px 13px',
   },
   thumb: {
     width: '56px',
     height: '56px',
     objectFit: 'cover' as const,
-    borderRadius: '6px',
+    borderRadius: '8px',
     flexShrink: 0,
     backgroundColor: 'var(--border)',
   },
@@ -270,10 +279,11 @@ const styles = {
     flex: 1,
   },
   itemTitle: {
-    fontSize: '14px',
+    fontSize: '14.5px',
     fontWeight: '600' as const,
     margin: '0 0 8px 0',
     color: 'var(--text)',
+    lineHeight: 1.4,
     overflow: 'hidden',
     display: '-webkit-box',
     WebkitLineClamp: 2,
@@ -299,11 +309,14 @@ const styles = {
   metaText: {
     fontSize: '12px',
     color: 'var(--text-muted)',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '3px',
   },
   count: {
-    fontSize: '13px',
+    fontSize: '12.5px',
     color: 'var(--text-faint)',
-    marginTop: '16px',
+    marginTop: '18px',
   },
   showAllBtn: {
     display: 'block',
@@ -311,9 +324,9 @@ const styles = {
     padding: '10px',
     marginTop: '8px',
     backgroundColor: 'transparent',
-    border: '1px dashed var(--border-strong)',
-    borderRadius: '4px',
-    color: '#007bff',
+    border: '1px dashed var(--border-dashed)',
+    borderRadius: '9px',
+    color: 'var(--accent)',
     cursor: 'pointer',
     fontSize: '13px',
     fontWeight: '600' as const,

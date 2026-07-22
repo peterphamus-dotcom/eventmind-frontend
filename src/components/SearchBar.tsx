@@ -8,7 +8,12 @@ interface SearchBarProps {
 export function SearchBar({ value, onChange, placeholder = 'Search…' }: SearchBarProps) {
   return (
     <div style={styles.wrap}>
-      <span style={styles.icon} aria-hidden>🔍</span>
+      <span style={styles.icon} aria-hidden>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+      </span>
       <input
         type="search"
         value={value}
@@ -24,7 +29,10 @@ export function SearchBar({ value, onChange, placeholder = 'Search…' }: Search
           style={styles.clear}
           aria-label="Clear search"
         >
-          ✕
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
         </button>
       )}
     </div>
@@ -36,35 +44,40 @@ const styles: Record<string, React.CSSProperties> = {
     position: 'relative',
     display: 'flex',
     alignItems: 'center',
-    marginBottom: '16px',
+    marginBottom: '18px',
   },
   icon: {
     position: 'absolute',
-    left: '12px',
-    fontSize: '14px',
+    left: '13px',
     pointerEvents: 'none',
-    opacity: 0.7,
+    color: 'var(--text-faint)',
+    display: 'flex',
   },
   input: {
     width: '100%',
-    padding: '10px 36px',
+    // index.css forces 16px on inputs to stop iOS Safari zooming on focus,
+    // so the design's 15px is not reachable here.
+    padding: '11px 36px 11px 38px',
     border: '1px solid var(--border-strong)',
-    borderRadius: '6px',
-    backgroundColor: 'var(--input-bg)',
+    borderRadius: '9px',
+    backgroundColor: 'var(--surface)',
     color: 'var(--text)',
-    fontSize: '16px',
+    fontSize: '15px',
+    boxSizing: 'border-box',
   },
   clear: {
     position: 'absolute',
     right: '8px',
-    width: '28px',
-    height: '28px',
-    minHeight: '28px',
+    width: '26px',
+    height: '26px',
+    minHeight: '26px',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '6px',
     background: 'transparent',
     color: 'var(--text-muted)',
     cursor: 'pointer',
-    fontSize: '13px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 };

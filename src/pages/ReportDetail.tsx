@@ -4,6 +4,7 @@ import { api, photoSrc } from '../api';
 import { useToast } from '../Toast';
 import { CommentsSection } from '../components/CommentsSection';
 import { ReactionBar } from '../components/ReactionBar';
+import { DetailPage, DetailSection, DetailRow, BellIcon, styles } from '../components/DetailPage';
 import type { Report } from '../types';
 
 export function ReportDetail() {
@@ -47,331 +48,120 @@ export function ReportDetail() {
     }
   }
 
-  if (isLoading) return <div style={styles.loading}>Loading...</div>;
+  if (isLoading) return <div style={styles.loading}>Loading…</div>;
   if (error) return <div style={styles.error}>{error}</div>;
   if (!report) return <div style={styles.error}>Report not found</div>;
 
   return (
-    <div style={styles.container}>
-      {/* Header */}
-      <div style={styles.header}>
-        <button onClick={() => navigate('/dashboard')} style={styles.backBtn}>
-          ← Back to Dashboard
-        </button>
-        <h1 style={styles.title}>Report Details</h1>
-      </div>
-
-      {/* Content */}
-      <div style={styles.content}>
-        <div style={styles.card}>
-          {/* Main Info */}
-          <div style={styles.section}>
-            <h2 style={styles.sectionTitle}>Report</h2>
-            <p style={styles.text}>{report.text}</p>
-            <div style={styles.reactionRow}>
-              <ReactionBar
-                reactions={report.reactions || []}
-                onToggle={async (emoji) => {
-                  const res = await api.toggleReportReaction(report.id, emoji);
-                  return res.data.data!.reactions;
-                }}
-              />
-              <button
-                onClick={handleSubscribeToggle}
-                style={{
-                  ...styles.subscribeBtn,
-                  ...(report.isSubscribed ? styles.subscribeBtnActive : {}),
-                }}
-                disabled={isUpdating}
-                title="Get notified about activity on this report"
-              >
-                {report.isSubscribed ? '🔔 Subscribed' : '🔕 Subscribe'}
-              </button>
-            </div>
-          </div>
-
-          {/* Metadata */}
-          <div style={styles.section}>
-            <h3 style={styles.subtitle}>Details</h3>
-            <div style={styles.details}>
-              <div style={styles.detailRow}>
-                <span style={styles.detailLabel}>Location:</span>
-                <span>{report.location?.name || 'Unknown'}</span>
-              </div>
-              <div style={styles.detailRow}>
-                <span style={styles.detailLabel}>Reported by:</span>
-                <span>
-                  {report.submitter?.id ? (
-                    <Link to={`/users/${report.submitter.id}`} style={styles.userLink}>
-                      {report.submitter.name}
-                    </Link>
-                  ) : (
-                    report.submitter?.name
-                  )}{' '}
-                  ({report.submitter?.email})
-                </span>
-              </div>
-              <div style={styles.detailRow}>
-                <span style={styles.detailLabel}>Reported at:</span>
-                <span>{new Date(report.submittedAt).toLocaleString()}</span>
-              </div>
-              <div style={styles.detailRow}>
-                <span style={styles.detailLabel}>Outside home location:</span>
-                <span>{report.isOutsideHomeLocation ? 'Yes' : 'No'}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Tags */}
-          {report.tags && report.tags.length > 0 && (
-            <div style={styles.section}>
-              <h3 style={styles.subtitle}>Tags</h3>
-              <div style={styles.tags}>
-                {report.tags.map((tag) => (
-                  <span key={tag.id} style={styles.tag}>
-                    {tag.name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Photos */}
-          {report.photos && report.photos.length > 0 && (
-            <div style={styles.section}>
-              <h3 style={styles.subtitle}>Photos ({report.photos.length})</h3>
-              <div style={styles.photoGrid}>
-                {report.photos.map((photo) => (
-                  <div key={photo.id} style={styles.photoContainer}>
-                    <img
-                      src={photoSrc(photo.url)}
-                      alt={photo.caption || 'Report photo'}
-                      style={styles.photo}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="14" fill="%23999"%3EPhoto unavailable%3C/text%3E%3C/svg%3E';
-                      }}
-                    />
-                    {photo.caption && <p style={styles.photoCaption}>{photo.caption}</p>}
-                    <p style={styles.photoDate}>{new Date(photo.uploadedAt).toLocaleString()}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Comments */}
-          <CommentsSection
-            initialComments={report.comments || []}
-            onAdd={async (text) => {
-              const res = await api.addReportComment(report.id, text);
-              return res.data.data!;
-            }}
-            onReact={async (commentId, emoji) => {
-              const res = await api.toggleReportCommentReaction(report.id, commentId, emoji);
+    <DetailPage title="Report Details">
+      {/* Main Info */}
+      <DetailSection>
+        <h2 style={styles.leadTitle}>Report</h2>
+        <p style={styles.bodyText}>{report.text}</p>
+        <div style={styles.reactionRow}>
+          <ReactionBar
+            reactions={report.reactions || []}
+            onToggle={async (emoji) => {
+              const res = await api.toggleReportReaction(report.id, emoji);
               return res.data.data!.reactions;
             }}
           />
-
-          {/* Action Buttons */}
-          <div style={styles.actions}>
-            <button onClick={() => navigate('/reports/new')} style={styles.primaryBtn}>
-              + New Report
-            </button>
-            <button onClick={() => navigate('/dashboard')} style={styles.secondaryBtn}>
-              Back to Dashboard
-            </button>
-          </div>
+          <button
+            onClick={handleSubscribeToggle}
+            style={{
+              ...styles.subscribeBtn,
+              ...(report.isSubscribed ? styles.subscribeBtnActive : {}),
+            }}
+            disabled={isUpdating}
+            title="Get notified about activity on this report"
+          >
+            {BellIcon}
+            {report.isSubscribed ? 'Subscribed' : 'Subscribe'}
+          </button>
         </div>
+      </DetailSection>
+
+      {/* Metadata */}
+      <DetailSection title="Details">
+        <div style={styles.details}>
+          <DetailRow label="Location">{report.location?.name || 'Unknown'}</DetailRow>
+          <DetailRow label="Reported by">
+            {report.submitter?.id ? (
+              <Link to={`/users/${report.submitter.id}`} style={styles.userLink}>
+                {report.submitter.name}
+              </Link>
+            ) : (
+              report.submitter?.name
+            )}{' '}
+            ({report.submitter?.email})
+          </DetailRow>
+          <DetailRow label="Reported at">
+            {new Date(report.submittedAt).toLocaleString()}
+          </DetailRow>
+          <DetailRow label="Outside home location">
+            {report.isOutsideHomeLocation ? 'Yes' : 'No'}
+          </DetailRow>
+        </div>
+      </DetailSection>
+
+      {/* Tags */}
+      {report.tags && report.tags.length > 0 && (
+        <DetailSection title="Tags">
+          <div style={styles.tags}>
+            {report.tags.map((tag) => (
+              <span key={tag.id} style={styles.tag}>
+                {tag.name}
+              </span>
+            ))}
+          </div>
+        </DetailSection>
+      )}
+
+      {/* Photos */}
+      {report.photos && report.photos.length > 0 && (
+        <DetailSection title={`Photos (${report.photos.length})`}>
+          <div style={styles.photoGrid}>
+            {report.photos.map((photo) => (
+              <div key={photo.id}>
+                <img
+                  src={photoSrc(photo.url)}
+                  alt={photo.caption || 'Report photo'}
+                  style={styles.photo}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src =
+                      'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="14" fill="%23999"%3EPhoto unavailable%3C/text%3E%3C/svg%3E';
+                  }}
+                />
+                {photo.caption && <p style={styles.photoCaption}>{photo.caption}</p>}
+                <p style={styles.photoDate}>{new Date(photo.uploadedAt).toLocaleString()}</p>
+              </div>
+            ))}
+          </div>
+        </DetailSection>
+      )}
+
+      {/* Comments */}
+      <CommentsSection
+        initialComments={report.comments || []}
+        onAdd={async (text) => {
+          const res = await api.addReportComment(report.id, text);
+          return res.data.data!;
+        }}
+        onReact={async (commentId, emoji) => {
+          const res = await api.toggleReportCommentReaction(report.id, commentId, emoji);
+          return res.data.data!.reactions;
+        }}
+      />
+
+      {/* Action Buttons */}
+      <div style={styles.actions}>
+        <button onClick={() => navigate('/reports/new')} style={styles.primaryBtn}>
+          + New Report
+        </button>
+        <button onClick={() => navigate('/dashboard')} style={styles.secondaryBtn}>
+          Back to Dashboard
+        </button>
       </div>
-    </div>
+    </DetailPage>
   );
 }
-
-const styles = {
-  container: {
-    minHeight: '100vh',
-    backgroundColor: 'var(--bg)',
-  },
-  header: {
-    backgroundColor: 'var(--surface)',
-    padding: '20px 40px',
-    borderBottom: '1px solid var(--border)',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '20px',
-  },
-  userLink: {
-    color: '#007bff',
-    textDecoration: 'none',
-    fontWeight: '500' as const,
-  },
-  backBtn: {
-    fontSize: '14px',
-    color: '#007bff',
-    backgroundColor: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    fontWeight: '500',
-    padding: 0,
-  },
-  title: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    margin: 0,
-  },
-  content: {
-    maxWidth: '900px',
-    margin: '40px auto',
-    padding: '0 20px',
-  },
-  card: {
-    backgroundColor: 'var(--surface)',
-    borderRadius: '8px',
-    padding: '32px',
-    boxShadow: '0 2px 10px var(--shadow)',
-  },
-  section: {
-    marginBottom: '32px',
-    paddingBottom: '24px',
-    borderBottom: '1px solid var(--border)',
-  },
-  sectionTitle: {
-    fontSize: '20px',
-    fontWeight: '600',
-    marginBottom: '16px',
-    color: 'var(--text)',
-    margin: '0 0 16px 0',
-  },
-  subtitle: {
-    fontSize: '16px',
-    fontWeight: '600',
-    marginBottom: '12px',
-    color: 'var(--text)',
-    margin: '0 0 12px 0',
-  },
-  text: {
-    fontSize: '15px',
-    lineHeight: '1.6',
-    color: 'var(--text-muted)',
-    margin: 0,
-    whiteSpace: 'pre-wrap' as const,
-  },
-  reactionRow: {
-    marginTop: '12px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    flexWrap: 'wrap' as const,
-  },
-  subscribeBtn: {
-    padding: '8px 12px',
-    fontSize: '13px',
-    backgroundColor: 'var(--bg)',
-    border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontWeight: '500' as const,
-    color: 'var(--text)',
-  },
-  subscribeBtnActive: {
-    backgroundColor: '#fff3cd',
-    borderColor: '#ffc107',
-    color: '#856404',
-  },
-  details: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '12px',
-  },
-  detailRow: {
-    display: 'flex',
-    gap: '16px',
-    fontSize: '14px',
-  },
-  detailLabel: {
-    fontWeight: '600',
-    color: 'var(--text)',
-    minWidth: '150px',
-  },
-  tags: {
-    display: 'flex',
-    flexWrap: 'wrap' as const,
-    gap: '8px',
-  },
-  tag: {
-    display: 'inline-block',
-    padding: '6px 12px',
-    backgroundColor: 'var(--tag-bg)',
-    color: 'var(--tag-text)',
-    borderRadius: '16px',
-    fontSize: '13px',
-    fontWeight: '500',
-  },
-  photoGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-    gap: '16px',
-  },
-  photoContainer: {
-    borderRadius: '4px',
-    overflow: 'hidden',
-    backgroundColor: 'var(--bg)',
-  },
-  photo: {
-    width: '100%',
-    height: '200px',
-    objectFit: 'cover' as const,
-    display: 'block',
-  },
-  photoCaption: {
-    fontSize: '12px',
-    color: 'var(--text-muted)',
-    padding: '8px 12px',
-    margin: 0,
-  },
-  photoDate: {
-    fontSize: '11px',
-    color: 'var(--text-faint)',
-    padding: '0 12px 8px 12px',
-    margin: 0,
-  },
-  actions: {
-    display: 'flex',
-    gap: '12px',
-    marginTop: '24px',
-  },
-  primaryBtn: {
-    padding: '10px 20px',
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '500',
-    flex: 1,
-  },
-  secondaryBtn: {
-    padding: '10px 20px',
-    backgroundColor: '#6c757d',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '500',
-    flex: 1,
-  },
-  loading: {
-    padding: '20px',
-    fontSize: '16px',
-    color: 'var(--text-muted)',
-  },
-  error: {
-    padding: '20px',
-    fontSize: '16px',
-    color: 'var(--danger-text)',
-    backgroundColor: 'var(--danger-bg)',
-  },
-};

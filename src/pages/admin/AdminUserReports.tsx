@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api';
+import { styles as shared } from '../../components/AdminShared';
 import type { UserReport, UserReportStatus } from '../../types';
+
+const STATUS_TINT: Record<string, React.CSSProperties> = {
+  OPEN: { backgroundColor: 'var(--danger)', color: 'white' },
+  RESOLVED: { backgroundColor: 'var(--success)', color: 'white' },
+  DISMISSED: { backgroundColor: 'var(--neutral)', color: 'white' },
+};
 
 const REASON_LABELS: Record<string, string> = {
   HARASSMENT: 'Harassment',
@@ -91,15 +98,7 @@ export default function AdminUserReports() {
             <div key={r.id} style={styles.reportCard}>
               <div style={styles.reportHeader}>
                 <span style={styles.reasonBadge}>{REASON_LABELS[r.reason] || r.reason}</span>
-                <span
-                  style={{
-                    ...styles.statusBadge,
-                    backgroundColor:
-                      r.status === 'OPEN' ? '#dc3545' : r.status === 'RESOLVED' ? '#28a745' : '#6c757d',
-                  }}
-                >
-                  {r.status}
-                </span>
+                <span style={{ ...styles.statusBadge, ...STATUS_TINT[r.status] }}>{r.status}</span>
                 <span style={styles.date} title={new Date(r.createdAt).toLocaleString()}>
                   {relativeTime(r.createdAt)}
                 </span>
@@ -150,54 +149,29 @@ export default function AdminUserReports() {
 }
 
 const styles = {
-  card: {
-    backgroundColor: 'var(--surface)',
-    borderRadius: '8px',
-    padding: '32px',
-    boxShadow: '0 2px 10px var(--shadow)',
-  },
-  title: {
-    fontSize: '20px',
-    fontWeight: '600' as const,
-    marginBottom: '24px',
-    color: 'var(--text)',
-  },
+  card: shared.card,
+  title: shared.title,
   error: {
-    padding: '12px 16px',
-    backgroundColor: 'var(--danger-bg)',
+    padding: '11px 14px',
+    backgroundColor: 'var(--danger-soft)',
     color: 'var(--danger-text)',
-    borderRadius: '4px',
+    borderRadius: '9px',
     fontSize: '14px',
     marginBottom: '16px',
   },
-  filterRow: {
-    display: 'flex',
-    gap: '12px',
-    alignItems: 'center',
-    marginBottom: '24px',
-  },
-  label: {
-    fontSize: '14px',
-    fontWeight: '600' as const,
-    color: 'var(--text)',
-  },
-  select: {
-    padding: '8px 12px',
-    border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    fontSize: '14px',
-    backgroundColor: 'var(--input-bg)',
-    color: 'var(--text)',
-  },
+  filterRow: shared.filterRow,
+  label: shared.filterLabel,
+  select: shared.selectSmall,
   list: {
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '14px',
+    gap: '12px',
   },
   reportCard: {
-    padding: '16px',
+    padding: '15px 17px',
     backgroundColor: 'var(--bg)',
-    borderRadius: '6px',
+    borderRadius: '9px',
+    border: '1px solid var(--border)',
   },
   reportHeader: {
     display: 'flex',
@@ -208,11 +182,11 @@ const styles = {
   },
   reasonBadge: {
     display: 'inline-block',
-    padding: '3px 8px',
-    backgroundColor: 'var(--tag-bg)',
-    color: 'var(--tag-text)',
-    borderRadius: '4px',
-    fontSize: '12px',
+    padding: '3px 9px',
+    backgroundColor: 'var(--accent-soft)',
+    color: 'var(--accent-text)',
+    borderRadius: '6px',
+    fontSize: '11.5px',
     fontWeight: '600' as const,
   },
   statusBadge: {
@@ -224,28 +198,28 @@ const styles = {
     fontWeight: '600' as const,
   },
   date: {
-    fontSize: '12px',
+    fontSize: '11.5px',
     color: 'var(--text-faint)',
     marginLeft: 'auto',
   },
   reportBody: {
-    fontSize: '14px',
+    fontSize: '13.5px',
     color: 'var(--text)',
     marginBottom: '8px',
   },
   userLink: {
-    color: '#007bff',
+    color: 'var(--accent)',
     textDecoration: 'none',
     fontWeight: '600' as const,
   },
   details: {
-    fontSize: '13px',
+    fontSize: '12.5px',
     color: 'var(--text-muted)',
     margin: '0 0 10px 0',
     whiteSpace: 'pre-wrap' as const,
   },
   resolvedNote: {
-    fontSize: '12px',
+    fontSize: '11.5px',
     color: 'var(--text-faint)',
     fontStyle: 'italic' as const,
     margin: '0 0 10px 0',
@@ -253,40 +227,19 @@ const styles = {
   actions: {
     display: 'flex',
     gap: '8px',
+    flexWrap: 'wrap' as const,
   },
-  btnResolve: {
-    padding: '6px 12px',
-    backgroundColor: '#28a745',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '13px',
-    fontWeight: '500' as const,
-  },
-  btnDismiss: {
-    padding: '6px 12px',
-    backgroundColor: '#6c757d',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '13px',
-    fontWeight: '500' as const,
-  },
+  btnResolve: shared.btnSuccess,
+  btnDismiss: shared.btnNeutral,
   btnReopen: {
     padding: '6px 12px',
     backgroundColor: 'transparent',
     border: '1px solid var(--border-strong)',
     color: 'var(--text)',
-    borderRadius: '4px',
+    borderRadius: '6px',
     cursor: 'pointer',
-    fontSize: '13px',
-    fontWeight: '500' as const,
+    fontSize: '12px',
+    fontWeight: '600' as const,
   },
-  empty: {
-    fontSize: '14px',
-    color: 'var(--text-faint)',
-    fontStyle: 'italic' as const,
-  },
+  empty: shared.empty,
 };

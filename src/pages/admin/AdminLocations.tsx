@@ -1,7 +1,16 @@
 import { useState, useEffect } from 'react';
 import { api, photoSrc } from '../../api';
 import { useToast } from '../../Toast';
+import { styles as shared } from '../../components/AdminShared';
 import type { Location } from '../../types';
+
+const MapIcon = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: '-2px', marginRight: '5px' }}>
+    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+    <line x1="8" y1="2" x2="8" y2="18" />
+    <line x1="16" y1="6" x2="16" y2="22" />
+  </svg>
+);
 
 export default function AdminLocations() {
   const showToast = useToast();
@@ -156,11 +165,14 @@ export default function AdminLocations() {
                       ...(floorplanBusyId === location.id ? styles.floorplanBtnDisabled : {}),
                     }}
                   >
-                    {floorplanBusyId === location.id
-                      ? 'Working…'
-                      : location.floorplanUrl
-                        ? '🗺️ Replace floorplan'
-                        : '🗺️ Upload floorplan'}
+                    {floorplanBusyId === location.id ? (
+                      'Working…'
+                    ) : (
+                      <>
+                        {MapIcon}
+                        {location.floorplanUrl ? 'Replace floorplan' : 'Upload floorplan'}
+                      </>
+                    )}
                   </label>
                   {location.floorplanUrl && (
                     <button
@@ -187,65 +199,35 @@ export default function AdminLocations() {
 }
 
 const styles = {
-  card: {
-    backgroundColor: 'var(--surface)',
-    borderRadius: '8px',
-    padding: '32px',
-    boxShadow: '0 2px 10px var(--shadow)',
-  },
-  title: {
-    fontSize: '20px',
-    fontWeight: '600',
-    marginBottom: '24px',
-    color: 'var(--text)',
-  },
+  card: shared.card,
+  title: shared.title,
   error: {
-    padding: '12px 16px',
-    backgroundColor: 'var(--danger-bg)',
+    padding: '11px 14px',
+    backgroundColor: 'var(--danger-soft)',
     color: 'var(--danger-text)',
-    borderRadius: '4px',
+    borderRadius: '9px',
     fontSize: '14px',
     marginBottom: '16px',
   },
   form: {
-    marginBottom: '24px',
+    marginBottom: '20px',
   },
-  formRow: {
-    display: 'flex',
-    gap: '12px',
-  },
-  input: {
-    flex: 1,
-    padding: '10px 12px',
-    border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    fontSize: '14px',
-    backgroundColor: 'var(--input-bg)',
-    color: 'var(--text)',
-  },
-  btnPrimary: {
-    padding: '10px 20px',
-    backgroundColor: '#28a745',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '500' as const,
-  },
+  formRow: shared.addRow,
+  input: shared.addInput,
+  btnPrimary: shared.addBtn,
   list: {
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '8px',
-    marginBottom: '24px',
+    gap: '10px',
+    marginBottom: '20px',
   },
   listItem: {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '12px',
-    padding: '16px',
+    padding: '14px 16px',
     backgroundColor: 'var(--bg)',
-    borderRadius: '4px',
+    borderRadius: '9px',
     border: '1px solid var(--border)',
   },
   listItemTop: {
@@ -260,24 +242,24 @@ const styles = {
     flexWrap: 'wrap' as const,
   },
   floorplanThumb: {
-    width: '80px',
-    height: '60px',
+    width: '76px',
+    height: '56px',
     objectFit: 'cover' as const,
-    borderRadius: '4px',
+    borderRadius: '7px',
     border: '1px solid var(--border-strong)',
     backgroundColor: 'var(--surface)',
     flexShrink: 0,
   },
   floorplanPlaceholder: {
-    width: '80px',
-    height: '60px',
+    width: '76px',
+    height: '56px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: '4px',
+    borderRadius: '7px',
     border: '1px dashed var(--border-strong)',
     color: 'var(--text-faint)',
-    fontSize: '11px',
+    fontSize: '10px',
     textAlign: 'center' as const,
     flexShrink: 0,
   },
@@ -285,17 +267,19 @@ const styles = {
     display: 'flex',
     gap: '8px',
     flexWrap: 'wrap' as const,
+    alignItems: 'center',
   },
   floorplanBtn: {
-    display: 'inline-block',
+    display: 'inline-flex',
+    alignItems: 'center',
     padding: '8px 14px',
-    backgroundColor: '#007bff',
+    backgroundColor: 'var(--accent)',
     color: 'white',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '7px',
     cursor: 'pointer',
-    fontSize: '13px',
-    fontWeight: '500' as const,
+    fontSize: '12.5px',
+    fontWeight: '600' as const,
   },
   floorplanBtnDisabled: {
     opacity: 0.6,
@@ -303,17 +287,17 @@ const styles = {
   },
   floorplanRemoveBtn: {
     padding: '8px 14px',
-    backgroundColor: '#6c757d',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
+    backgroundColor: 'transparent',
+    border: '1px solid var(--border-strong)',
+    color: 'var(--text-muted)',
+    borderRadius: '7px',
     cursor: 'pointer',
-    fontSize: '13px',
-    fontWeight: '500' as const,
+    fontSize: '12.5px',
+    fontWeight: '600' as const,
   },
   itemName: {
-    fontSize: '14px',
-    fontWeight: '600',
+    fontSize: '14.5px',
+    fontWeight: '600' as const,
     color: 'var(--text)',
     margin: '0 0 4px 0',
   },
@@ -324,21 +308,17 @@ const styles = {
   },
   badge: {
     display: 'inline-block',
-    padding: '4px 8px',
-    backgroundColor: 'var(--success-bg)',
-    color: 'var(--success-text)',
-    borderRadius: '4px',
-    fontSize: '12px',
-    fontWeight: '600' as const,
+    padding: '3px 9px',
+    backgroundColor: 'var(--success-soft)',
+    color: 'var(--success)',
+    borderRadius: '6px',
+    fontSize: '11.5px',
+    fontWeight: '700' as const,
   },
-  empty: {
-    fontSize: '14px',
-    color: 'var(--text-faint)',
-    fontStyle: 'italic',
-  },
+  empty: shared.empty,
   info: {
-    fontSize: '14px',
+    fontSize: '13px',
     color: 'var(--text-muted)',
-    marginTop: '24px',
+    marginTop: '20px',
   },
 };

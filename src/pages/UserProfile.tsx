@@ -4,6 +4,7 @@ import { useAuth } from '../AuthContext';
 import { useToast } from '../Toast';
 import { api, photoSrc } from '../api';
 import { Modal } from '../components/Modal';
+import { DetailPage, styles as detail } from '../components/DetailPage';
 import type { PublicUserProfile, UserReportReason } from '../types';
 
 const REASONS: { value: UserReportReason; label: string }[] = [
@@ -13,6 +14,13 @@ const REASONS: { value: UserReportReason; label: string }[] = [
   { value: 'SPAM', label: 'Spam' },
   { value: 'OTHER', label: 'Other' },
 ];
+
+const FlagIcon = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+    <line x1="4" y1="22" x2="4" y2="15" />
+  </svg>
+);
 
 export function UserProfile() {
   const { userId } = useParams<{ userId: string }>();
@@ -71,22 +79,13 @@ export function UserProfile() {
     }
   }
 
-  if (isLoading) return <div style={styles.loading}>Loading...</div>;
+  if (isLoading) return <div style={detail.loading}>Loading…</div>;
 
   if (error || !profile) {
     return (
-      <div style={styles.container}>
-        <div style={styles.header}>
-          <button onClick={() => navigate(-1)} style={styles.backBtn}>
-            ← Back
-          </button>
-        </div>
-        <div style={styles.content}>
-          <div style={styles.card}>
-            <div style={styles.error}>{error || 'User not found'}</div>
-          </div>
-        </div>
-      </div>
+      <DetailPage onBack={() => navigate(-1)} backLabel="Back" maxWidth="560px">
+        <div style={styles.error}>{error || 'User not found'}</div>
+      </DetailPage>
     );
   }
 
@@ -98,60 +97,52 @@ export function UserProfile() {
     .toUpperCase();
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <button onClick={() => navigate(-1)} style={styles.backBtn}>
-          ← Back
-        </button>
-        <h1 style={styles.title}>Profile</h1>
-      </div>
-
-      <div style={styles.content}>
-        <div style={styles.card}>
-          <div style={styles.avatarSection}>
-            <div style={styles.avatarWrap}>
-              {profile.avatarUrl ? (
-                <img src={photoSrc(profile.avatarUrl)} alt="" style={styles.avatarImg} />
-              ) : (
-                <div style={styles.avatarPlaceholder}>{initials}</div>
-              )}
-            </div>
-            <h2 style={styles.name}>{profile.name}</h2>
-            <span style={styles.roleBadge}>{profile.role.replace('_', ' ')}</span>
+    <>
+      <DetailPage title="Profile" onBack={() => navigate(-1)} backLabel="Back" maxWidth="560px">
+        <div style={styles.avatarSection}>
+          <div style={styles.avatarWrap}>
+            {profile.avatarUrl ? (
+              <img src={photoSrc(profile.avatarUrl)} alt="" style={styles.avatarImg} />
+            ) : (
+              <div style={styles.avatarPlaceholder}>{initials}</div>
+            )}
           </div>
-
-          {profile.bio && (
-            <div style={styles.section}>
-              <label style={styles.label}>Bio</label>
-              <p style={styles.bioText}>{profile.bio}</p>
-            </div>
-          )}
-
-          <div style={styles.section}>
-            <label style={styles.label}>Home location</label>
-            <div style={styles.readOnlyValue}>{profile.homeLocation?.name || 'Unknown'}</div>
-          </div>
-
-          {profile.teams && profile.teams.length > 0 && (
-            <div style={styles.section}>
-              <label style={styles.label}>Teams</label>
-              <div style={styles.teamsList}>
-                {profile.teams.map((team) => (
-                  <span key={team.id} style={styles.teamChip}>
-                    {team.name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div style={styles.divider} />
-
-          <button onClick={() => setIsReportOpen(true)} style={styles.reportBtn}>
-            🚩 Report user
-          </button>
+          <h2 style={styles.name}>{profile.name}</h2>
+          <span style={styles.roleBadge}>{profile.role.replace('_', ' ')}</span>
         </div>
-      </div>
+
+        {profile.bio && (
+          <div style={styles.section}>
+            <label style={styles.label}>Bio</label>
+            <p style={styles.bioText}>{profile.bio}</p>
+          </div>
+        )}
+
+        <div style={styles.section}>
+          <label style={styles.label}>Home location</label>
+          <div style={styles.readOnlyValue}>{profile.homeLocation?.name || 'Unknown'}</div>
+        </div>
+
+        {profile.teams && profile.teams.length > 0 && (
+          <div style={styles.sectionTight}>
+            <label style={styles.label}>Teams</label>
+            <div style={styles.teamsList}>
+              {profile.teams.map((team) => (
+                <span key={team.id} style={styles.teamChip}>
+                  {team.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div style={styles.divider} />
+
+        <button onClick={() => setIsReportOpen(true)} style={styles.reportBtn}>
+          {FlagIcon}
+          Report user
+        </button>
+      </DetailPage>
 
       {isReportOpen && (
         <Modal title={`Report ${profile.name}`} onClose={() => setIsReportOpen(false)}>
@@ -190,68 +181,31 @@ export function UserProfile() {
           </button>
         </Modal>
       )}
-    </div>
+    </>
   );
 }
 
-const styles = {
-  container: {
-    minHeight: '100vh',
-    backgroundColor: 'var(--bg)',
-  },
-  header: {
-    backgroundColor: 'var(--surface)',
-    padding: '20px 40px',
-    borderBottom: '1px solid var(--border)',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '20px',
-  },
-  backBtn: {
-    fontSize: '14px',
-    color: '#007bff',
-    backgroundColor: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    fontWeight: '500' as const,
-    padding: 0,
-  },
-  title: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    margin: 0,
-  },
-  content: {
-    maxWidth: '600px',
-    margin: '40px auto',
-    padding: '0 20px',
-  },
-  card: {
-    backgroundColor: 'var(--surface)',
-    borderRadius: '8px',
-    padding: '32px',
-    boxShadow: '0 2px 10px var(--shadow)',
-  },
+const styles: Record<string, React.CSSProperties> = {
   error: {
     padding: '12px 16px',
-    backgroundColor: 'var(--danger-bg)',
+    backgroundColor: 'var(--danger-soft)',
     color: 'var(--danger-text)',
-    borderRadius: '4px',
+    borderRadius: '9px',
     fontSize: '14px',
     marginBottom: '20px',
   },
   avatarSection: {
     display: 'flex',
-    flexDirection: 'column' as const,
+    flexDirection: 'column',
     alignItems: 'center',
     gap: '10px',
-    marginBottom: '28px',
-    paddingBottom: '28px',
+    marginBottom: '26px',
+    paddingBottom: '26px',
     borderBottom: '1px solid var(--border)',
   },
   avatarWrap: {
-    width: '96px',
-    height: '96px',
+    width: '88px',
+    height: '88px',
     borderRadius: '50%',
     overflow: 'hidden',
     backgroundColor: 'var(--bg)',
@@ -260,7 +214,7 @@ const styles = {
   avatarImg: {
     width: '100%',
     height: '100%',
-    objectFit: 'cover' as const,
+    objectFit: 'cover',
   },
   avatarPlaceholder: {
     width: '100%',
@@ -268,123 +222,126 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '32px',
-    fontWeight: '700' as const,
-    color: 'var(--text-muted)',
-    backgroundColor: 'var(--tag-bg)',
+    fontSize: '28px',
+    fontWeight: 700,
+    color: 'var(--accent-text)',
+    backgroundColor: 'var(--accent-soft)',
   },
   name: {
-    fontSize: '20px',
-    fontWeight: '700' as const,
+    fontSize: '19px',
+    fontWeight: 700,
     margin: 0,
     color: 'var(--text)',
   },
   roleBadge: {
     display: 'inline-block',
-    padding: '4px 10px',
-    backgroundColor: 'var(--tag-bg)',
-    color: 'var(--tag-text)',
+    padding: '4px 12px',
+    backgroundColor: 'var(--accent-soft)',
+    color: 'var(--accent-text)',
     borderRadius: '14px',
     fontSize: '12px',
-    fontWeight: '600' as const,
-    textTransform: 'capitalize' as const,
+    fontWeight: 600,
+    textTransform: 'capitalize',
   },
   section: {
     marginBottom: '20px',
   },
+  sectionTight: {
+    marginBottom: '8px',
+  },
   label: {
     display: 'block',
-    fontSize: '12px',
-    fontWeight: '600' as const,
+    fontSize: '11px',
+    fontWeight: 700,
     color: 'var(--text-muted)',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.5px',
-    marginBottom: '6px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    marginBottom: '7px',
   },
   bioText: {
-    fontSize: '14px',
+    fontSize: '13.5px',
     color: 'var(--text)',
     margin: 0,
-    whiteSpace: 'pre-wrap' as const,
+    lineHeight: 1.5,
+    whiteSpace: 'pre-wrap',
   },
   readOnlyValue: {
-    padding: '10px 12px',
-    fontSize: '14px',
+    padding: '10px 13px',
+    fontSize: '13.5px',
     color: 'var(--text-muted)',
     backgroundColor: 'var(--bg)',
-    borderRadius: '4px',
+    borderRadius: '8px',
   },
   teamsList: {
     display: 'flex',
-    flexWrap: 'wrap' as const,
+    flexWrap: 'wrap',
     gap: '6px',
   },
   teamChip: {
     display: 'inline-block',
-    padding: '4px 10px',
-    backgroundColor: 'var(--tag-bg)',
-    color: 'var(--tag-text)',
+    padding: '4px 11px',
+    backgroundColor: 'var(--accent-soft)',
+    color: 'var(--accent-text)',
     borderRadius: '14px',
     fontSize: '12px',
-    fontWeight: '500' as const,
+    fontWeight: 600,
   },
   divider: {
     borderTop: '1px solid var(--border)',
-    margin: '8px 0 20px 0',
+    margin: '20px 0',
   },
   reportBtn: {
+    width: '100%',
     padding: '10px 20px',
     backgroundColor: 'transparent',
-    color: '#dc3545',
-    border: '1px solid #dc3545',
-    borderRadius: '4px',
+    color: 'var(--danger-text)',
+    border: '1px solid var(--danger)',
+    borderRadius: '9px',
     cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '600' as const,
-    width: '100%',
+    fontSize: '13.5px',
+    fontWeight: 600,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '7px',
   },
   select: {
     width: '100%',
     padding: '10px 12px',
     border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    backgroundColor: 'var(--input-bg)',
+    borderRadius: '8px',
+    backgroundColor: 'var(--surface)',
     color: 'var(--text)',
     fontSize: '14px',
-    boxSizing: 'border-box' as const,
+    boxSizing: 'border-box',
   },
   textarea: {
     width: '100%',
     padding: '10px 12px',
     border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    backgroundColor: 'var(--input-bg)',
+    borderRadius: '8px',
+    backgroundColor: 'var(--surface)',
     color: 'var(--text)',
     fontSize: '14px',
     fontFamily: 'inherit',
-    resize: 'vertical' as const,
-    boxSizing: 'border-box' as const,
+    resize: 'vertical',
+    boxSizing: 'border-box',
   },
   charCount: {
     fontSize: '11px',
     color: 'var(--text-faint)',
-    textAlign: 'right' as const,
+    textAlign: 'right',
     marginTop: '4px',
   },
   primaryBtn: {
+    width: '100%',
     padding: '10px 20px',
-    backgroundColor: '#dc3545',
+    backgroundColor: 'var(--danger)',
     color: 'white',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '14px',
-    fontWeight: '600' as const,
-    width: '100%',
-  },
-  loading: {
-    padding: '20px',
-    fontSize: '16px',
-    color: 'var(--text-muted)',
+    fontWeight: 600,
   },
 };

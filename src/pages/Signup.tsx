@@ -2,6 +2,23 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { api } from '../api';
+import { AuthCard, styles } from '../components/AuthCard';
+
+const UserPlusIcon = (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <line x1="19" y1="8" x2="19" y2="14" />
+    <line x1="16" y1="11" x2="22" y2="11" />
+  </svg>
+);
+
+const MailIcon = (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <path d="m3 7 9 6 9-6" />
+  </svg>
+);
 
 export function Signup() {
   const [name, setName] = useState('');
@@ -39,182 +56,93 @@ export function Signup() {
   // Post-signup confirmation screen.
   if (sentTo) {
     return (
-      <div style={styles.container}>
-        <div style={styles.card}>
-          <h1 style={styles.title}>Check your email 📬</h1>
-          <p style={styles.subtitle}>
-            We sent a confirmation link to <strong>{sentTo}</strong>. Click it to confirm your
-            address — then an admin will review your request for access.
-          </p>
-          <button type="button" onClick={handleResend} style={styles.secondaryButton}>
-            Resend confirmation email
-          </button>
-          {resendMsg && <p style={styles.noticeText}>{resendMsg}</p>}
+      <AuthCard
+        icon={MailIcon}
+        tone="soft"
+        title="Check your email"
+        subtitle={
+          <>
+            We sent a confirmation link to <b>{sentTo}</b>. Click it to confirm your address — then
+            an admin will review your request for access.
+          </>
+        }
+        footer={
           <p style={styles.footer}>
-            <Link to="/login" style={styles.link}>Back to login</Link>
+            <Link to="/login" style={styles.link}>
+              Back to login
+            </Link>
           </p>
-        </div>
-      </div>
+        }
+      >
+        <button type="button" onClick={handleResend} style={styles.buttonSecondary}>
+          Resend confirmation email
+        </button>
+        {resendMsg && <p style={styles.hint}>{resendMsg}</p>}
+      </AuthCard>
     );
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h1 style={styles.title}>Create your account</h1>
-        <p style={styles.subtitle}>Join your team on EventMind. Access is granted after an admin approves you.</p>
-
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              style={styles.input}
-              placeholder="Your name"
-              disabled={isLoading}
-              autoComplete="name"
-            />
-          </div>
-
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={styles.input}
-              placeholder="your@email.com"
-              disabled={isLoading}
-              autoComplete="email"
-            />
-          </div>
-
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={styles.input}
-              placeholder="At least 8 characters"
-              disabled={isLoading}
-              autoComplete="new-password"
-            />
-          </div>
-
-          {error && <div style={styles.error}>{error}</div>}
-
-          <button type="submit" style={styles.button} disabled={isLoading}>
-            {isLoading ? 'Creating account…' : 'Sign up'}
-          </button>
-        </form>
-
+    <AuthCard
+      icon={UserPlusIcon}
+      title="Create your account"
+      titleSize={24}
+      subtitle="Join your team on EventMind. Access is granted after an admin approves you."
+      footer={
         <p style={styles.footer}>
-          Already have an account? <Link to="/login" style={styles.link}>Log in</Link>
+          Already have an account?{' '}
+          <Link to="/login" style={styles.link}>
+            Log in
+          </Link>
         </p>
-      </div>
-    </div>
+      }
+    >
+      <form onSubmit={handleSubmit} style={styles.form}>
+        <div style={styles.formGroup}>
+          <label style={styles.label}>Name</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            style={styles.input}
+            placeholder="Your name"
+            disabled={isLoading}
+            autoComplete="name"
+          />
+        </div>
+
+        <div style={styles.formGroup}>
+          <label style={styles.label}>Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={styles.input}
+            placeholder="your@email.com"
+            disabled={isLoading}
+            autoComplete="email"
+          />
+        </div>
+
+        <div style={styles.formGroup}>
+          <label style={styles.label}>Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={styles.input}
+            placeholder="At least 8 characters"
+            disabled={isLoading}
+            autoComplete="new-password"
+          />
+        </div>
+
+        {error && <div style={styles.error}>{error}</div>}
+
+        <button type="submit" style={styles.button} disabled={isLoading}>
+          {isLoading ? 'Creating account…' : 'Sign up'}
+        </button>
+      </form>
+    </AuthCard>
   );
 }
-
-const styles = {
-  container: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: '100vh',
-    backgroundColor: 'var(--bg)',
-    padding: '20px',
-  },
-  card: {
-    backgroundColor: 'var(--surface)',
-    borderRadius: '8px',
-    boxShadow: '0 2px 10px var(--shadow)',
-    padding: '40px',
-    maxWidth: '400px',
-    width: '100%',
-  },
-  title: {
-    fontSize: '26px',
-    fontWeight: 'bold',
-    marginBottom: '8px',
-    color: 'var(--text)',
-  },
-  subtitle: {
-    fontSize: '14px',
-    color: 'var(--text-muted)',
-    marginBottom: '24px',
-    lineHeight: 1.5,
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '16px',
-  },
-  formGroup: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '6px',
-  },
-  label: {
-    fontSize: '14px',
-    fontWeight: '500',
-    color: 'var(--text)',
-  },
-  input: {
-    padding: '10px 12px',
-    border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    fontSize: '14px',
-    fontFamily: 'inherit',
-    backgroundColor: 'var(--input-bg)',
-    color: 'var(--text)',
-  },
-  button: {
-    padding: '10px 16px',
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    fontSize: '14px',
-    fontWeight: '500',
-    cursor: 'pointer',
-    marginTop: '8px',
-  },
-  secondaryButton: {
-    padding: '10px 16px',
-    backgroundColor: 'transparent',
-    color: '#007bff',
-    border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    fontSize: '14px',
-    fontWeight: '500',
-    cursor: 'pointer',
-    marginTop: '8px',
-  },
-  error: {
-    padding: '10px 12px',
-    backgroundColor: 'var(--danger-bg)',
-    color: 'var(--danger-text)',
-    borderRadius: '4px',
-    fontSize: '14px',
-  },
-  noticeText: {
-    fontSize: '13px',
-    color: 'var(--text-muted)',
-    margin: '12px 0 0 0',
-  },
-  footer: {
-    marginTop: '24px',
-    fontSize: '14px',
-    color: 'var(--text-muted)',
-    textAlign: 'center' as const,
-  },
-  link: {
-    color: '#007bff',
-    fontWeight: 600,
-    textDecoration: 'none',
-  },
-};

@@ -1,6 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
+import { AuthCard, AuthSpinner, styles } from '../components/AuthCard';
+
+const XCircleIcon = (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <line x1="15" y1="9" x2="9" y2="15" />
+    <line x1="9" y1="9" x2="15" y2="15" />
+  </svg>
+);
 
 export function VerifyEmail() {
   const [params] = useSearchParams();
@@ -23,61 +32,32 @@ export function VerifyEmail() {
       .catch(() => setState('error'));
   }, [token, verifyEmail, navigate]);
 
-  return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        {state === 'verifying' ? (
-          <>
-            <h1 style={styles.title}>Confirming your email…</h1>
-            <p style={styles.subtitle}>One moment while we verify your link.</p>
-          </>
-        ) : (
-          <>
-            <h1 style={styles.title}>Link invalid or expired</h1>
-            <p style={styles.subtitle}>
-              This confirmation link is no longer valid. Try logging in to request a new one.
-            </p>
-            <Link to="/login" style={styles.link}>Back to login</Link>
-          </>
-        )}
+  // The spinner replaces the icon badge here, so this state builds the
+  // card directly rather than going through AuthCard.
+  if (state === 'verifying') {
+    return (
+      <div style={styles.container}>
+        <div style={{ ...styles.card, ...styles.cardCentered }}>
+          <AuthSpinner />
+          <h1 style={{ ...styles.title, fontSize: '20px' }}>Confirming your email…</h1>
+          <p style={{ ...styles.subtitle, margin: 0 }}>One moment while we verify your link.</p>
+        </div>
       </div>
-    </div>
+    );
+  }
+
+  return (
+    <AuthCard
+      icon={XCircleIcon}
+      tone="danger"
+      centered
+      title="Link invalid or expired"
+      titleSize={20}
+      subtitle="This confirmation link is no longer valid. Try logging in to request a new one."
+    >
+      <Link to="/login" style={{ ...styles.link, fontSize: '14px' }}>
+        Back to login
+      </Link>
+    </AuthCard>
   );
 }
-
-const styles = {
-  container: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: '100vh',
-    backgroundColor: 'var(--bg)',
-    padding: '20px',
-  },
-  card: {
-    backgroundColor: 'var(--surface)',
-    borderRadius: '8px',
-    boxShadow: '0 2px 10px var(--shadow)',
-    padding: '40px',
-    maxWidth: '400px',
-    width: '100%',
-    textAlign: 'center' as const,
-  },
-  title: {
-    fontSize: '22px',
-    fontWeight: 'bold',
-    marginBottom: '8px',
-    color: 'var(--text)',
-  },
-  subtitle: {
-    fontSize: '14px',
-    color: 'var(--text-muted)',
-    marginBottom: '20px',
-    lineHeight: 1.5,
-  },
-  link: {
-    color: '#007bff',
-    fontWeight: 600,
-    textDecoration: 'none',
-  },
-};

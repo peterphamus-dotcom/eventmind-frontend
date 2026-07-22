@@ -5,6 +5,18 @@ import { useAuth } from '../AuthContext';
 import { LocationFilter } from './LocationFilter';
 import { CollapsibleSection } from './CollapsibleSection';
 import { SearchBar } from './SearchBar';
+import {
+  urgencyBadge,
+  statusBadge,
+  urgencyRail,
+  LocationIcon,
+  PinIcon,
+  StarIcon,
+  PlusIcon,
+  SortIcon,
+  MapPinOutlineIcon,
+  addCardStyle,
+} from './badges';
 import type { Ticket, Location } from '../types';
 
 const DEFAULT_VISIBLE_COUNT = 10;
@@ -88,17 +100,15 @@ export function TicketsPanel() {
     }
   }
 
-  const urgencyColor = (urgency: string) =>
-    urgency === 'HIGH' ? '#dc3545' : urgency === 'MEDIUM' ? '#ffc107' : '#28a745';
-
-  const statusColor = (status: string) =>
+  /** Tile accent for the status counters, matching the badge tints. */
+  const statTileColor = (status: string) =>
     status === 'OPEN'
-      ? '#007bff'
+      ? 'var(--accent)'
       : status === 'IN_PROGRESS'
-        ? '#ffc107'
+        ? 'var(--warning)'
         : status === 'RESOLVED'
-          ? '#28a745'
-          : '#6c757d';
+          ? 'var(--success)'
+          : 'var(--neutral)';
 
   const renderTicket = (ticket: Ticket) => (
     <div
@@ -107,7 +117,7 @@ export function TicketsPanel() {
       style={{
         ...styles.listItem,
         ...(isCompact ? styles.listItemCompact : {}),
-        borderLeftColor: urgencyColor(ticket.urgency),
+        borderLeftColor: urgencyRail(ticket.urgency),
         opacity: ticket.status === 'RESOLVED' || ticket.status === 'ARCHIVED' ? 0.65 : 1,
       }}
     >
@@ -128,21 +138,20 @@ export function TicketsPanel() {
           {ticket.title}
         </h3>
         <div style={{ ...styles.itemMeta, ...(isCompact ? styles.itemMetaCompact : {}) }}>
-          <span style={{ ...styles.badge, backgroundColor: statusColor(ticket.status) }}>
-            {ticket.status.replace(/_/g, ' ')}
+          <span style={statusBadge(ticket.status)}>{ticket.status.replace(/_/g, ' ')}</span>
+          <span style={urgencyBadge(ticket.urgency)}>{ticket.urgency}</span>
+          <span style={styles.metaText}>
+            <LocationIcon />
+            {ticket.location?.name}
           </span>
-          <span style={{ ...styles.badge, backgroundColor: urgencyColor(ticket.urgency) }}>
-            {ticket.urgency}
-          </span>
-          <span style={styles.metaText}>📍 {ticket.location?.name}</span>
           <span style={styles.metaText}>
             {new Date(ticket.createdAt).toLocaleDateString()}
           </span>
         </div>
       </div>
       <div style={styles.itemBadge}>
-        {ticket.isPinnedGlobal && '📌'}
-        {ticket.userHasPersonalPin && '⭐'}
+        {ticket.isPinnedGlobal && <PinIcon />}
+        {ticket.userHasPersonalPin && <StarIcon />}
       </div>
     </div>
   );
@@ -158,8 +167,9 @@ export function TicketsPanel() {
   return (
     <div>
       {/* Add new */}
-      <div onClick={() => navigate('/tickets/new')} style={styles.addCard}>
-        + Create Ticket
+      <div onClick={() => navigate('/tickets/new')} style={addCardStyle}>
+        <PlusIcon />
+        Create Ticket
       </div>
 
       {/* Status counters */}
@@ -178,11 +188,12 @@ export function TicketsPanel() {
               onClick={() => setStatusFilter(statusFilter === key ? 'ALL' : key)}
               style={{
                 ...styles.statTile,
-                borderColor: statusColor(key),
-                ...(statusFilter === key ? { backgroundColor: 'var(--surface-hover)' } : {}),
+                ...(statusFilter === key
+                  ? { borderColor: statTileColor(key), backgroundColor: 'var(--accent-soft)' }
+                  : {}),
               }}
             >
-              <span style={{ ...styles.statNumber, color: statusColor(key) }}>
+              <span style={{ ...styles.statNumber, color: statTileColor(key) }}>
                 {stats[key]}
               </span>
               <span style={styles.statLabel}>{label}</span>
@@ -201,8 +212,8 @@ export function TicketsPanel() {
       {/* Controls */}
       <div style={styles.controls}>
         <div style={styles.control}>
-          <span style={styles.controlLabel} role="img" aria-label="Locations" title="Locations">
-            📍
+          <span style={styles.controlLabel} aria-label="Locations" title="Locations">
+            <MapPinOutlineIcon />
           </span>
           <LocationFilter
             locations={locations}
@@ -211,8 +222,8 @@ export function TicketsPanel() {
           />
         </div>
         <div style={styles.control}>
-          <span style={styles.controlLabel} role="img" aria-label="Sort by" title="Sort by">
-            ↕️
+          <span style={styles.controlLabel} aria-label="Sort by" title="Sort by">
+            <SortIcon />
           </span>
           <select
             value={sortBy}
@@ -244,12 +255,22 @@ export function TicketsPanel() {
       ) : (
         <>
           {pinned.length > 0 && (
-            <CollapsibleSection title="📌 Pinned" count={pinned.length} storageKey="tickets-pinned">
+            <CollapsibleSection
+              title="Pinned"
+              icon={<PinIcon size={13} />}
+              count={pinned.length}
+              storageKey="tickets-pinned"
+            >
               <div style={styles.list}>{pinned.map(renderTicket)}</div>
             </CollapsibleSection>
           )}
           {saved.length > 0 && (
-            <CollapsibleSection title="⭐ Saved" count={saved.length} storageKey="tickets-saved">
+            <CollapsibleSection
+              title="Saved"
+              icon={<StarIcon size={13} />}
+              count={saved.length}
+              storageKey="tickets-saved"
+            >
               <div style={styles.list}>{saved.map(renderTicket)}</div>
             </CollapsibleSection>
           )}
@@ -286,45 +307,35 @@ export function TicketsPanel() {
 }
 
 const styles = {
-  addCard: {
-    backgroundColor: 'transparent',
-    padding: '16px',
-    borderRadius: '4px',
-    border: '2px dashed var(--border-strong)',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'var(--text-muted)',
-    fontSize: '15px',
-    fontWeight: '600' as const,
-    marginBottom: '20px',
-  },
   statsRow: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-    gap: '12px',
-    marginBottom: '20px',
+    gap: '10px',
+    marginBottom: '22px',
   },
   statTile: {
     display: 'flex',
     flexDirection: 'column' as const,
     alignItems: 'center',
-    gap: '4px',
+    gap: '5px',
     padding: '14px 8px',
     backgroundColor: 'var(--surface)',
-    border: '1px solid',
-    borderLeftWidth: '4px',
-    borderRadius: '6px',
+    // Longhand: the active-filter variant overrides borderColor alone,
+    // and mixing that with the border shorthand makes React warn on
+    // every filter change.
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: 'var(--border)',
+    borderRadius: '10px',
     cursor: 'pointer',
   },
   statNumber: {
-    fontSize: '24px',
+    fontSize: '23px',
     fontWeight: '700' as const,
     lineHeight: 1,
   },
   statLabel: {
-    fontSize: '12px',
+    fontSize: '11.5px',
     color: 'var(--text-muted)',
     fontWeight: '600' as const,
   },
@@ -343,24 +354,24 @@ const styles = {
     minWidth: '160px',
   },
   controlLabel: {
-    fontSize: '16px',
+    display: 'flex',
     flexShrink: 0,
   },
   sortSelect: {
     flex: 1,
     minWidth: 0,
-    padding: '8px 10px',
+    padding: '9px 11px',
     border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    backgroundColor: 'var(--input-bg)',
+    borderRadius: '8px',
+    backgroundColor: 'var(--surface)',
     color: 'var(--text)',
-    fontSize: '16px',
+    fontSize: '14px',
   },
   error: {
     padding: '12px 16px',
-    backgroundColor: 'var(--danger-bg)',
+    backgroundColor: 'var(--danger-soft)',
     color: 'var(--danger-text)',
-    borderRadius: '4px',
+    borderRadius: '9px',
     fontSize: '14px',
     marginBottom: '16px',
   },
@@ -371,16 +382,11 @@ const styles = {
     fontSize: '14px',
     color: 'var(--text-faint)',
     fontStyle: 'italic',
-    padding: '24px 0',
+    padding: '28px 0',
+    textAlign: 'center' as const,
   },
   group: {
-    marginBottom: '24px',
-  },
-  groupTitle: {
-    fontSize: '14px',
-    fontWeight: '700' as const,
-    color: 'var(--text-muted)',
-    margin: '0 0 10px 0',
+    marginBottom: '22px',
   },
   list: {
     display: 'flex',
@@ -389,23 +395,24 @@ const styles = {
   },
   listItem: {
     backgroundColor: 'var(--surface)',
-    padding: '16px',
-    borderRadius: '4px',
-    borderLeft: '4px solid #007bff',
+    padding: '15px 16px',
+    border: '1px solid var(--border)',
+    borderRadius: '10px',
+    borderLeft: '3px solid var(--accent)',
     cursor: 'pointer',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: '8px',
+    gap: '10px',
   },
   listItemCompact: {
-    padding: '8px 12px',
+    padding: '9px 13px',
   },
   thumb: {
     width: '56px',
     height: '56px',
     objectFit: 'cover' as const,
-    borderRadius: '6px',
+    borderRadius: '8px',
     flexShrink: 0,
     backgroundColor: 'var(--border)',
   },
@@ -435,25 +442,23 @@ const styles = {
     flexWrap: 'nowrap' as const,
     overflow: 'hidden',
   },
-  badge: {
-    padding: '3px 8px',
-    borderRadius: '10px',
-    color: 'white',
-    fontSize: '11px',
-    fontWeight: '600' as const,
-  },
   metaText: {
     fontSize: '12px',
     color: 'var(--text-muted)',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '3px',
   },
   itemBadge: {
-    fontSize: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '5px',
     flexShrink: 0,
   },
   count: {
-    fontSize: '13px',
+    fontSize: '12.5px',
     color: 'var(--text-faint)',
-    marginTop: '16px',
+    marginTop: '18px',
   },
   showAllBtn: {
     display: 'block',
@@ -461,9 +466,9 @@ const styles = {
     padding: '10px',
     marginTop: '8px',
     backgroundColor: 'transparent',
-    border: '1px dashed var(--border-strong)',
-    borderRadius: '4px',
-    color: '#007bff',
+    border: '1px dashed var(--border-dashed)',
+    borderRadius: '9px',
+    color: 'var(--accent)',
     cursor: 'pointer',
     fontSize: '13px',
     fontWeight: '600' as const,
