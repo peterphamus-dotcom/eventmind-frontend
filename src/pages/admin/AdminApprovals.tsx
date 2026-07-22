@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../api';
 import { useToast } from '../../Toast';
+import { styles as shared } from '../../components/AdminShared';
 import type { PendingUser, Location, Team } from '../../types';
 
 function relativeTime(iso: string): string {
@@ -126,7 +127,7 @@ export default function AdminApprovals({ onCountChange }: AdminApprovalsProps) {
         <p>Loading…</p>
       ) : pending.length === 0 ? (
         <div style={styles.empty}>
-          <p>✅ No one is waiting for approval right now.</p>
+          <p>No one is waiting for approval right now.</p>
           <p style={styles.emptyHint}>When someone signs up or accepts an invite, they'll appear here.</p>
         </div>
       ) : (
@@ -222,41 +223,23 @@ export default function AdminApprovals({ onCountChange }: AdminApprovalsProps) {
 }
 
 const styles = {
-  card: {
-    backgroundColor: 'var(--surface)',
-    borderRadius: '8px',
-    padding: '32px',
-    boxShadow: '0 2px 10px var(--shadow)',
-  },
+  card: shared.card,
   title: {
-    fontSize: '20px',
-    fontWeight: '600' as const,
-    marginBottom: '8px',
+    fontSize: '18px',
+    fontWeight: '700' as const,
+    margin: '0 0 8px',
     color: 'var(--text)',
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
+    gap: '9px',
   },
-  countBadge: {
-    display: 'inline-block',
-    padding: '2px 10px',
-    backgroundColor: '#007bff',
-    color: 'white',
-    borderRadius: '12px',
-    fontSize: '13px',
-    fontWeight: '700' as const,
-  },
-  blurb: {
-    fontSize: '14px',
-    color: 'var(--text-muted)',
-    margin: '0 0 20px 0',
-    lineHeight: 1.5,
-  },
+  countBadge: shared.badgeCount,
+  blurb: shared.subtitle,
   error: {
-    padding: '12px 16px',
-    backgroundColor: 'var(--danger-bg)',
+    padding: '11px 14px',
+    backgroundColor: 'var(--danger-soft)',
     color: 'var(--danger-text)',
-    borderRadius: '4px',
+    borderRadius: '9px',
     fontSize: '14px',
     marginBottom: '16px',
   },
@@ -270,17 +253,8 @@ const styles = {
     color: 'var(--text-faint)',
     margin: '8px 0 0 0',
   },
-  list: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '12px',
-  },
-  userCard: {
-    border: '1px solid var(--border)',
-    borderRadius: '8px',
-    padding: '16px',
-    backgroundColor: 'var(--bg)',
-  },
+  list: shared.list,
+  userCard: shared.row,
   userHead: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -289,54 +263,50 @@ const styles = {
     flexWrap: 'wrap' as const,
   },
   userName: {
-    fontSize: '16px',
-    fontWeight: '600' as const,
+    fontSize: '15.5px',
+    fontWeight: '700' as const,
     color: 'var(--text)',
   },
   userMeta: {
-    fontSize: '13px',
+    fontSize: '12.5px',
     color: 'var(--text-muted)',
     marginTop: '2px',
   },
   userBio: {
-    fontSize: '13px',
+    fontSize: '12.5px',
     color: 'var(--text-muted)',
     fontStyle: 'italic' as const,
     marginTop: '6px',
   },
-  headActions: {
-    display: 'flex',
-    gap: '8px',
-    flexShrink: 0,
-  },
+  headActions: shared.rowActions,
   approveBtn: {
-    padding: '8px 16px',
-    backgroundColor: '#28a745',
+    padding: '8px 15px',
+    backgroundColor: 'var(--success)',
     color: 'white',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '7px',
     cursor: 'pointer',
     fontSize: '13px',
     fontWeight: '600' as const,
   },
   rejectBtn: {
-    padding: '8px 16px',
+    padding: '8px 15px',
     backgroundColor: 'transparent',
-    border: '1px solid #dc3545',
-    color: '#dc3545',
-    borderRadius: '4px',
+    border: '1px solid var(--danger)',
+    color: 'var(--danger-text)',
+    borderRadius: '7px',
     cursor: 'pointer',
     fontSize: '13px',
     fontWeight: '600' as const,
   },
   cancelBtn: {
-    padding: '8px 16px',
+    padding: '9px 18px',
     backgroundColor: 'transparent',
     border: '1px solid var(--border-strong)',
     color: 'var(--text)',
-    borderRadius: '4px',
+    borderRadius: '7px',
     cursor: 'pointer',
-    fontSize: '13px',
+    fontSize: '13.5px',
     fontWeight: '600' as const,
   },
   approveForm: {
@@ -345,7 +315,7 @@ const styles = {
     borderTop: '1px solid var(--border)',
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '16px',
+    gap: '14px',
   },
   formRow: {
     display: 'flex',
@@ -353,30 +323,30 @@ const styles = {
     flexWrap: 'wrap' as const,
   },
   formField: {
-    flex: '1 1 200px',
+    flex: '1 1 180px',
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '6px',
   },
   label: {
-    fontSize: '12px',
-    fontWeight: '600' as const,
+    fontSize: '11px',
+    fontWeight: '700' as const,
     color: 'var(--text-muted)',
     textTransform: 'uppercase' as const,
-    letterSpacing: '0.5px',
+    letterSpacing: '0.05em',
   },
   select: {
-    padding: '10px 12px',
+    padding: '9px 11px',
     border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
+    borderRadius: '7px',
     fontSize: '14px',
-    backgroundColor: 'var(--input-bg)',
+    backgroundColor: 'var(--surface)',
     color: 'var(--text)',
   },
   teamChecks: {
     display: 'flex',
     flexWrap: 'wrap' as const,
-    gap: '10px',
+    gap: '8px',
   },
   teamCheck: {
     display: 'flex',

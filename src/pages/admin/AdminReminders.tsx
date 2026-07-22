@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../api';
+import { styles as shared } from '../../components/AdminShared';
 import type { Reminder, ReminderTargetType, User, Team, Location } from '../../types';
 
 const PRESETS = [
@@ -237,7 +238,7 @@ export default function AdminReminders() {
                   style={styles.btnDelete}
                   disabled={busyId === r.id}
                 >
-                  ✕ Delete
+                  Delete
                 </button>
               </div>
             </div>
@@ -249,33 +250,19 @@ export default function AdminReminders() {
 }
 
 const styles = {
-  card: {
-    backgroundColor: 'var(--surface)',
-    borderRadius: '8px',
-    padding: '32px',
-    boxShadow: '0 2px 10px var(--shadow)',
-  },
-  title: {
-    fontSize: '20px',
-    fontWeight: '600',
-    marginBottom: '4px',
-    color: 'var(--text)',
-  },
-  subtitle: {
-    fontSize: '13px',
-    color: 'var(--text-faint)',
-    marginBottom: '24px',
-  },
+  card: shared.card,
+  title: shared.titleTight,
+  subtitle: shared.subtitle,
   error: {
-    padding: '12px 16px',
-    backgroundColor: 'var(--danger-bg)',
+    padding: '11px 14px',
+    backgroundColor: 'var(--danger-soft)',
     color: 'var(--danger-text)',
-    borderRadius: '4px',
+    borderRadius: '9px',
     fontSize: '14px',
     marginBottom: '16px',
   },
   form: {
-    marginBottom: '24px',
+    marginBottom: '20px',
   },
   formRow: {
     display: 'flex',
@@ -283,46 +270,36 @@ const styles = {
     flexWrap: 'wrap' as const,
     alignItems: 'center',
   },
-  select: {
-    padding: '10px 12px',
-    border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    fontSize: '14px',
-    backgroundColor: 'var(--input-bg)',
-    color: 'var(--text)',
-  },
+  select: shared.select,
   customInput: {
-    width: '80px',
-    padding: '10px 12px',
+    width: '90px',
+    padding: '9px 12px',
     border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    fontSize: '14px',
-    backgroundColor: 'var(--input-bg)',
+    borderRadius: '8px',
+    fontSize: '13.5px',
+    backgroundColor: 'var(--surface)',
     color: 'var(--text)',
   },
   btnPrimary: {
-    padding: '10px 20px',
-    backgroundColor: '#28a745',
+    padding: '9px 18px',
+    backgroundColor: 'var(--success)',
     color: 'white',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '8px',
     cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '500' as const,
+    fontSize: '13px',
+    fontWeight: '600' as const,
+    whiteSpace: 'nowrap' as const,
   },
-  list: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '12px',
-  },
+  list: shared.list,
   reminderCard: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: '12px',
-    padding: '14px 16px',
+    padding: '13px 15px',
     backgroundColor: 'var(--bg)',
-    borderRadius: '6px',
+    borderRadius: '9px',
     border: '1px solid var(--border)',
     flexWrap: 'wrap' as const,
   },
@@ -339,74 +316,36 @@ const styles = {
   },
   typeBadge: {
     padding: '2px 8px',
-    backgroundColor: 'var(--tag-bg)',
-    color: 'var(--tag-text)',
+    backgroundColor: 'var(--accent-soft)',
+    color: 'var(--accent-text)',
     borderRadius: '10px',
     fontSize: '11px',
     fontWeight: '700' as const,
   },
   targetName: {
-    fontSize: '15px',
+    fontSize: '14px',
     fontWeight: '600' as const,
     color: 'var(--text)',
   },
-  overdueBadge: {
-    padding: '2px 8px',
-    backgroundColor: '#dc3545',
-    color: 'white',
-    borderRadius: '10px',
-    fontSize: '11px',
-    fontWeight: '700' as const,
-  },
+  overdueBadge: shared.pillDanger,
   pausedBadge: {
     padding: '2px 8px',
-    backgroundColor: '#6c757d',
+    backgroundColor: 'var(--neutral)',
     color: 'white',
     borderRadius: '10px',
-    fontSize: '11px',
+    fontSize: '10.5px',
     fontWeight: '700' as const,
   },
   reminderMeta: {
-    fontSize: '12px',
+    fontSize: '11.5px',
     color: 'var(--text-faint)',
   },
   reminderActions: {
     display: 'flex',
     gap: '8px',
   },
-  btnPause: {
-    padding: '6px 14px',
-    backgroundColor: '#6c757d',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '12px',
-    fontWeight: '500' as const,
-  },
-  btnResume: {
-    padding: '6px 14px',
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '12px',
-    fontWeight: '500' as const,
-  },
-  btnDelete: {
-    padding: '6px 10px',
-    backgroundColor: '#dc3545',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '12px',
-    fontWeight: '500' as const,
-  },
-  empty: {
-    fontSize: '14px',
-    color: 'var(--text-faint)',
-    fontStyle: 'italic',
-  },
+  btnPause: shared.btnNeutral,
+  btnResume: shared.btnPrimary,
+  btnDelete: shared.btnDanger,
+  empty: shared.empty,
 };

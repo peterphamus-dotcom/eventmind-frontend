@@ -1,6 +1,26 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../api';
+import { styles as shared } from '../../components/AdminShared';
 import type { SocialSighting, SocialSightingType, SocialPlatform } from '../../types';
+
+const TrendIcon = (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: '-2px', marginRight: '5px' }}>
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+    <polyline points="17 6 23 6 23 12" />
+  </svg>
+);
+
+const StarIcon = (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: '-2px', marginRight: '5px' }}>
+    <polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9 12 2" />
+  </svg>
+);
+
+const FireIcon = (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style={{ verticalAlign: '-1px', marginRight: '4px' }}>
+    <path d="M12 2s-1 3-4 5-4 5-4 8a8 8 0 0 0 16 0c0-2-1-3-2-4 0 2-1 3-2 3 1-3-1-5-1-7-1 2-2 3-2 5-2-1-3-4-1-10z" />
+  </svg>
+);
 
 const PLATFORMS: { value: SocialPlatform; label: string }[] = [
   { value: 'INSTAGRAM', label: 'Instagram' },
@@ -128,7 +148,7 @@ export default function AdminSocialIntel() {
             style={{ ...styles.toggleBtn, ...(type === 'TREND' ? styles.toggleBtnActive : {}) }}
             disabled={isCreating}
           >
-            📈 Trend
+            {TrendIcon}Trend
           </button>
           <button
             type="button"
@@ -136,7 +156,7 @@ export default function AdminSocialIntel() {
             style={{ ...styles.toggleBtn, ...(type === 'INFLUENCER' ? styles.toggleBtnActive : {}) }}
             disabled={isCreating}
           >
-            ⭐ Influencer
+            {StarIcon}Influencer
           </button>
         </div>
 
@@ -232,13 +252,16 @@ export default function AdminSocialIntel() {
               <div style={styles.sightingMain}>
                 <div style={styles.sightingHeader}>
                   <span style={s.type === 'INFLUENCER' ? styles.influencerBadge : styles.trendBadge}>
-                    {s.type === 'INFLUENCER' ? '⭐ Influencer' : '📈 Trend'}
+                    {s.type === 'INFLUENCER' ? <>{StarIcon}Influencer</> : <>{TrendIcon}Trend</>}
                   </span>
                   <span style={styles.platformBadge}>
                     {PLATFORMS.find((p) => p.value === s.platform)?.label || s.platform}
                   </span>
                   {typeof s.followerCount === 'number' && s.followerCount >= INFLUENCER_THRESHOLD && (
-                    <span style={styles.hotBadge}>🔥 {formatFollowers(s.followerCount)}+ followers</span>
+                    <span style={styles.hotBadge}>
+                      {FireIcon}
+                      {formatFollowers(s.followerCount)}+ followers
+                    </span>
                   )}
                 </div>
                 <a href={s.url} target="_blank" rel="noopener noreferrer" style={styles.link}>
@@ -258,7 +281,7 @@ export default function AdminSocialIntel() {
                 style={styles.btnDelete}
                 disabled={busyId === s.id}
               >
-                ✕ Delete
+                Delete
               </button>
             </div>
           ))}
@@ -269,28 +292,14 @@ export default function AdminSocialIntel() {
 }
 
 const styles = {
-  card: {
-    backgroundColor: 'var(--surface)',
-    borderRadius: '8px',
-    padding: '32px',
-    boxShadow: '0 2px 10px var(--shadow)',
-  },
-  title: {
-    fontSize: '20px',
-    fontWeight: '600' as const,
-    marginBottom: '4px',
-    color: 'var(--text)',
-  },
-  subtitle: {
-    fontSize: '13px',
-    color: 'var(--text-faint)',
-    marginBottom: '24px',
-  },
+  card: shared.card,
+  title: shared.titleTight,
+  subtitle: shared.subtitle,
   error: {
-    padding: '12px 16px',
-    backgroundColor: 'var(--danger-bg)',
+    padding: '11px 14px',
+    backgroundColor: 'var(--danger-soft)',
     color: 'var(--danger-text)',
-    borderRadius: '4px',
+    borderRadius: '9px',
     fontSize: '14px',
     marginBottom: '16px',
   },
@@ -298,8 +307,8 @@ const styles = {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '10px',
-    marginBottom: '24px',
-    paddingBottom: '24px',
+    marginBottom: '20px',
+    paddingBottom: '20px',
     borderBottom: '1px solid var(--border)',
   },
   toggleRow: {
@@ -307,8 +316,14 @@ const styles = {
     gap: '8px',
   },
   toggleBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
     padding: '8px 16px',
-    border: '1px solid var(--border-strong)',
+    // Longhand: toggleBtnActive overrides borderColor alone, and mixing
+    // that with the border shorthand makes React warn on every toggle.
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: 'var(--border-strong)',
     borderRadius: '6px',
     backgroundColor: 'var(--bg)',
     color: 'var(--text-muted)',
@@ -317,48 +332,41 @@ const styles = {
     fontWeight: '600' as const,
   },
   toggleBtnActive: {
-    backgroundColor: '#007bff',
+    backgroundColor: 'var(--accent)',
     color: 'white',
-    borderColor: '#007bff',
+    borderColor: 'var(--accent)',
   },
   formRow: {
     display: 'flex',
     gap: '10px',
     flexWrap: 'wrap' as const,
   },
-  select: {
-    padding: '10px 12px',
-    border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    fontSize: '14px',
-    backgroundColor: 'var(--input-bg)',
-    color: 'var(--text)',
-  },
+  select: shared.select,
   input: {
     flex: '1 1 160px',
-    padding: '10px 12px',
+    padding: '9px 12px',
     border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    fontSize: '14px',
-    backgroundColor: 'var(--input-bg)',
+    borderRadius: '8px',
+    fontSize: '13.5px',
+    backgroundColor: 'var(--surface)',
     color: 'var(--text)',
   },
   followerInput: {
-    width: '140px',
-    padding: '10px 12px',
+    width: '130px',
+    padding: '9px 12px',
     border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    fontSize: '14px',
-    backgroundColor: 'var(--input-bg)',
+    borderRadius: '8px',
+    fontSize: '13.5px',
+    backgroundColor: 'var(--surface)',
     color: 'var(--text)',
   },
   urlInput: {
     width: '100%',
-    padding: '10px 12px',
+    padding: '9px 12px',
     border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    fontSize: '14px',
-    backgroundColor: 'var(--input-bg)',
+    borderRadius: '8px',
+    fontSize: '13.5px',
+    backgroundColor: 'var(--surface)',
     color: 'var(--text)',
     boxSizing: 'border-box' as const,
   },
@@ -366,43 +374,40 @@ const styles = {
     width: '100%',
     padding: '10px 12px',
     border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    fontSize: '14px',
+    borderRadius: '8px',
+    fontSize: '13.5px',
     fontFamily: 'inherit',
     resize: 'vertical' as const,
-    backgroundColor: 'var(--input-bg)',
+    backgroundColor: 'var(--surface)',
     color: 'var(--text)',
     boxSizing: 'border-box' as const,
   },
   btnPrimary: {
     alignSelf: 'flex-start',
-    padding: '10px 20px',
-    backgroundColor: '#28a745',
+    padding: '9px 18px',
+    backgroundColor: 'var(--success)',
     color: 'white',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '8px',
     cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '500' as const,
+    fontSize: '13px',
+    fontWeight: '600' as const,
   },
   filterRow: {
     display: 'flex',
     gap: '10px',
     marginBottom: '16px',
+    flexWrap: 'wrap' as const,
   },
-  list: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '12px',
-  },
+  list: shared.list,
   sightingCard: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     gap: '12px',
-    padding: '14px 16px',
+    padding: '13px 15px',
     backgroundColor: 'var(--bg)',
-    borderRadius: '6px',
+    borderRadius: '9px',
     border: '1px solid var(--border)',
     flexWrap: 'wrap' as const,
   },
@@ -418,17 +423,21 @@ const styles = {
     flexWrap: 'wrap' as const,
   },
   trendBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
     padding: '2px 8px',
-    backgroundColor: 'var(--tag-bg)',
-    color: 'var(--tag-text)',
+    backgroundColor: 'var(--accent-soft)',
+    color: 'var(--accent-text)',
     borderRadius: '10px',
     fontSize: '11px',
     fontWeight: '700' as const,
   },
   influencerBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
     padding: '2px 8px',
-    backgroundColor: '#fff3cd',
-    color: '#856404',
+    backgroundColor: 'var(--warning-soft)',
+    color: 'var(--warning-text-on)',
     borderRadius: '10px',
     fontSize: '11px',
     fontWeight: '700' as const,
@@ -438,12 +447,14 @@ const styles = {
     backgroundColor: 'var(--border)',
     color: 'var(--text-muted)',
     borderRadius: '10px',
-    fontSize: '11px',
+    fontSize: '10.5px',
     fontWeight: '600' as const,
   },
   hotBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
     padding: '2px 8px',
-    backgroundColor: '#dc3545',
+    backgroundColor: 'var(--danger)',
     color: 'white',
     borderRadius: '10px',
     fontSize: '11px',
@@ -451,9 +462,9 @@ const styles = {
   },
   link: {
     display: 'block',
-    fontSize: '14px',
+    fontSize: '13.5px',
     fontWeight: '600' as const,
-    color: '#007bff',
+    color: 'var(--accent)',
     textDecoration: 'none',
     wordBreak: 'break-all' as const,
   },
@@ -469,29 +480,18 @@ const styles = {
     marginTop: '2px',
   },
   note: {
-    fontSize: '13px',
-    color: 'var(--text)',
-    marginTop: '6px',
+    fontSize: '12px',
+    color: 'var(--text-muted)',
+    marginTop: '4px',
   },
   sightingMeta: {
-    fontSize: '12px',
+    fontSize: '11.5px',
     color: 'var(--text-faint)',
     marginTop: '6px',
   },
   btnDelete: {
-    padding: '6px 10px',
-    backgroundColor: '#dc3545',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '12px',
-    fontWeight: '500' as const,
+    ...shared.btnDanger,
     flexShrink: 0,
   },
-  empty: {
-    fontSize: '14px',
-    color: 'var(--text-faint)',
-    fontStyle: 'italic',
-  },
+  empty: shared.empty,
 };

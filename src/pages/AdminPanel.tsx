@@ -16,6 +16,36 @@ import AdminUserReports from './admin/AdminUserReports';
 
 type AdminTab = 'approvals' | 'users' | 'teams' | 'locations' | 'tags' | 'banner' | 'export' | 'viewAs' | 'reminders' | 'socialIntel' | 'userReports';
 
+const GearIcon = (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="3" />
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+  </svg>
+);
+
+const TABS: { id: AdminTab; label: string; adminOnly?: boolean }[] = [
+  { id: 'approvals', label: 'Approvals' },
+  { id: 'users', label: 'Users' },
+  { id: 'teams', label: 'Teams' },
+  { id: 'locations', label: 'Locations' },
+  { id: 'tags', label: 'Tags' },
+  { id: 'export', label: 'Export' },
+  { id: 'viewAs', label: 'View As' },
+  { id: 'reminders', label: 'Reminders' },
+  { id: 'socialIntel', label: 'Social Intel' },
+  { id: 'userReports', label: 'User Reports' },
+  { id: 'banner', label: 'Banner', adminOnly: true },
+];
+
+/** MEMBER -> Member, CORE_TEAM -> Core Team */
+function formatRole(role?: string) {
+  if (!role) return '';
+  return role
+    .split('_')
+    .map((w) => w.charAt(0) + w.slice(1).toLowerCase())
+    .join(' ');
+}
+
 export function AdminPanel() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -66,9 +96,14 @@ export function AdminPanel() {
     <div style={styles.container}>
       {/* Header */}
       <div style={styles.header}>
-        <h1 style={styles.title}>⚙️ Admin Panel</h1>
+        <h1 style={styles.title}>
+          {GearIcon}
+          Admin Panel
+        </h1>
         <div style={styles.userInfo}>
-          <span>{user?.name} ({user?.role})</span>
+          <span style={styles.userName}>
+            {user?.name} <span style={styles.userRole}>({formatRole(user?.role)})</span>
+          </span>
           <button onClick={handleLogout} style={styles.logoutBtn}>
             Logout
           </button>
@@ -77,107 +112,21 @@ export function AdminPanel() {
 
       {/* Tabs */}
       <div style={styles.tabs}>
-        <button
-          onClick={() => setActiveTab('approvals')}
-          style={{
-            ...styles.tab,
-            ...(activeTab === 'approvals' ? styles.tabActive : {}),
-          }}
-        >
-          ✅ Approvals{pendingCount > 0 ? ` (${pendingCount})` : ''}
-        </button>
-        <button
-          onClick={() => setActiveTab('users')}
-          style={{
-            ...styles.tab,
-            ...(activeTab === 'users' ? styles.tabActive : {}),
-          }}
-        >
-          👥 Users
-        </button>
-        <button
-          onClick={() => setActiveTab('teams')}
-          style={{
-            ...styles.tab,
-            ...(activeTab === 'teams' ? styles.tabActive : {}),
-          }}
-        >
-          🤝 Teams
-        </button>
-        <button
-          onClick={() => setActiveTab('locations')}
-          style={{
-            ...styles.tab,
-            ...(activeTab === 'locations' ? styles.tabActive : {}),
-          }}
-        >
-          📍 Locations
-        </button>
-        <button
-          onClick={() => setActiveTab('tags')}
-          style={{
-            ...styles.tab,
-            ...(activeTab === 'tags' ? styles.tabActive : {}),
-          }}
-        >
-          🏷️ Tags
-        </button>
-        <button
-          onClick={() => setActiveTab('export')}
-          style={{
-            ...styles.tab,
-            ...(activeTab === 'export' ? styles.tabActive : {}),
-          }}
-        >
-          ⬇ Export
-        </button>
-        <button
-          onClick={() => setActiveTab('viewAs')}
-          style={{
-            ...styles.tab,
-            ...(activeTab === 'viewAs' ? styles.tabActive : {}),
-          }}
-        >
-          👁️ View As
-        </button>
-        <button
-          onClick={() => setActiveTab('reminders')}
-          style={{
-            ...styles.tab,
-            ...(activeTab === 'reminders' ? styles.tabActive : {}),
-          }}
-        >
-          ⏰ Reminders
-        </button>
-        <button
-          onClick={() => setActiveTab('socialIntel')}
-          style={{
-            ...styles.tab,
-            ...(activeTab === 'socialIntel' ? styles.tabActive : {}),
-          }}
-        >
-          📡 Social Intel
-        </button>
-        <button
-          onClick={() => setActiveTab('userReports')}
-          style={{
-            ...styles.tab,
-            ...(activeTab === 'userReports' ? styles.tabActive : {}),
-          }}
-        >
-          🚩 User Reports
-        </button>
-        {user?.role === 'ADMIN' && (
+        {TABS.filter((tab) => !tab.adminOnly || user?.role === 'ADMIN').map((tab) => (
           <button
-            onClick={() => setActiveTab('banner')}
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
             style={{
               ...styles.tab,
-              ...(activeTab === 'banner' ? styles.tabActive : {}),
+              ...(activeTab === tab.id ? styles.tabActive : {}),
             }}
           >
-            📢 Banner
+            {tab.label}
+            {tab.id === 'approvals' && pendingCount > 0 && (
+              <span style={styles.badge}>{pendingCount}</span>
+            )}
           </button>
-        )}
+        ))}
       </div>
 
       {/* Content */}
@@ -218,37 +167,47 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     flexWrap: 'wrap' as const,
-    gap: '8px',
+    gap: '10px',
   },
   title: {
-    fontSize: 'clamp(20px, 5vw, 28px)',
-    fontWeight: 'bold',
+    fontSize: 'clamp(20px, 3vw, 24px)',
+    fontWeight: 700,
     margin: 0,
+    letterSpacing: '-0.01em',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '9px',
     color: 'var(--text)',
   },
   userInfo: {
     display: 'flex',
-    gap: '16px',
+    gap: '14px',
     alignItems: 'center',
     fontSize: '14px',
     flexWrap: 'wrap' as const,
   },
+  userName: {
+    color: 'var(--text-muted)',
+  },
+  userRole: {
+    color: 'var(--text-faint)',
+  },
   logoutBtn: {
-    padding: '8px 16px',
-    backgroundColor: '#dc3545',
-    color: 'white',
+    padding: '8px 15px',
+    backgroundColor: 'var(--danger-soft)',
+    color: 'var(--danger-text)',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '8px',
     cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '500' as const,
+    fontSize: '13.5px',
+    fontWeight: 600,
   },
   tabs: {
     display: 'flex',
-    gap: '0',
+    gap: '2px',
     backgroundColor: 'var(--surface)',
     borderBottom: '1px solid var(--border-strong)',
-    padding: '0 clamp(8px, 3vw, 40px)',
+    padding: '0 clamp(16px, 4vw, 40px)',
     overflowX: 'auto' as const,
   },
   tab: {
@@ -257,7 +216,7 @@ const styles = {
     backgroundColor: 'transparent',
     cursor: 'pointer',
     fontSize: '14px',
-    fontWeight: '500' as const,
+    fontWeight: 500,
     color: 'var(--text-muted)',
     // Longhand: React warns when a shorthand and its longhand are swapped
     // across renders, which is exactly what tabActive does below.
@@ -271,10 +230,19 @@ const styles = {
     color: 'var(--accent)',
     borderBottomColor: 'var(--accent)',
   },
+  badge: {
+    marginLeft: '6px',
+    backgroundColor: 'var(--accent)',
+    color: 'white',
+    borderRadius: '999px',
+    padding: '1px 7px',
+    fontSize: '11px',
+    fontWeight: 700,
+  },
   content: {
     maxWidth: '1200px',
-    margin: 'clamp(16px, 4vw, 40px) auto',
-    padding: '0 clamp(12px, 3vw, 20px)',
+    margin: '0 auto',
+    padding: 'clamp(16px, 4vw, 36px) clamp(16px, 3vw, 20px)',
   },
   error: {
     maxWidth: '600px',
@@ -286,7 +254,7 @@ const styles = {
   },
   btn: {
     padding: '10px 20px',
-    backgroundColor: '#007bff',
+    backgroundColor: 'var(--accent)',
     color: 'white',
     border: 'none',
     borderRadius: '4px',
@@ -300,10 +268,10 @@ const styles = {
   },
   backBtn: {
     fontSize: '14px',
-    color: '#007bff',
+    color: 'var(--accent)',
     backgroundColor: 'transparent',
     border: 'none',
     cursor: 'pointer',
-    fontWeight: '500' as const,
+    fontWeight: 500,
   },
 };

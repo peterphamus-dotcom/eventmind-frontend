@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../api';
+import { styles as shared } from '../../components/AdminShared';
 import type { Team, Tag, User } from '../../types';
 
 export default function AdminTeams() {
@@ -178,7 +179,7 @@ export default function AdminTeams() {
                         style={styles.btnDelete}
                         disabled={deletingId === team.id}
                       >
-                        {deletingId === team.id ? 'Deleting...' : '✕ Delete'}
+                        {deletingId === team.id ? 'Deleting…' : 'Delete'}
                       </button>
                     </>
                   )}
@@ -267,124 +268,47 @@ export default function AdminTeams() {
 }
 
 const styles = {
-  card: {
-    backgroundColor: 'var(--surface)',
-    borderRadius: '8px',
-    padding: '32px',
-    boxShadow: '0 2px 10px var(--shadow)',
-  },
-  title: {
-    fontSize: '20px',
-    fontWeight: '600',
-    marginBottom: '4px',
-    color: 'var(--text)',
-  },
-  subtitle: {
-    fontSize: '13px',
-    color: 'var(--text-faint)',
-    marginBottom: '24px',
-  },
+  card: shared.card,
+  title: shared.titleTight,
+  subtitle: shared.subtitle,
   error: {
-    padding: '12px 16px',
-    backgroundColor: 'var(--danger-bg)',
+    padding: '11px 14px',
+    backgroundColor: 'var(--danger-soft)',
     color: 'var(--danger-text)',
-    borderRadius: '4px',
+    borderRadius: '9px',
     fontSize: '14px',
     marginBottom: '16px',
   },
   form: {
-    marginBottom: '24px',
+    marginBottom: '20px',
   },
-  formRow: {
-    display: 'flex',
-    gap: '12px',
-  },
-  input: {
-    flex: 1,
-    padding: '10px 12px',
-    border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    fontSize: '14px',
-    backgroundColor: 'var(--input-bg)',
-    color: 'var(--text)',
-  },
-  btnPrimary: {
-    padding: '10px 20px',
-    backgroundColor: '#28a745',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '500' as const,
-  },
+  formRow: shared.addRow,
+  input: shared.addInput,
+  btnPrimary: shared.addBtn,
   teamList: {
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '16px',
+    gap: '14px',
   },
-  teamCard: {
-    padding: '16px',
-    backgroundColor: 'var(--bg)',
-    borderRadius: '6px',
-    border: '1px solid var(--border)',
-  },
+  teamCard: shared.row,
   teamHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '12px',
+    marginBottom: '10px',
+    gap: '10px',
   },
   teamName: {
-    fontSize: '16px',
-    fontWeight: '600',
+    fontSize: '15px',
+    fontWeight: '700' as const,
     color: 'var(--text)',
     margin: 0,
   },
-  teamActions: {
-    display: 'flex',
-    gap: '8px',
-  },
-  btnEdit: {
-    padding: '6px 14px',
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '12px',
-    fontWeight: '500' as const,
-  },
-  btnDelete: {
-    padding: '6px 10px',
-    backgroundColor: '#dc3545',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '12px',
-    fontWeight: '500' as const,
-  },
-  btnSave: {
-    padding: '6px 14px',
-    backgroundColor: '#28a745',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '12px',
-    fontWeight: '500' as const,
-  },
-  btnCancel: {
-    padding: '6px 14px',
-    backgroundColor: '#6c757d',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '12px',
-    fontWeight: '500' as const,
-  },
+  teamActions: shared.rowActions,
+  btnEdit: shared.btnPrimary,
+  btnDelete: shared.btnDanger,
+  btnSave: shared.btnSuccess,
+  btnCancel: shared.btnNeutral,
   teamBody: {
     display: 'flex',
     flexDirection: 'column' as const,
@@ -400,38 +324,26 @@ const styles = {
   metaLabel: {
     color: 'var(--text-muted)',
     fontWeight: '600' as const,
-    minWidth: '70px',
+    minWidth: '64px',
   },
   metaEmpty: {
     color: 'var(--text-faint)',
     fontStyle: 'italic' as const,
   },
-  tagBadge: {
-    padding: '3px 10px',
-    backgroundColor: 'var(--tag-bg)',
-    color: 'var(--tag-text)',
-    borderRadius: '12px',
-    fontSize: '12px',
-    fontWeight: '500' as const,
-  },
-  memberBadge: {
-    padding: '3px 10px',
-    backgroundColor: 'var(--success-bg)',
-    color: 'var(--success-text)',
-    borderRadius: '12px',
-    fontSize: '12px',
-    fontWeight: '500' as const,
-  },
+  tagBadge: shared.pillAccent,
+  memberBadge: shared.pillSuccess,
   editSection: {
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '16px',
+    gap: '14px',
   },
   editGroup: {},
   editLabel: {
-    fontSize: '13px',
-    fontWeight: '600' as const,
+    fontSize: '11px',
+    fontWeight: '700' as const,
     color: 'var(--text-muted)',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.05em',
     marginBottom: '8px',
   },
   chipRow: {
@@ -443,24 +355,24 @@ const styles = {
     padding: '6px 14px',
     backgroundColor: 'var(--surface)',
     color: 'var(--text)',
-    border: '1px solid var(--border-strong)',
+    // Longhand: chipActive overrides borderColor alone, and mixing
+    // that with the border shorthand makes React warn on every toggle.
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: 'var(--border-strong)',
     borderRadius: '16px',
     cursor: 'pointer',
     fontSize: '13px',
   },
   chipActive: {
-    backgroundColor: '#007bff',
+    backgroundColor: 'var(--accent)',
     color: 'white',
-    borderColor: '#007bff',
+    borderColor: 'var(--accent)',
   },
-  empty: {
-    fontSize: '14px',
-    color: 'var(--text-faint)',
-    fontStyle: 'italic',
-  },
+  empty: shared.empty,
   info: {
-    fontSize: '14px',
+    fontSize: '13px',
     color: 'var(--text-muted)',
-    marginTop: '24px',
+    marginTop: '20px',
   },
 };

@@ -2,6 +2,36 @@ import { useState, useEffect, useRef } from 'react';
 import { api } from '../../api';
 import { useToast } from '../../Toast';
 import ImageCropper from '../../components/ImageCropper';
+import { styles as shared } from '../../components/AdminShared';
+
+const ImageIcon = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: '-2px', marginRight: '6px' }}>
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    <circle cx="8.5" cy="8.5" r="1.5" />
+    <polyline points="21 15 16 10 5 21" />
+  </svg>
+);
+
+const PlusIcon = (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ verticalAlign: '-2px', marginRight: '5px' }}>
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <line x1="5" y1="12" x2="19" y2="12" />
+  </svg>
+);
+
+const XIcon = (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
+
+const MegaphoneIcon = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+    <path d="M3 11l18-5v12L3 13v-2z" />
+    <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />
+  </svg>
+);
 
 export default function AdminBanner() {
   const showToast = useToast();
@@ -145,7 +175,12 @@ export default function AdminBanner() {
             style={styles.uploadBtn}
             disabled={isUploading}
           >
-            {isUploading ? 'Uploading…' : imageUrl ? '🖼️ Replace photo' : '🖼️ Upload photo'}
+            {isUploading ? 'Uploading…' : (
+              <>
+                {ImageIcon}
+                {imageUrl ? 'Replace photo' : 'Upload photo'}
+              </>
+            )}
           </button>
           {imageUrl && (
             <button
@@ -187,14 +222,14 @@ export default function AdminBanner() {
                 aria-label={`Remove message ${i + 1}`}
                 disabled={isSaving}
               >
-                ✕
+                {XIcon}
               </button>
             )}
           </div>
         ))}
 
         <button type="button" onClick={addMessage} style={styles.addBtn} disabled={isSaving}>
-          ＋ Add message
+          {PlusIcon}Add message
         </button>
 
         <label style={styles.checkboxRow}>
@@ -214,7 +249,7 @@ export default function AdminBanner() {
               .filter((m) => m.trim())
               .map((m, i) => (
                 <div key={i} style={styles.preview}>
-                  <span>📢</span>
+                  {MegaphoneIcon}
                   <span>{m}</span>
                 </div>
               ))}
@@ -244,28 +279,14 @@ export default function AdminBanner() {
 }
 
 const styles = {
-  card: {
-    backgroundColor: 'var(--surface)',
-    borderRadius: '8px',
-    padding: '32px',
-    boxShadow: '0 2px 10px var(--shadow)',
-  },
-  title: {
-    fontSize: '20px',
-    fontWeight: '600' as const,
-    marginBottom: '4px',
-    color: 'var(--text)',
-  },
-  subtitle: {
-    fontSize: '13px',
-    color: 'var(--text-faint)',
-    marginBottom: '20px',
-  },
+  card: shared.card,
+  title: shared.titleTight,
+  subtitle: shared.subtitle,
   error: {
-    padding: '12px 16px',
-    backgroundColor: 'var(--danger-bg)',
+    padding: '11px 14px',
+    backgroundColor: 'var(--danger-soft)',
     color: 'var(--danger-text)',
-    borderRadius: '4px',
+    borderRadius: '9px',
     fontSize: '14px',
     marginBottom: '16px',
   },
@@ -274,17 +295,17 @@ const styles = {
   },
   fieldLabel: {
     display: 'block',
-    fontSize: '13px',
-    fontWeight: '600' as const,
+    fontSize: '12.5px',
+    fontWeight: '700' as const,
     color: 'var(--text-muted)',
     marginBottom: '8px',
   },
   imagePreview: {
     display: 'block',
     width: '100%',
-    height: '160px',
+    height: '150px',
     objectFit: 'cover' as const,
-    borderRadius: '6px',
+    borderRadius: '8px',
     marginBottom: '10px',
     backgroundColor: 'var(--border)',
   },
@@ -293,11 +314,11 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
-    height: '120px',
-    borderRadius: '6px',
+    height: '110px',
+    borderRadius: '8px',
     border: '2px dashed var(--border-strong)',
     color: 'var(--text-faint)',
-    fontSize: '14px',
+    fontSize: '13px',
     marginBottom: '10px',
   },
   imageHint: {
@@ -310,14 +331,16 @@ const styles = {
     gap: '10px',
   },
   uploadBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
     padding: '9px 16px',
-    backgroundColor: '#007bff',
+    backgroundColor: 'var(--accent)',
     color: 'white',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '8px',
     cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '500' as const,
+    fontSize: '13px',
+    fontWeight: '600' as const,
   },
   divider: {
     border: 'none',
@@ -328,11 +351,11 @@ const styles = {
     width: '100%',
     padding: '12px',
     border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
+    borderRadius: '8px',
     fontFamily: 'inherit',
     resize: 'vertical' as const,
     marginBottom: '12px',
-    backgroundColor: 'var(--input-bg)',
+    backgroundColor: 'var(--surface)',
     color: 'var(--text)',
   },
   msgRow: {
@@ -347,8 +370,8 @@ const styles = {
     height: '22px',
     marginTop: '9px',
     borderRadius: '50%',
-    backgroundColor: 'var(--tag-bg)',
-    color: 'var(--tag-text)',
+    backgroundColor: 'var(--accent-soft)',
+    color: 'var(--accent-text)',
     fontSize: '12px',
     fontWeight: '600' as const,
     display: 'flex',
@@ -357,12 +380,12 @@ const styles = {
   },
   msgTextarea: {
     flex: 1,
-    padding: '12px',
+    padding: '11px 13px',
     border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
+    borderRadius: '8px',
     fontFamily: 'inherit',
     resize: 'vertical' as const,
-    backgroundColor: 'var(--input-bg)',
+    backgroundColor: 'var(--surface)',
     color: 'var(--text)',
   },
   msgRemove: {
@@ -370,19 +393,23 @@ const styles = {
     marginTop: '6px',
     width: '30px',
     height: '30px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     background: 'transparent',
     border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
+    borderRadius: '7px',
     color: 'var(--danger-text)',
     cursor: 'pointer',
-    fontSize: '13px',
   },
   addBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
     padding: '8px 14px',
-    backgroundColor: 'var(--tag-bg)',
-    color: 'var(--tag-text)',
-    border: '1px dashed var(--border-strong)',
-    borderRadius: '4px',
+    backgroundColor: 'var(--accent-soft)',
+    color: 'var(--accent-text)',
+    border: '1px dashed var(--border-dashed)',
+    borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '13px',
     fontWeight: '600' as const,
@@ -408,35 +435,35 @@ const styles = {
     alignItems: 'center',
     gap: '10px',
     padding: '10px 16px',
-    backgroundColor: '#0d3b66',
+    backgroundColor: 'var(--accent)',
     color: 'white',
-    borderRadius: '4px',
-    fontSize: '14px',
+    borderRadius: '8px',
+    fontSize: '13.5px',
     fontWeight: '500' as const,
     marginBottom: '16px',
   },
   actions: {
     display: 'flex',
-    gap: '12px',
+    gap: '10px',
   },
   saveBtn: {
     padding: '10px 20px',
-    backgroundColor: '#28a745',
+    backgroundColor: 'var(--success)',
     color: 'white',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '14px',
     fontWeight: '600' as const,
   },
   clearBtn: {
     padding: '10px 20px',
-    backgroundColor: '#6c757d',
+    backgroundColor: 'var(--neutral)',
     color: 'white',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '8px',
     cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '500' as const,
+    fontSize: '13.5px',
+    fontWeight: '600' as const,
   },
 };
