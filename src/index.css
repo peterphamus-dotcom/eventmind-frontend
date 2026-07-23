@@ -204,3 +204,24 @@ img {
     transform: translateY(0);
   }
 }
+
+/* Print isolation for the admin post-mortem report: hide everything except
+   the report card so "Save as PDF" produces a clean document. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #post-mortem-report,
+  #post-mortem-report * {
+    visibility: visible;
+  }
+  #post-mortem-report {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

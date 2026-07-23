@@ -295,3 +295,44 @@ export interface ApiResponse<T> {
   error?: string;
   timestamp: string;
 }
+
+// ---- Post-mortem report ----
+
+export interface PostMortemStats {
+  range: { startDate: string | null; endDate: string | null; locationIds: string[] };
+  tickets: {
+    total: number;
+    byStatus: Record<'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'ARCHIVED', number>;
+    byUrgency: Record<'LOW' | 'MEDIUM' | 'HIGH', number>;
+    resolvedCount: number;
+    avgResolutionHours: number | null;
+    medianResolutionHours: number | null;
+    oldestUnresolved: { id: string; title: string; urgency: string; createdAt: string; ageDays: number } | null;
+  };
+  reports: {
+    total: number;
+    byLocation: Array<{ location: string; count: number }>;
+    byTag: Array<{ tag: string; count: number }>;
+    byUser: Array<{ userId: string; name: string; count: number }>;
+  };
+  activity: Array<{ userId: string; name: string; reportsCount: number; ticketsCount: number; score: number }>;
+  userConduct: {
+    total: number;
+    byStatus: Record<'OPEN' | 'RESOLVED' | 'DISMISSED', number>;
+    byReason: Record<'HARASSMENT' | 'INAPPROPRIATE_CONTENT' | 'SAFETY_CONCERN' | 'SPAM' | 'OTHER', number>;
+  };
+  topLocations: Array<{ location: string; ticketCount: number; reportCount: number; total: number }>;
+}
+
+export interface PostMortemNarrative {
+  executiveSummary: string;
+  notableIncidents: string;
+  wentWell: string;
+  needsImprovement: string;
+  recommendations: string[];
+}
+
+export interface PostMortemReport {
+  stats: PostMortemStats;
+  narrative: PostMortemNarrative | null;
+}

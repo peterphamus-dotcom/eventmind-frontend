@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { api } from '../../api';
 import { useToast } from '../../Toast';
 import { styles as shared } from '../../components/AdminShared';
+import { PostMortemPanel } from '../../components/PostMortemPanel';
 
 type Which = 'tickets' | 'reports';
 
@@ -42,6 +43,7 @@ export default function AdminExport() {
   }
 
   return (
+    <>
     <div style={styles.card}>
       <h2 style={styles.title}>Export Data</h2>
       <p style={styles.subtitle}>
@@ -90,6 +92,9 @@ export default function AdminExport() {
         </div>
       </div>
     </div>
+
+    <PostMortemPanel />
+    </>
   );
 }
 
