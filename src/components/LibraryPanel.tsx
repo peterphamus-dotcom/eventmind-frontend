@@ -29,9 +29,18 @@ interface FormState {
   content: string;
   file: File | null;
   tagIds: string[];
+  isPublic: boolean;
 }
 
-const emptyForm: FormState = { mode: 'create', kind: 'TEXT', title: '', content: '', file: null, tagIds: [] };
+const emptyForm: FormState = {
+  mode: 'create',
+  kind: 'TEXT',
+  title: '',
+  content: '',
+  file: null,
+  tagIds: [],
+  isPublic: false,
+};
 
 export function LibraryPanel() {
   const { user } = useAuth();
@@ -98,6 +107,7 @@ export function LibraryPanel() {
       content: doc.content || '',
       file: null,
       tagIds: doc.tags.map((t) => t.id),
+      isPublic: doc.isPublic,
     });
     setFormError(null);
   }
@@ -122,19 +132,26 @@ export function LibraryPanel() {
     try {
       if (form.mode === 'create') {
         if (form.kind === 'TEXT') {
-          await api.createLibraryTextDocument({ title: form.title.trim(), content: form.content.trim(), tagIds: form.tagIds });
+          await api.createLibraryTextDocument({
+            title: form.title.trim(),
+            content: form.content.trim(),
+            tagIds: form.tagIds,
+            isPublic: form.isPublic,
+          });
         } else {
           const fd = new FormData();
           fd.append('title', form.title.trim());
           fd.append('file', form.file as File);
           fd.append('tagIds', JSON.stringify(form.tagIds));
+          fd.append('isPublic', String(form.isPublic));
           await api.uploadLibraryDocument(fd);
         }
         showToast('Document added');
       } else {
-        const updates: { title?: string; content?: string; tagIds?: string[] } = {
+        const updates: { title?: string; content?: string; tagIds?: string[]; isPublic?: boolean } = {
           title: form.title.trim(),
           tagIds: form.tagIds,
+          isPublic: form.isPublic,
         };
         if (form.kind === 'TEXT') updates.content = form.content.trim();
         await api.updateLibraryDocument(form.id as string, updates);
@@ -214,6 +231,7 @@ export function LibraryPanel() {
               <div style={styles.cardHeader}>
                 <span style={styles.kindIcon}>{doc.kind === 'FILE' ? '📎' : '📄'}</span>
                 <span style={styles.title}>{doc.title}</span>
+                {doc.isPublic && isAdmin && <span style={styles.publicBadge}>Public</span>}
               </div>
 
               {doc.tags.length > 0 && (
@@ -328,6 +346,17 @@ export function LibraryPanel() {
             </div>
           ) : null}
 
+          <div style={styles.section}>
+            <label style={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={form.isPublic}
+                onChange={(e) => setForm({ ...form, isPublic: e.target.checked })}
+              />
+              Visible to Expo users
+            </label>
+          </div>
+
           {allTags.length > 0 && (
             <div style={styles.section}>
               <label style={styles.label}>Visible to (leave blank for everyone)</label>
@@ -438,6 +467,23 @@ const styles = {
     fontSize: '15px',
     fontWeight: '600' as const,
     color: 'var(--text)',
+  },
+  publicBadge: {
+    display: 'inline-block',
+    padding: '2px 8px',
+    backgroundColor: 'var(--accent-soft)',
+    color: 'var(--accent-text)',
+    borderRadius: '10px',
+    fontSize: '10.5px',
+    fontWeight: '700' as const,
+  },
+  checkboxLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '13px',
+    color: 'var(--text)',
+    cursor: 'pointer',
   },
   tags: {
     display: 'flex',

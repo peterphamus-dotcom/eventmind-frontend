@@ -4,11 +4,13 @@ export type ViewDensity = 'COMPACT' | 'FULL';
 
 export type UserStatus = 'UNVERIFIED' | 'PENDING' | 'ACTIVE' | 'REJECTED';
 
+export type Role = 'MEMBER' | 'CORE_TEAM' | 'ADMIN' | 'EXPO';
+
 export interface User {
   id: string;
   email: string;
   name: string;
-  role: 'MEMBER' | 'CORE_TEAM' | 'ADMIN';
+  role: Role;
   status: UserStatus;
   homeLocationId: string | null;
   homeLocation?: Location | null;
@@ -37,7 +39,7 @@ export interface PendingUser {
 export interface PublicUserProfile {
   id: string;
   name: string;
-  role: 'MEMBER' | 'CORE_TEAM' | 'ADMIN';
+  role: Role;
   homeLocation?: Location;
   teams?: Team[];
   bio?: string | null;
@@ -64,7 +66,7 @@ export interface TeamMember {
   id: string;
   name: string;
   email: string;
-  role: 'MEMBER' | 'CORE_TEAM' | 'ADMIN';
+  role: Role;
 }
 
 export interface Tag {
@@ -241,6 +243,7 @@ export interface LibraryDocument {
   fileName?: string | null;
   fileSize?: number | null;
   mimeType?: string | null;
+  isPublic: boolean;
   tags: Tag[];
   createdBy: { id: string; name: string };
   createdAt: string;

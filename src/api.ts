@@ -287,7 +287,7 @@ export const api = {
         tagIds: filters?.tagIds && filters.tagIds.length > 0 ? filters.tagIds.join(',') : undefined,
       },
     }),
-  createLibraryTextDocument: (data: { title: string; content: string; tagIds?: string[] }) =>
+  createLibraryTextDocument: (data: { title: string; content: string; tagIds?: string[]; isPublic?: boolean }) =>
     client.post<ApiResponse<LibraryDocument>>('/library', data),
   uploadLibraryDocument: (formData: FormData) =>
     client.post<ApiResponse<LibraryDocument>>('/library/upload', formData, {
@@ -295,7 +295,7 @@ export const api = {
     }),
   updateLibraryDocument: (
     id: string,
-    updates: { title?: string; content?: string; tagIds?: string[] }
+    updates: { title?: string; content?: string; tagIds?: string[]; isPublic?: boolean }
   ) => client.patch<ApiResponse<LibraryDocument>>(`/library/${id}`, updates),
   deleteLibraryDocument: (id: string) =>
     client.delete<ApiResponse<{ message: string }>>(`/library/${id}`),

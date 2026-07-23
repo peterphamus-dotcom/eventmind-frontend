@@ -165,6 +165,7 @@ export default function AdminApprovals({ onCountChange }: AdminApprovalsProps) {
                         <option value="MEMBER">Member</option>
                         <option value="CORE_TEAM">Core Team</option>
                         <option value="ADMIN">Admin</option>
+                        <option value="EXPO">Expo</option>
                       </select>
                     </div>
                     <div style={styles.formField}>

@@ -296,6 +296,7 @@ export const ROLE_TINT: Record<string, CSSProperties> = {
   ADMIN: { backgroundColor: 'var(--purple)', color: 'white' },
   CORE_TEAM: { backgroundColor: 'var(--accent)', color: 'white' },
   MEMBER: { backgroundColor: 'var(--border)', color: 'var(--text-muted)' },
+  EXPO: { backgroundColor: 'var(--success)', color: 'white' },
 };
 
 export function roleBadge(role: string): CSSProperties {

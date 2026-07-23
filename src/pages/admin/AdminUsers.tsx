@@ -78,6 +78,7 @@ export default function AdminUsers() {
           <option value="ADMIN">Admin</option>
           <option value="CORE_TEAM">Core Team</option>
           <option value="MEMBER">Member</option>
+          <option value="EXPO">Expo</option>
         </select>
       </div>
 
@@ -145,6 +146,7 @@ export default function AdminUsers() {
                           <option value="ADMIN">Admin</option>
                           <option value="CORE_TEAM">Core Team</option>
                           <option value="MEMBER">Member</option>
+                          <option value="EXPO">Expo</option>
                         </select>
                         <button
                           onClick={() =>
