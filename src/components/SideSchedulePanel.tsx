@@ -4,8 +4,6 @@ import { useAuth } from '../AuthContext';
 import { useToast } from '../Toast';
 import { api } from '../api';
 import { Modal } from './Modal';
-import { LocationFilter } from './LocationFilter';
-import { ScheduleImportModal } from './ScheduleImportModal';
 import type { ScheduleItem, Location } from '../types';
 
 interface FormState {
@@ -16,9 +14,18 @@ interface FormState {
   startTime: string; // datetime-local value
   endTime: string; // datetime-local value
   locationId: string;
+  isPublic: boolean;
 }
 
-const emptyForm: FormState = { mode: 'create', title: '', description: '', startTime: '', endTime: '', locationId: '' };
+const emptyForm: FormState = {
+  mode: 'create',
+  title: '',
+  description: '',
+  startTime: '',
+  endTime: '',
+  locationId: '',
+  isPublic: false,
+};
 
 /** Converts an ISO datetime to the value a <input type="datetime-local"> expects. */
 function toLocalInputValue(iso?: string | null): string {
@@ -38,45 +45,43 @@ function formatRange(startIso: string, endIso?: string | null): string {
   return `${startStr} – ${endStr}`;
 }
 
-/** The event schedule/agenda: a flat, chronological list of items. */
-export function SchedulePanel() {
+/**
+ * Side Schedule: personal schedule items contributed by EXPO users, kept
+ * separate from the official event agenda. Each item is either public
+ * (shown to everyone here, grouped by contributor) or private (visible
+ * only to the person who added it). Only EXPO users can add items; anyone
+ * can view the public ones.
+ */
+export function SideSchedulePanel() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const showToast = useToast();
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'CORE_TEAM';
+  const isExpo = user?.role === 'EXPO';
 
   const [items, setItems] = useState<ScheduleItem[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
-  const [selectedLocationIds, setSelectedLocationIds] = useState<string[]>([]);
 
   const [form, setForm] = useState<FormState | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [importOpen, setImportOpen] = useState(false);
 
   const loadItems = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await api.listSchedule({
-        search: search.trim() || undefined,
-        locationId: selectedLocationIds.length > 0 ? selectedLocationIds.join(',') : undefined,
-        kind: 'OFFICIAL',
-      });
+      const response = await api.listSchedule({ kind: 'SIDE' });
       setItems(response.data.data?.items || []);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load schedule');
+      setError(err.response?.data?.error || 'Failed to load side schedule');
     } finally {
       setIsLoading(false);
     }
-  }, [search, selectedLocationIds]);
+  }, []);
 
   useEffect(() => {
-    const timer = setTimeout(loadItems, 250);
-    return () => clearTimeout(timer);
+    loadItems();
   }, [loadItems]);
 
   useEffect(() => {
@@ -97,6 +102,7 @@ export function SchedulePanel() {
       startTime: toLocalInputValue(item.startTime),
       endTime: toLocalInputValue(item.endTime),
       locationId: item.location?.id || '',
+      isPublic: item.isPublic,
     });
     setFormError(null);
   }
@@ -121,6 +127,7 @@ export function SchedulePanel() {
         startTime: new Date(form.startTime).toISOString(),
         endTime: form.endTime ? new Date(form.endTime).toISOString() : undefined,
         locationId: form.locationId || undefined,
+        isPublic: form.isPublic,
       };
       if (form.mode === 'create') {
         await api.createScheduleItem(payload);
@@ -153,72 +160,74 @@ export function SchedulePanel() {
     }
   }
 
+  const groups = new Map<string, { name: string; items: ScheduleItem[] }>();
+  for (const item of items) {
+    const key = item.createdBy.id;
+    if (!groups.has(key)) groups.set(key, { name: item.createdBy.name, items: [] });
+    groups.get(key)!.items.push(item);
+  }
+  const sortedGroups = [...groups.values()].sort((a, b) => a.name.localeCompare(b.name));
+
   return (
     <div>
       {error && <div style={styles.error}>{error}</div>}
 
       <div style={styles.controls}>
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search schedule…"
-          style={styles.search}
-        />
-        <div style={styles.locationControl}>
-          <LocationFilter locations={locations} selectedIds={selectedLocationIds} onChange={setSelectedLocationIds} />
-        </div>
-        {isAdmin && (
-          <>
-            <button onClick={() => setImportOpen(true)} style={styles.importBtn}>
-              📥 Import
-            </button>
-            <button onClick={openCreateForm} style={styles.addBtn}>
-              + Add Item
-            </button>
-          </>
+        <p style={styles.blurb}>
+          Personal schedules contributed by Expo users, kept separate from the official event agenda.
+        </p>
+        {isExpo && (
+          <button onClick={openCreateForm} style={styles.addBtn}>
+            + Add My Schedule Item
+          </button>
         )}
       </div>
 
       {isLoading ? (
         <p>Loading…</p>
-      ) : items.length === 0 ? (
+      ) : sortedGroups.length === 0 ? (
         <div style={styles.empty}>
-          <p>🗓️ No schedule items yet.</p>
-          {isAdmin ? (
-            <p style={styles.emptyHint}>
-              Import a schedule from Google Calendar (.ics), Excel, PDF, or a photo. Or manually add events.
-            </p>
+          <p>🗓️ No side schedule items yet.</p>
+          {isExpo ? (
+            <p style={styles.emptyHint}>Add your own schedule — mark it public to share it here, or keep it private just for you.</p>
           ) : (
-            <p style={styles.emptyHint}>The event schedule will appear here once published by an admin.</p>
+            <p style={styles.emptyHint}>Public schedules contributed by Expo users will appear here.</p>
           )}
         </div>
       ) : (
-        <div style={styles.list}>
-          {items.map((item) => (
-            <div key={item.id} style={styles.card}>
-              <div onClick={() => navigate(`/schedule/${item.id}`)} style={styles.cardClickable}>
-                <div style={styles.timeCol}>{formatRange(item.startTime, item.endTime)}</div>
-                <div style={styles.body}>
-                  <div style={styles.title}>{item.title}</div>
-                  <div style={styles.meta}>
-                    {item.location && <span style={styles.metaText}>📍 {item.location.name}</span>}
-                    {!!item.commentCount && <span style={styles.metaText}>💬 {item.commentCount}</span>}
-                    {item.isSubscribed && <span style={styles.metaText}>🔔</span>}
-                    {item.myReminderOffsetMinutes != null && <span style={styles.metaText}>⏰</span>}
+        <div style={styles.groups}>
+          {sortedGroups.map((group) => (
+            <div key={group.name}>
+              <h3 style={styles.groupTitle}>{group.name}'s Schedule</h3>
+              <div style={styles.list}>
+                {group.items.map((item) => (
+                  <div key={item.id} style={styles.card}>
+                    <div onClick={() => navigate(`/schedule/${item.id}`)} style={styles.cardClickable}>
+                      <div style={styles.timeCol}>{formatRange(item.startTime, item.endTime)}</div>
+                      <div style={styles.body}>
+                        <div style={styles.title}>
+                          {item.title}
+                          {!item.isPublic && <span style={styles.privateBadge}>Private</span>}
+                        </div>
+                        <div style={styles.meta}>
+                          {item.location && <span style={styles.metaText}>📍 {item.location.name}</span>}
+                          {!!item.commentCount && <span style={styles.metaText}>💬 {item.commentCount}</span>}
+                        </div>
+                      </div>
+                    </div>
+                    {item.createdBy.id === user?.id && (
+                      <div style={styles.actions}>
+                        <button onClick={() => openEditForm(item)} style={styles.editBtn}>
+                          Edit
+                        </button>
+                        <button onClick={() => handleDelete(item.id)} style={styles.deleteBtn}>
+                          Delete
+                        </button>
+                      </div>
+                    )}
                   </div>
-                </div>
+                ))}
               </div>
-              {isAdmin && (
-                <div style={styles.actions}>
-                  <button onClick={() => openEditForm(item)} style={styles.editBtn}>
-                    Edit
-                  </button>
-                  <button onClick={() => handleDelete(item.id)} style={styles.deleteBtn}>
-                    Delete
-                  </button>
-                </div>
-              )}
             </div>
           ))}
         </div>
@@ -287,21 +296,21 @@ export function SchedulePanel() {
             />
           </div>
 
+          <div style={styles.section}>
+            <label style={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={form.isPublic}
+                onChange={(e) => setForm({ ...form, isPublic: e.target.checked })}
+              />
+              Make this visible to everyone (otherwise only you can see it)
+            </label>
+          </div>
+
           <button onClick={handleSubmit} style={styles.primaryBtn} disabled={isSubmitting}>
             {isSubmitting ? 'Saving…' : form.mode === 'create' ? 'Add Item' : 'Save Changes'}
           </button>
         </Modal>
-      )}
-
-      {importOpen && (
-        <ScheduleImportModal
-          locations={locations}
-          onClose={() => setImportOpen(false)}
-          onImported={() => {
-            setImportOpen(false);
-            loadItems();
-          }}
-        />
       )}
     </div>
   );
@@ -322,20 +331,13 @@ const styles = {
     marginBottom: '20px',
     flexWrap: 'wrap' as const,
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  search: {
-    flex: '1 1 200px',
-    minWidth: '160px',
-    padding: '10px 12px',
-    border: '1px solid var(--border-strong)',
-    borderRadius: '4px',
-    fontSize: '14px',
-    backgroundColor: 'var(--input-bg)',
-    color: 'var(--text)',
-  },
-  locationControl: {
-    flex: '1 1 180px',
-    minWidth: '160px',
+  blurb: {
+    fontSize: '13.5px',
+    color: 'var(--text-muted)',
+    margin: 0,
+    flex: '1 1 260px',
   },
   addBtn: {
     padding: '10px 16px',
@@ -348,16 +350,16 @@ const styles = {
     fontWeight: '600' as const,
     whiteSpace: 'nowrap' as const,
   },
-  importBtn: {
-    padding: '10px 16px',
-    backgroundColor: 'transparent',
-    border: '1px solid var(--border-strong)',
-    color: 'var(--text)',
-    borderRadius: '4px',
-    cursor: 'pointer',
+  groups: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '24px',
+  },
+  groupTitle: {
     fontSize: '14px',
-    fontWeight: '600' as const,
-    whiteSpace: 'nowrap' as const,
+    fontWeight: '700' as const,
+    color: 'var(--text)',
+    margin: '0 0 10px',
   },
   list: {
     display: 'flex',
@@ -398,6 +400,18 @@ const styles = {
     fontWeight: '600' as const,
     color: 'var(--text)',
     marginBottom: '4px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  privateBadge: {
+    display: 'inline-block',
+    padding: '1px 7px',
+    backgroundColor: 'var(--border)',
+    color: 'var(--text-muted)',
+    borderRadius: '9px',
+    fontSize: '10px',
+    fontWeight: '700' as const,
   },
   meta: {
     display: 'flex',
@@ -460,6 +474,14 @@ const styles = {
     textTransform: 'uppercase' as const,
     letterSpacing: '0.5px',
     marginBottom: '6px',
+  },
+  checkboxLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '13px',
+    color: 'var(--text)',
+    cursor: 'pointer',
   },
   input: {
     width: '100%',

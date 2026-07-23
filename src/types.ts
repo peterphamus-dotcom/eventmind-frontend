@@ -250,6 +250,8 @@ export interface LibraryDocument {
   updatedAt: string;
 }
 
+export type ScheduleItemKind = 'OFFICIAL' | 'SIDE';
+
 export interface ScheduleItem {
   id: string;
   title: string;
@@ -258,6 +260,8 @@ export interface ScheduleItem {
   endTime?: string | null;
   location?: { id: string; name: string } | null;
   createdBy: { id: string; name: string };
+  kind: ScheduleItemKind;
+  isPublic: boolean;
   commentCount?: number;
   isSubscribed?: boolean;
   myReminderOffsetMinutes?: number | null;

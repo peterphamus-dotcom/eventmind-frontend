@@ -6,6 +6,7 @@ import { ReportsPanel } from '../components/ReportsPanel';
 import { FloorplanPanel } from '../components/FloorplanPanel';
 import { LibraryPanel } from '../components/LibraryPanel';
 import { SchedulePanel } from '../components/SchedulePanel';
+import { SideSchedulePanel } from '../components/SideSchedulePanel';
 import { EventSummary } from '../components/EventSummary';
 import { NotificationBell } from '../components/NotificationBell';
 import { AboutModal } from '../components/AboutModal';
@@ -14,7 +15,7 @@ import { DisplaySettingsModal } from '../components/DisplaySettingsModal';
 import { InviteModal } from '../components/InviteModal';
 import { AwaitingApproval } from '../components/AwaitingApproval';
 
-type Tab = 'tickets' | 'reports' | 'floorplan' | 'library' | 'schedule';
+type Tab = 'tickets' | 'reports' | 'floorplan' | 'library' | 'schedule' | 'sideSchedule';
 
 /** Line icons at the two sizes the shell uses: 16px in menus and tabs, 17px in header buttons. */
 function Icon({ size = 16, children }: { size?: number; children: React.ReactNode }) {
@@ -115,6 +116,14 @@ const paths = {
       <line x1="3" y1="10" x2="21" y2="10" />
     </>
   ),
+  sideSchedule: (
+    <>
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+      <circle cx="9" cy="15.5" r="1.6" />
+      <circle cx="15" cy="15.5" r="1.6" />
+    </>
+  ),
 };
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
@@ -123,6 +132,7 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'floorplan', label: 'Floorplan', icon: paths.floorplan },
   { id: 'library', label: 'Library', icon: paths.library },
   { id: 'schedule', label: 'Schedule', icon: paths.schedule },
+  { id: 'sideSchedule', label: 'Side Schedule', icon: paths.sideSchedule },
 ];
 
 /** MEMBER -> Member, CORE_TEAM -> Core Team */
@@ -257,6 +267,7 @@ export function Dashboard() {
           {activeTab === 'floorplan' && <FloorplanPanel />}
           {activeTab === 'library' && <LibraryPanel />}
           {activeTab === 'schedule' && <SchedulePanel />}
+          {activeTab === 'sideSchedule' && <SideSchedulePanel />}
         </div>
       )}
     </div>

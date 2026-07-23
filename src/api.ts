@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, DraftScheduleItem, ScheduleImportSourceType, PendingUser } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser } from './types';
 
 type TeamPreview<T> = PaginatedResponse<T> & { team: { id: string; name: string; tags: Tag[] } };
 
@@ -301,7 +301,7 @@ export const api = {
     client.delete<ApiResponse<{ message: string }>>(`/library/${id}`),
 
   // Schedule
-  listSchedule: (filters?: { search?: string; locationId?: string }) =>
+  listSchedule: (filters?: { search?: string; locationId?: string; kind?: ScheduleItemKind }) =>
     client.get<ApiResponse<{ items: ScheduleItem[]; total: number }>>('/schedule', { params: filters }),
   getScheduleItem: (id: string) =>
     client.get<ApiResponse<ScheduleItem>>(`/schedule/${id}`),
@@ -311,10 +311,18 @@ export const api = {
     startTime: string;
     endTime?: string;
     locationId?: string;
+    isPublic?: boolean;
   }) => client.post<ApiResponse<ScheduleItem>>('/schedule', data),
   updateScheduleItem: (
     id: string,
-    updates: { title?: string; description?: string | null; startTime?: string; endTime?: string | null; locationId?: string | null }
+    updates: {
+      title?: string;
+      description?: string | null;
+      startTime?: string;
+      endTime?: string | null;
+      locationId?: string | null;
+      isPublic?: boolean;
+    }
   ) => client.patch<ApiResponse<ScheduleItem>>(`/schedule/${id}`, updates),
   deleteScheduleItem: (id: string) =>
     client.delete<ApiResponse<{ message: string }>>(`/schedule/${id}`),
