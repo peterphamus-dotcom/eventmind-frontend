@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../AuthContext';
 import { useToast } from '../Toast';
 import { api } from '../api';
 import { Modal } from './Modal';
+import { ScheduleItemModal } from './ScheduleItemModal';
+import { groupByDay, formatDayHeading, timeBucketOf, bucketColorVar, isItemPast } from '../scheduleGrouping';
 import type { ScheduleItem, Location } from '../types';
 
 interface FormState {
@@ -53,7 +54,6 @@ function formatRange(startIso: string, endIso?: string | null): string {
  * can view the public ones.
  */
 export function SideSchedulePanel() {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const showToast = useToast();
   const isExpo = user?.role === 'EXPO';
@@ -66,13 +66,24 @@ export function SideSchedulePanel() {
   const [form, setForm] = useState<FormState | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
+  const hasInitializedDays = useRef(false);
 
   const loadItems = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const response = await api.listSchedule({ kind: 'SIDE' });
-      setItems(response.data.data?.items || []);
+      const loaded = response.data.data?.items || [];
+      setItems(loaded);
+      if (!hasInitializedDays.current && loaded.length > 0) {
+        hasInitializedDays.current = true;
+        const today = new Date();
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const key = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+        setExpandedDays(new Set([key]));
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to load side schedule');
     } finally {
@@ -160,13 +171,25 @@ export function SideSchedulePanel() {
     }
   }
 
-  const groups = new Map<string, { name: string; items: ScheduleItem[] }>();
-  for (const item of items) {
-    const key = item.createdBy.id;
-    if (!groups.has(key)) groups.set(key, { name: item.createdBy.name, items: [] });
-    groups.get(key)!.items.push(item);
+  function toggleDay(dayKey: string) {
+    setExpandedDays((prev) => {
+      const next = new Set(prev);
+      if (next.has(dayKey)) next.delete(dayKey);
+      else next.add(dayKey);
+      return next;
+    });
   }
-  const sortedGroups = [...groups.values()].sort((a, b) => a.name.localeCompare(b.name));
+
+  const dayGroups = groupByDay(items).map(({ dayKey, items: dayItems }) => {
+    const byContributor = new Map<string, { name: string; items: ScheduleItem[] }>();
+    for (const item of dayItems) {
+      const key = item.createdBy.id;
+      if (!byContributor.has(key)) byContributor.set(key, { name: item.createdBy.name, items: [] });
+      byContributor.get(key)!.items.push(item);
+    }
+    const contributorGroups = [...byContributor.values()].sort((a, b) => a.name.localeCompare(b.name));
+    return { dayKey, count: dayItems.length, contributorGroups };
+  });
 
   return (
     <div>
@@ -185,7 +208,7 @@ export function SideSchedulePanel() {
 
       {isLoading ? (
         <p>Loading…</p>
-      ) : sortedGroups.length === 0 ? (
+      ) : dayGroups.length === 0 ? (
         <div style={styles.empty}>
           <p>🗓️ No side schedule items yet.</p>
           {isExpo ? (
@@ -195,42 +218,75 @@ export function SideSchedulePanel() {
           )}
         </div>
       ) : (
-        <div style={styles.groups}>
-          {sortedGroups.map((group) => (
-            <div key={group.name}>
-              <h3 style={styles.groupTitle}>{group.name}'s Schedule</h3>
-              <div style={styles.list}>
-                {group.items.map((item) => (
-                  <div key={item.id} style={styles.card}>
-                    <div onClick={() => navigate(`/schedule/${item.id}`)} style={styles.cardClickable}>
-                      <div style={styles.timeCol}>{formatRange(item.startTime, item.endTime)}</div>
-                      <div style={styles.body}>
-                        <div style={styles.title}>
-                          {item.title}
-                          {!item.isPublic && <span style={styles.privateBadge}>Private</span>}
-                        </div>
-                        <div style={styles.meta}>
-                          {item.location && <span style={styles.metaText}>📍 {item.location.name}</span>}
-                          {!!item.commentCount && <span style={styles.metaText}>💬 {item.commentCount}</span>}
+        <div style={styles.dayGroups}>
+          {dayGroups.map(({ dayKey, count, contributorGroups }) => {
+            const isExpanded = expandedDays.has(dayKey);
+            return (
+              <div key={dayKey} style={styles.dayGroup}>
+                <button onClick={() => toggleDay(dayKey)} style={styles.dayHeader}>
+                  <span style={{ ...styles.dayChevron, transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>▶</span>
+                  <span style={styles.dayHeading}>{formatDayHeading(dayKey)}</span>
+                  <span style={styles.dayCount}>{count}</span>
+                </button>
+                {isExpanded && (
+                  <div style={styles.groups}>
+                    {contributorGroups.map((group) => (
+                      <div key={group.name}>
+                        <h3 style={styles.groupTitle}>{group.name}'s Schedule</h3>
+                        <div style={styles.list}>
+                          {group.items.map((item) => {
+                            const past = isItemPast(item);
+                            const accent = bucketColorVar(timeBucketOf(item.startTime));
+                            return (
+                              <div
+                                key={item.id}
+                                style={{ ...styles.card, borderLeft: `4px solid ${past ? 'var(--border-strong)' : accent}`, opacity: past ? 0.55 : 1 }}
+                              >
+                                <div onClick={() => setPreviewId(item.id)} style={styles.cardClickable}>
+                                  <div style={styles.timeCol}>{formatRange(item.startTime, item.endTime)}</div>
+                                  <div style={styles.body}>
+                                    <div style={styles.title}>
+                                      {item.title}
+                                      {!item.isPublic && <span style={styles.privateBadge}>Private</span>}
+                                    </div>
+                                    <div style={styles.meta}>
+                                      {item.location && <span style={styles.metaText}>📍 {item.location.name}</span>}
+                                      {!!item.commentCount && <span style={styles.metaText}>💬 {item.commentCount}</span>}
+                                    </div>
+                                  </div>
+                                </div>
+                                {item.createdBy.id === user?.id && (
+                                  <div style={styles.actions}>
+                                    <button onClick={() => openEditForm(item)} style={styles.editBtn}>
+                                      Edit
+                                    </button>
+                                    <button onClick={() => handleDelete(item.id)} style={styles.deleteBtn}>
+                                      Delete
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
-                    </div>
-                    {item.createdBy.id === user?.id && (
-                      <div style={styles.actions}>
-                        <button onClick={() => openEditForm(item)} style={styles.editBtn}>
-                          Edit
-                        </button>
-                        <button onClick={() => handleDelete(item.id)} style={styles.deleteBtn}>
-                          Delete
-                        </button>
-                      </div>
-                    )}
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
+      )}
+
+      {previewId && (
+        <ScheduleItemModal
+          itemId={previewId}
+          onClose={() => {
+            setPreviewId(null);
+            loadItems();
+          }}
+        />
       )}
 
       {form && (
@@ -349,6 +405,45 @@ const styles = {
     fontSize: '14px',
     fontWeight: '600' as const,
     whiteSpace: 'nowrap' as const,
+  },
+  dayGroups: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '10px',
+  },
+  dayGroup: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '8px',
+  },
+  dayHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '10px 12px',
+    backgroundColor: 'var(--surface-alt)',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    textAlign: 'left' as const,
+    width: '100%',
+  },
+  dayChevron: {
+    fontSize: '10px',
+    color: 'var(--text-muted)',
+    transition: 'transform 0.15s ease',
+    flexShrink: 0,
+  },
+  dayHeading: {
+    fontSize: '14px',
+    fontWeight: '700' as const,
+    color: 'var(--text)',
+    flex: 1,
+  },
+  dayCount: {
+    fontSize: '12px',
+    fontWeight: '600' as const,
+    color: 'var(--text-muted)',
   },
   groups: {
     display: 'flex',

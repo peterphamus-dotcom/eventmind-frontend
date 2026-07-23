@@ -1,11 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../AuthContext';
 import { useToast } from '../Toast';
 import { api } from '../api';
 import { Modal } from './Modal';
 import { LocationFilter } from './LocationFilter';
 import { ScheduleImportModal } from './ScheduleImportModal';
+import { ScheduleItemModal } from './ScheduleItemModal';
+import { groupByDay, formatDayHeading, timeBucketOf, bucketColorVar, isItemPast } from '../scheduleGrouping';
 import type { ScheduleItem, Location } from '../types';
 
 interface FormState {
@@ -38,9 +39,8 @@ function formatRange(startIso: string, endIso?: string | null): string {
   return `${startStr} – ${endStr}`;
 }
 
-/** The event schedule/agenda: a flat, chronological list of items. */
+/** The event schedule/agenda: grouped by day, collapsible, today expanded. */
 export function SchedulePanel() {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const showToast = useToast();
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'CORE_TEAM';
@@ -56,6 +56,9 @@ export function SchedulePanel() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
+  const hasInitializedDays = useRef(false);
 
   const loadItems = useCallback(async () => {
     setIsLoading(true);
@@ -66,7 +69,15 @@ export function SchedulePanel() {
         locationId: selectedLocationIds.length > 0 ? selectedLocationIds.join(',') : undefined,
         kind: 'OFFICIAL',
       });
-      setItems(response.data.data?.items || []);
+      const loaded = response.data.data?.items || [];
+      setItems(loaded);
+      if (!hasInitializedDays.current && loaded.length > 0) {
+        hasInitializedDays.current = true;
+        const todayKey = new Date();
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const key = `${todayKey.getFullYear()}-${pad(todayKey.getMonth() + 1)}-${pad(todayKey.getDate())}`;
+        setExpandedDays(new Set([key]));
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to load schedule');
     } finally {
@@ -153,6 +164,17 @@ export function SchedulePanel() {
     }
   }
 
+  function toggleDay(dayKey: string) {
+    setExpandedDays((prev) => {
+      const next = new Set(prev);
+      if (next.has(dayKey)) next.delete(dayKey);
+      else next.add(dayKey);
+      return next;
+    });
+  }
+
+  const dayGroups = groupByDay(items);
+
   return (
     <div>
       {error && <div style={styles.error}>{error}</div>}
@@ -194,34 +216,67 @@ export function SchedulePanel() {
           )}
         </div>
       ) : (
-        <div style={styles.list}>
-          {items.map((item) => (
-            <div key={item.id} style={styles.card}>
-              <div onClick={() => navigate(`/schedule/${item.id}`)} style={styles.cardClickable}>
-                <div style={styles.timeCol}>{formatRange(item.startTime, item.endTime)}</div>
-                <div style={styles.body}>
-                  <div style={styles.title}>{item.title}</div>
-                  <div style={styles.meta}>
-                    {item.location && <span style={styles.metaText}>📍 {item.location.name}</span>}
-                    {!!item.commentCount && <span style={styles.metaText}>💬 {item.commentCount}</span>}
-                    {item.isSubscribed && <span style={styles.metaText}>🔔</span>}
-                    {item.myReminderOffsetMinutes != null && <span style={styles.metaText}>⏰</span>}
+        <div style={styles.dayGroups}>
+          {dayGroups.map(({ dayKey, items: dayItems }) => {
+            const isExpanded = expandedDays.has(dayKey);
+            return (
+              <div key={dayKey} style={styles.dayGroup}>
+                <button onClick={() => toggleDay(dayKey)} style={styles.dayHeader}>
+                  <span style={{ ...styles.dayChevron, transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>▶</span>
+                  <span style={styles.dayHeading}>{formatDayHeading(dayKey)}</span>
+                  <span style={styles.dayCount}>{dayItems.length}</span>
+                </button>
+                {isExpanded && (
+                  <div style={styles.list}>
+                    {dayItems.map((item) => {
+                      const past = isItemPast(item);
+                      const accent = bucketColorVar(timeBucketOf(item.startTime));
+                      return (
+                        <div
+                          key={item.id}
+                          style={{ ...styles.card, borderLeft: `4px solid ${past ? 'var(--border-strong)' : accent}`, opacity: past ? 0.55 : 1 }}
+                        >
+                          <div onClick={() => setPreviewId(item.id)} style={styles.cardClickable}>
+                            <div style={styles.timeCol}>{formatRange(item.startTime, item.endTime)}</div>
+                            <div style={styles.body}>
+                              <div style={styles.title}>{item.title}</div>
+                              <div style={styles.meta}>
+                                {item.location && <span style={styles.metaText}>📍 {item.location.name}</span>}
+                                {!!item.commentCount && <span style={styles.metaText}>💬 {item.commentCount}</span>}
+                                {item.isSubscribed && <span style={styles.metaText}>🔔</span>}
+                                {item.myReminderOffsetMinutes != null && <span style={styles.metaText}>⏰</span>}
+                              </div>
+                            </div>
+                          </div>
+                          {isAdmin && (
+                            <div style={styles.actions}>
+                              <button onClick={() => openEditForm(item)} style={styles.editBtn}>
+                                Edit
+                              </button>
+                              <button onClick={() => handleDelete(item.id)} style={styles.deleteBtn}>
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-                </div>
+                )}
               </div>
-              {isAdmin && (
-                <div style={styles.actions}>
-                  <button onClick={() => openEditForm(item)} style={styles.editBtn}>
-                    Edit
-                  </button>
-                  <button onClick={() => handleDelete(item.id)} style={styles.deleteBtn}>
-                    Delete
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
+      )}
+
+      {previewId && (
+        <ScheduleItemModal
+          itemId={previewId}
+          onClose={() => {
+            setPreviewId(null);
+            loadItems();
+          }}
+        />
       )}
 
       {form && (
@@ -358,6 +413,45 @@ const styles = {
     fontSize: '14px',
     fontWeight: '600' as const,
     whiteSpace: 'nowrap' as const,
+  },
+  dayGroups: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '10px',
+  },
+  dayGroup: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '8px',
+  },
+  dayHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '10px 12px',
+    backgroundColor: 'var(--surface-alt)',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    textAlign: 'left' as const,
+    width: '100%',
+  },
+  dayChevron: {
+    fontSize: '10px',
+    color: 'var(--text-muted)',
+    transition: 'transform 0.15s ease',
+    flexShrink: 0,
+  },
+  dayHeading: {
+    fontSize: '14px',
+    fontWeight: '700' as const,
+    color: 'var(--text)',
+    flex: 1,
+  },
+  dayCount: {
+    fontSize: '12px',
+    fontWeight: '600' as const,
+    color: 'var(--text-muted)',
   },
   list: {
     display: 'flex',
