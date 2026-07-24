@@ -349,6 +349,7 @@ export interface PostMortemReport {
 // ---- B2B Community ----
 
 export type CommunityPostType = 'MEETUP' | 'PROMO' | 'DISCUSSION';
+export type CommunitySortBy = 'date' | 'views' | 'comments';
 
 export interface CommunityContact {
   email: string;
@@ -375,6 +376,7 @@ export interface CommunityPost {
   author: CommunityAuthor;
   createdAt: string;
   updatedAt: string;
+  viewCount?: number;
   commentCount?: number;
   rsvpCount?: number;
   reactions?: ReactionSummary[];

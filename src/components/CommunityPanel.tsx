@@ -3,7 +3,7 @@ import { useToast } from '../Toast';
 import { api } from '../api';
 import { Modal } from './Modal';
 import { CommunityPostModal } from './CommunityPostModal';
-import type { CommunityPost, CommunityPostType } from '../types';
+import type { CommunityPost, CommunityPostType, CommunitySortBy } from '../types';
 
 const TYPE_META: Record<CommunityPostType, { label: string; color: string; emoji: string }> = {
   MEETUP: { label: 'Meetup', color: 'var(--accent)', emoji: '🤝' },
@@ -12,6 +12,12 @@ const TYPE_META: Record<CommunityPostType, { label: string; color: string; emoji
 };
 
 type FeedFilter = 'all' | 'MEETUP' | 'PROMO' | 'DISCUSSION' | 'following';
+
+const SORT_OPTIONS: { id: CommunitySortBy; label: string }[] = [
+  { id: 'date', label: 'Newest' },
+  { id: 'views', label: 'Most viewed' },
+  { id: 'comments', label: 'Most commented' },
+];
 
 interface ComposerState {
   type: CommunityPostType;
@@ -43,6 +49,7 @@ export function CommunityPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FeedFilter>('all');
+  const [sortBy, setSortBy] = useState<CommunitySortBy>('date');
   const [openId, setOpenId] = useState<string | null>(null);
 
   const [composer, setComposer] = useState<ComposerState | null>(null);
@@ -54,7 +61,7 @@ export function CommunityPanel() {
     setLoading(true);
     setError(null);
     try {
-      const params: { type?: CommunityPostType; feed?: 'following' } = {};
+      const params: { type?: CommunityPostType; feed?: 'following'; sortBy?: CommunitySortBy } = { sortBy };
       if (filter === 'following') params.feed = 'following';
       else if (filter !== 'all') params.type = filter;
       const res = await api.listCommunity(params);
@@ -66,7 +73,7 @@ export function CommunityPanel() {
     } finally {
       setLoading(false);
     }
-  }, [filter]);
+  }, [filter, sortBy]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -146,6 +153,16 @@ export function CommunityPanel() {
             {f.label}
           </button>
         ))}
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as CommunitySortBy)}
+          style={styles.sortSelect}
+          aria-label="Sort posts by"
+        >
+          {SORT_OPTIONS.map((s) => (
+            <option key={s.id} value={s.id}>Sort: {s.label}</option>
+          ))}
+        </select>
       </div>
 
       {loading ? (
@@ -178,6 +195,7 @@ export function CommunityPanel() {
                   {p.type === 'MEETUP' && p.startTime && <span>· 🗓️ {shortWhen(p.startTime)}{p.meetupLocation ? ` · 📍 ${p.meetupLocation}` : ''}</span>}
                   {p.type === 'MEETUP' && <span>· 👥 {p.rsvpCount || 0} going</span>}
                   {!!p.commentCount && <span>· 💬 {p.commentCount}</span>}
+                  {!!p.viewCount && <span>· 👁️ {p.viewCount}</span>}
                   {p.author.contact && <span title="Shared contact">· 📇</span>}
                 </div>
               </div>
@@ -259,7 +277,8 @@ const styles: Record<string, React.CSSProperties> = {
   controls: { display: 'flex', gap: '12px', marginBottom: '14px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' },
   blurb: { fontSize: '13.5px', color: 'var(--text-muted)', margin: 0, flex: '1 1 260px' },
   addBtn: { padding: '10px 16px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: 600, whiteSpace: 'nowrap' },
-  filterRow: { display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '18px' },
+  filterRow: { display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '18px', alignItems: 'center' },
+  sortSelect: { marginLeft: 'auto', padding: '6px 10px', borderRadius: '16px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface)', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '12.5px', fontWeight: 600 },
   filterChip: { padding: '6px 12px', borderRadius: '16px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface)', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '12.5px', fontWeight: 600 },
   filterChipActive: { backgroundColor: 'var(--accent-soft)', borderColor: 'var(--accent)', color: 'var(--accent-text)' },
   list: { display: 'flex', flexDirection: 'column', gap: '10px' },

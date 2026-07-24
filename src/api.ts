@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType, ContentReport } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType, CommunitySortBy, ContentReport } from './types';
 
 type TeamPreview<T> = PaginatedResponse<T> & { team: { id: string; name: string; tags: Tag[] } };
 
@@ -359,7 +359,7 @@ export const api = {
   ) => client.post<ApiResponse<{ created: number }>>('/schedule/import/confirm', { items }),
 
   // B2B Community
-  listCommunity: (filters?: { type?: CommunityPostType; feed?: 'following' }) =>
+  listCommunity: (filters?: { type?: CommunityPostType; feed?: 'following'; sortBy?: CommunitySortBy }) =>
     client.get<ApiResponse<{ items: CommunityPost[]; canPost: boolean; canModerate: boolean }>>('/community', { params: filters }),
   getCommunityPost: (id: string) => client.get<ApiResponse<CommunityPost>>(`/community/${id}`),
   createCommunityPost: (data: {

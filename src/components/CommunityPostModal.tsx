@@ -140,6 +140,7 @@ export function CommunityPostModal({ postId, onClose, onChanged }: Props) {
             {post.isPinned && <span style={styles.pinnedBadge}>📌 Pinned</span>}
             {meta && <span style={{ ...styles.typeBadge, backgroundColor: meta.color }}>{meta.label}</span>}
             <span style={styles.byline}>by {post.author.name}</span>
+            {!!post.viewCount && <span style={styles.byline}>· 👁️ {post.viewCount}</span>}
             {isExpo && post.author.id !== user?.id && (
               <button onClick={toggleFollow} disabled={busy} style={{ ...styles.followBtn, ...(post.isFollowingAuthor ? styles.followingBtn : {}) }}>
                 {post.isFollowingAuthor ? 'Following' : '+ Follow'}
