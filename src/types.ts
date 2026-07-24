@@ -21,6 +21,9 @@ export interface User {
   lastReportAt?: string | null;
   reportCount?: number;
   viewDensity?: ViewDensity;
+  shareContactInCommunity?: boolean;
+  communityHandle?: string | null;
+  communityBooth?: string | null;
   createdAt: string;
 }
 
@@ -162,7 +165,7 @@ export interface Comment {
   createdAt: string;
 }
 
-export type NotificationType = 'COMMENT' | 'STATUS_CHANGE' | 'URGENCY_CHANGE' | 'REACTION' | 'REMINDER_OVERDUE' | 'SCHEDULE_REMINDER' | 'NEW_SIGNUP' | 'ACCOUNT_STATUS';
+export type NotificationType = 'COMMENT' | 'STATUS_CHANGE' | 'URGENCY_CHANGE' | 'REACTION' | 'REMINDER_OVERDUE' | 'SCHEDULE_REMINDER' | 'NEW_SIGNUP' | 'ACCOUNT_STATUS' | 'COMMUNITY_REPLY' | 'COMMUNITY_MENTION' | 'COMMUNITY_NEW_POST';
 
 export interface Notification {
   id: string;
@@ -171,6 +174,7 @@ export interface Notification {
   ticketId?: string | null;
   reportId?: string | null;
   scheduleItemId?: string | null;
+  communityPostId?: string | null;
   read: boolean;
   createdAt: string;
 }
@@ -335,4 +339,43 @@ export interface PostMortemNarrative {
 export interface PostMortemReport {
   stats: PostMortemStats;
   narrative: PostMortemNarrative | null;
+}
+
+// ---- B2B Community ----
+
+export type CommunityPostType = 'MEETUP' | 'PROMO' | 'DISCUSSION';
+
+export interface CommunityContact {
+  email: string;
+  handle: string | null;
+  booth: string | null;
+}
+
+export interface CommunityAuthor {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+  contact: CommunityContact | null;
+}
+
+export interface CommunityPost {
+  id: string;
+  type: CommunityPostType;
+  title: string;
+  body: string;
+  startTime: string | null;
+  endTime: string | null;
+  meetupLocation: string | null;
+  author: CommunityAuthor;
+  createdAt: string;
+  updatedAt: string;
+  commentCount?: number;
+  rsvpCount?: number;
+  reactions?: ReactionSummary[];
+  myRsvp?: boolean;
+  isFollowingAuthor?: boolean;
+  canManage?: boolean;
+  attendees?: { id: string; name: string }[];
+  comments?: (Comment & { canManage?: boolean })[];
+  canModerate?: boolean;
 }

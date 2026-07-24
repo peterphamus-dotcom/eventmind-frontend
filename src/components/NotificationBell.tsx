@@ -95,6 +95,12 @@ export function NotificationBell() {
     if (n.ticketId) navigate(`/tickets/${n.ticketId}`);
     else if (n.reportId) navigate(`/reports/${n.reportId}`);
     else if (n.scheduleItemId) navigate(`/schedule/${n.scheduleItemId}`);
+    else if (n.communityPostId) {
+      // Community posts open in a modal within the Community tab, not a page.
+      sessionStorage.setItem('dashboardTab', 'community');
+      sessionStorage.setItem('communityOpenPostId', n.communityPostId);
+      navigate('/dashboard');
+    }
   }
 
   async function handleMarkAllRead() {

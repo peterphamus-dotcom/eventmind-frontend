@@ -7,6 +7,7 @@ import { FloorplanPanel } from '../components/FloorplanPanel';
 import { LibraryPanel } from '../components/LibraryPanel';
 import { SchedulePanel } from '../components/SchedulePanel';
 import { SideSchedulePanel } from '../components/SideSchedulePanel';
+import { CommunityPanel } from '../components/CommunityPanel';
 import { EventSummary } from '../components/EventSummary';
 import { NotificationBell } from '../components/NotificationBell';
 import { AboutModal } from '../components/AboutModal';
@@ -15,7 +16,7 @@ import { DisplaySettingsModal } from '../components/DisplaySettingsModal';
 import { InviteModal } from '../components/InviteModal';
 import { AwaitingApproval } from '../components/AwaitingApproval';
 
-type Tab = 'tickets' | 'reports' | 'floorplan' | 'library' | 'schedule' | 'sideSchedule';
+type Tab = 'tickets' | 'reports' | 'floorplan' | 'library' | 'schedule' | 'sideSchedule' | 'community';
 
 /** Line icons at the two sizes the shell uses: 16px in menus and tabs, 17px in header buttons. */
 function Icon({ size = 16, children }: { size?: number; children: React.ReactNode }) {
@@ -124,16 +125,30 @@ const paths = {
       <circle cx="15" cy="15.5" r="1.6" />
     </>
   ),
+  community: (
+    <>
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </>
+  ),
 };
 
-const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
+const ALL_TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'tickets', label: 'Tickets', icon: paths.ticket },
   { id: 'reports', label: 'Reports', icon: paths.report },
   { id: 'floorplan', label: 'Floorplan', icon: paths.floorplan },
   { id: 'library', label: 'Library', icon: paths.library },
   { id: 'schedule', label: 'Schedule', icon: paths.schedule },
   { id: 'sideSchedule', label: 'Side Schedule', icon: paths.sideSchedule },
+  { id: 'community', label: 'Community', icon: paths.community },
 ];
+
+/** The Community tab is Expo-only, with Admin/Core Team joining to moderate. */
+function tabsForRole(role?: string) {
+  return ALL_TABS.filter((t) => t.id !== 'community' || role === 'EXPO' || role === 'ADMIN' || role === 'CORE_TEAM');
+}
 
 /** MEMBER -> Member, CORE_TEAM -> Core Team */
 function formatRole(role?: string) {
@@ -246,7 +261,7 @@ export function Dashboard() {
 
           {/* Tab switcher */}
           <div style={styles.tabs}>
-            {TABS.map((tab) => (
+            {tabsForRole(user?.role).map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => selectTab(tab.id)}
@@ -268,6 +283,7 @@ export function Dashboard() {
           {activeTab === 'library' && <LibraryPanel />}
           {activeTab === 'schedule' && <SchedulePanel />}
           {activeTab === 'sideSchedule' && <SideSchedulePanel />}
+          {activeTab === 'community' && <CommunityPanel />}
         </div>
       )}
     </div>

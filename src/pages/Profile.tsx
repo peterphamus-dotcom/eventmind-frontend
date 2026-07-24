@@ -13,6 +13,9 @@ export function Profile() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [bio, setBio] = useState('');
+  const [shareContact, setShareContact] = useState(false);
+  const [communityHandle, setCommunityHandle] = useState('');
+  const [communityBooth, setCommunityBooth] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,19 +31,34 @@ export function Profile() {
       setName(user.name);
       setPhone(user.phone || '');
       setBio(user.bio || '');
+      setShareContact(user.shareContactInCommunity || false);
+      setCommunityHandle(user.communityHandle || '');
+      setCommunityBooth(user.communityBooth || '');
     }
   }, [user]);
 
   if (!user) return <div style={detail.loading}>Loading…</div>;
 
-  const isDirty = name !== user.name || phone !== (user.phone || '') || bio !== (user.bio || '');
+  const isExpo = user.role === 'EXPO';
+  const isDirty =
+    name !== user.name ||
+    phone !== (user.phone || '') ||
+    bio !== (user.bio || '') ||
+    shareContact !== (user.shareContactInCommunity || false) ||
+    communityHandle !== (user.communityHandle || '') ||
+    communityBooth !== (user.communityBooth || '');
 
   async function handleSave() {
     if (isSaving) return;
     setIsSaving(true);
     setError(null);
     try {
-      await api.updateMyProfile({ name, phone, bio });
+      await api.updateMyProfile({
+        name,
+        phone,
+        bio,
+        ...(isExpo ? { shareContactInCommunity: shareContact, communityHandle, communityBooth } : {}),
+      });
       await refreshUser();
       showToast('Profile updated');
     } catch (err: any) {
@@ -195,6 +213,33 @@ export function Profile() {
         />
         <div style={styles.charCount}>{bio.length}/500</div>
       </div>
+
+      {isExpo && (
+        <div style={styles.communityBox}>
+          <h3 style={styles.subtitle}>Community networking</h3>
+          <p style={styles.communityNote}>
+            Off by default, your contact stays private. Turn this on to attach a contact card
+            (your email plus the handle and booth below) to your Community posts so other Expo
+            vendors can reach you.
+          </p>
+          <label style={styles.toggleRow}>
+            <input type="checkbox" checked={shareContact} onChange={(e) => setShareContact(e.target.checked)} />
+            Share my contact card in the Community
+          </label>
+          {shareContact && (
+            <div style={styles.communityFields}>
+              <div style={{ flex: 1 }}>
+                <label style={form.uppercaseLabel}>Handle (optional)</label>
+                <input value={communityHandle} onChange={(e) => setCommunityHandle(e.target.value)} style={form.input} placeholder="@yourbrand" maxLength={60} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={form.uppercaseLabel}>Booth (optional)</label>
+                <input value={communityBooth} onChange={(e) => setCommunityBooth(e.target.value)} style={form.input} placeholder="e.g. B12" maxLength={60} />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <button
         onClick={handleSave}
@@ -385,6 +430,33 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     margin: '0 0 6px',
     color: 'var(--text)',
+  },
+  communityBox: {
+    border: '1px solid var(--border)',
+    borderRadius: '10px',
+    padding: '16px',
+    marginBottom: '18px',
+    backgroundColor: 'var(--surface-alt)',
+  },
+  communityNote: {
+    fontSize: '12.5px',
+    color: 'var(--text-muted)',
+    lineHeight: 1.5,
+    margin: '0 0 12px',
+  },
+  toggleRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '13.5px',
+    color: 'var(--text)',
+    cursor: 'pointer',
+  },
+  communityFields: {
+    display: 'flex',
+    gap: '12px',
+    marginTop: '14px',
+    flexWrap: 'wrap' as const,
   },
   hint: {
     fontSize: '12.5px',

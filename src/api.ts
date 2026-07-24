@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType } from './types';
 
 type TeamPreview<T> = PaginatedResponse<T> & { team: { id: string; name: string; tags: Tag[] } };
 
@@ -68,7 +68,7 @@ export const api = {
     client.get<ApiResponse<PaginatedResponse<User>>>('/users', { params: { page, pageSize, ...filters } }),
   updateUser: (id: string, role?: string, teamIds?: string[]) =>
     client.patch<ApiResponse<User>>(`/users/${id}`, { role, teamIds }),
-  updateMyProfile: (updates: { name?: string; phone?: string; bio?: string; viewDensity?: ViewDensity }) =>
+  updateMyProfile: (updates: { name?: string; phone?: string; bio?: string; viewDensity?: ViewDensity; shareContactInCommunity?: boolean; communityHandle?: string | null; communityBooth?: string | null }) =>
     client.patch<ApiResponse<User>>('/users/me', updates),
   uploadMyAvatar: (file: File) => {
     const fd = new FormData();
@@ -351,4 +351,36 @@ export const api = {
   confirmScheduleImport: (
     items: { title: string; description?: string | null; startTime: string; endTime?: string | null; locationId?: string | null }[]
   ) => client.post<ApiResponse<{ created: number }>>('/schedule/import/confirm', { items }),
+
+  // B2B Community
+  listCommunity: (filters?: { type?: CommunityPostType; feed?: 'following' }) =>
+    client.get<ApiResponse<{ items: CommunityPost[]; canPost: boolean; canModerate: boolean }>>('/community', { params: filters }),
+  getCommunityPost: (id: string) => client.get<ApiResponse<CommunityPost>>(`/community/${id}`),
+  createCommunityPost: (data: {
+    type: CommunityPostType;
+    title: string;
+    body: string;
+    startTime?: string;
+    endTime?: string;
+    meetupLocation?: string;
+  }) => client.post<ApiResponse<CommunityPost>>('/community', data),
+  updateCommunityPost: (
+    id: string,
+    updates: { title?: string; body?: string; startTime?: string | null; endTime?: string | null; meetupLocation?: string | null }
+  ) => client.patch<ApiResponse<CommunityPost>>(`/community/${id}`, updates),
+  deleteCommunityPost: (id: string) => client.delete<ApiResponse<unknown>>(`/community/${id}`),
+  toggleCommunityRsvp: (id: string) =>
+    client.post<ApiResponse<{ going: boolean; rsvpCount: number }>>(`/community/${id}/rsvp`),
+  toggleCommunityPostReaction: (id: string, emoji: string) =>
+    client.post<ApiResponse<ReactionsPayload>>(`/community/${id}/reactions`, { emoji }),
+  addCommunityComment: (id: string, text: string) =>
+    client.post<ApiResponse<Comment>>(`/community/${id}/comments`, { text }),
+  deleteCommunityComment: (postId: string, commentId: string) =>
+    client.delete<ApiResponse<unknown>>(`/community/${postId}/comments/${commentId}`),
+  toggleCommunityCommentReaction: (postId: string, commentId: string, emoji: string) =>
+    client.post<ApiResponse<ReactionsPayload>>(`/community/${postId}/comments/${commentId}/reactions`, { emoji }),
+  toggleCommunityFollow: (userId: string) =>
+    client.post<ApiResponse<{ following: boolean }>>(`/community/follow/${userId}`),
+  communityMentionCandidates: () =>
+    client.get<ApiResponse<{ items: { id: string; name: string }[] }>>('/community/mention-candidates'),
 };
