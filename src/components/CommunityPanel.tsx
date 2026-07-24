@@ -39,6 +39,7 @@ export function CommunityPanel() {
 
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [canPost, setCanPost] = useState(false);
+  const [canModerate, setCanModerate] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FeedFilter>('all');
@@ -59,6 +60,7 @@ export function CommunityPanel() {
       const res = await api.listCommunity(params);
       setPosts(res.data.data?.items || []);
       setCanPost(res.data.data?.canPost || false);
+      setCanModerate(res.data.data?.canModerate || false);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to load community');
     } finally {
@@ -109,6 +111,16 @@ export function CommunityPanel() {
     }
   }
 
+  async function togglePin(e: React.MouseEvent, postId: string) {
+    e.stopPropagation();
+    try {
+      await api.toggleCommunityPin(postId);
+      load();
+    } catch (err: any) {
+      showToast(err.response?.data?.error || 'Failed to pin');
+    }
+  }
+
   const filters: { id: FeedFilter; label: string }[] = [
     { id: 'all', label: 'All' },
     { id: 'MEETUP', label: '🤝 Meetups' },
@@ -150,10 +162,16 @@ export function CommunityPanel() {
           {posts.map((p) => {
             const meta = TYPE_META[p.type];
             return (
-              <div key={p.id} style={{ ...styles.card, borderLeft: `4px solid ${meta.color}` }} onClick={() => setOpenId(p.id)}>
+              <div key={p.id} style={{ ...styles.card, borderLeft: `4px solid ${meta.color}`, ...(p.isPinned ? styles.cardPinned : {}) }} onClick={() => setOpenId(p.id)}>
                 <div style={styles.cardHead}>
+                  {p.isPinned && <span style={styles.pinnedBadge} title="Pinned">📌 Pinned</span>}
                   <span style={{ ...styles.typeBadge, backgroundColor: meta.color }}>{meta.emoji} {meta.label}</span>
                   <span style={styles.cardTitle}>{p.title}</span>
+                  {canModerate && (
+                    <button onClick={(e) => togglePin(e, p.id)} style={styles.pinBtn} title={p.isPinned ? 'Unpin' : 'Pin to top'}>
+                      {p.isPinned ? 'Unpin' : '📌 Pin'}
+                    </button>
+                  )}
                 </div>
                 <div style={styles.cardMeta}>
                   <span>by {p.author.name}</span>
@@ -246,6 +264,9 @@ const styles: Record<string, React.CSSProperties> = {
   filterChipActive: { backgroundColor: 'var(--accent-soft)', borderColor: 'var(--accent)', color: 'var(--accent-text)' },
   list: { display: 'flex', flexDirection: 'column', gap: '10px' },
   card: { backgroundColor: 'var(--surface)', borderRadius: '6px', boxShadow: '0 1px 4px var(--shadow)', padding: '12px 14px', cursor: 'pointer' },
+  cardPinned: { backgroundColor: 'var(--warning-soft)' },
+  pinnedBadge: { fontSize: '11px', fontWeight: 700, color: 'var(--warning-text2)', whiteSpace: 'nowrap' },
+  pinBtn: { marginLeft: 'auto', padding: '3px 10px', borderRadius: '12px', border: '1px solid var(--border-strong)', backgroundColor: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '11.5px', fontWeight: 600, whiteSpace: 'nowrap' },
   cardHead: { display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '6px' },
   typeBadge: { color: 'white', fontSize: '11px', fontWeight: 700, padding: '2px 9px', borderRadius: '10px', whiteSpace: 'nowrap' },
   cardTitle: { fontSize: '15px', fontWeight: 600, color: 'var(--text)' },

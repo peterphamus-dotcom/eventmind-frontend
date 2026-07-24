@@ -163,9 +163,14 @@ export interface Comment {
   author: { id: string; name: string };
   reactions?: ReactionSummary[];
   createdAt: string;
+  canManage?: boolean;
+  // Community comments: whether the viewer may report it (not their own), and
+  // whether it's hidden by a moderator (only ever surfaced to the author + mods).
+  canReport?: boolean;
+  isHidden?: boolean;
 }
 
-export type NotificationType = 'COMMENT' | 'STATUS_CHANGE' | 'URGENCY_CHANGE' | 'REACTION' | 'REMINDER_OVERDUE' | 'SCHEDULE_REMINDER' | 'NEW_SIGNUP' | 'ACCOUNT_STATUS' | 'COMMUNITY_REPLY' | 'COMMUNITY_MENTION' | 'COMMUNITY_NEW_POST';
+export type NotificationType = 'COMMENT' | 'STATUS_CHANGE' | 'URGENCY_CHANGE' | 'REACTION' | 'REMINDER_OVERDUE' | 'SCHEDULE_REMINDER' | 'NEW_SIGNUP' | 'ACCOUNT_STATUS' | 'COMMUNITY_REPLY' | 'COMMUNITY_MENTION' | 'COMMUNITY_NEW_POST' | 'COMMUNITY_REPORT';
 
 export interface Notification {
   id: string;
@@ -366,6 +371,7 @@ export interface CommunityPost {
   startTime: string | null;
   endTime: string | null;
   meetupLocation: string | null;
+  isPinned?: boolean;
   author: CommunityAuthor;
   createdAt: string;
   updatedAt: string;
@@ -376,6 +382,28 @@ export interface CommunityPost {
   isFollowingAuthor?: boolean;
   canManage?: boolean;
   attendees?: { id: string; name: string }[];
-  comments?: (Comment & { canManage?: boolean })[];
+  comments?: Comment[];
   canModerate?: boolean;
+  /** Whether the viewer may report this post (true unless they authored it). */
+  canReport?: boolean;
+}
+
+// A moderator-queue entry for a reported community post or comment.
+export interface ContentReport {
+  id: string;
+  target: 'POST' | 'COMMENT';
+  reason: UserReportReason;
+  details: string | null;
+  status: UserReportStatus;
+  reporter: { id: string; name: string };
+  postId: string | null;
+  postTitle: string | null;
+  commentId: string | null;
+  commentText: string | null;
+  commentAuthor: string | null;
+  commentIsHidden: boolean | null;
+  postAuthor: string | null;
+  resolvedBy: { id: string; name: string } | null;
+  resolvedAt: string | null;
+  createdAt: string;
 }

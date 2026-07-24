@@ -9,13 +9,31 @@ interface CommentsSectionProps {
   onAdd: (text: string) => Promise<Comment>;
   /** Toggle a reaction on a comment; resolves to its fresh summary */
   onReact: (commentId: string, emoji: string) => Promise<ReactionSummary[]>;
+  /** The viewer's id — used to hide the "Report" affordance on their own comments. */
+  currentUserId?: string;
+  /** Whether the viewer can moderate (show Hide/Unhide + the hidden badge). */
+  canModerate?: boolean;
+  /** Open a report flow for a comment (parent renders the reason dialog). */
+  onReport?: (commentId: string) => void;
+  /** Toggle a comment's hidden state; resolves to its new isHidden value. */
+  onHide?: (commentId: string) => Promise<boolean>;
 }
 
-export function CommentsSection({ initialComments, onAdd, onReact }: CommentsSectionProps) {
+export function CommentsSection({ initialComments, onAdd, onReact, currentUserId, canModerate, onReport, onHide }: CommentsSectionProps) {
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [text, setText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function handleHide(commentId: string) {
+    if (!onHide) return;
+    try {
+      const isHidden = await onHide(commentId);
+      setComments((prev) => prev.map((c) => (c.id === commentId ? { ...c, isHidden } : c)));
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to hide comment');
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -41,23 +59,45 @@ export function CommentsSection({ initialComments, onAdd, onReact }: CommentsSec
         <p style={styles.empty}>No comments yet. Be the first to add one.</p>
       ) : (
         <div style={styles.list}>
-          {comments.map((c) => (
-            <div key={c.id} style={styles.comment}>
-              <div style={styles.commentHeader}>
-                <Link to={`/users/${c.author.id}`} style={styles.author}>
-                  {c.author.name}
-                </Link>
-                <span style={styles.date}>{new Date(c.createdAt).toLocaleString()}</span>
+          {comments.map((c) => {
+            // The hidden badge is only ever shown to moderators. The comment's
+            // own author still reaches this branch (backend returns their hidden
+            // comment) but sees no badge — it looks normal to them, by design.
+            const showHiddenBadge = canModerate && c.isHidden;
+            const canReport = onReport && currentUserId && c.author.id !== currentUserId;
+            return (
+              <div key={c.id} style={{ ...styles.comment, ...(showHiddenBadge ? styles.commentHidden : {}) }}>
+                <div style={styles.commentHeader}>
+                  <Link to={`/users/${c.author.id}`} style={styles.author}>
+                    {c.author.name}
+                  </Link>
+                  {showHiddenBadge && <span style={styles.hiddenBadge} title="Hidden from everyone except the author">🚫 Hidden</span>}
+                  <span style={styles.date}>{new Date(c.createdAt).toLocaleString()}</span>
+                </div>
+                <p style={styles.text}>{c.text}</p>
+                <div style={styles.reactions}>
+                  <ReactionBar
+                    reactions={c.reactions || []}
+                    onToggle={(emoji) => onReact(c.id, emoji)}
+                  />
+                </div>
+                {(canReport || (onHide && canModerate)) && (
+                  <div style={styles.modActions}>
+                    {canReport && (
+                      <button type="button" onClick={() => onReport!(c.id)} style={styles.modBtn}>
+                        ⚑ Report
+                      </button>
+                    )}
+                    {onHide && canModerate && (
+                      <button type="button" onClick={() => handleHide(c.id)} style={styles.modBtn}>
+                        {c.isHidden ? 'Unhide' : 'Hide'}
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
-              <p style={styles.text}>{c.text}</p>
-              <div style={styles.reactions}>
-                <ReactionBar
-                  reactions={c.reactions || []}
-                  onToggle={(emoji) => onReact(c.id, emoji)}
-                />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -114,6 +154,34 @@ const styles = {
     backgroundColor: 'var(--bg)',
     borderRadius: '9px',
     padding: '12px 15px',
+  },
+  commentHidden: {
+    border: '1px dashed var(--danger-text)',
+    opacity: 0.85,
+  },
+  hiddenBadge: {
+    fontSize: '10.5px',
+    fontWeight: '700' as const,
+    color: 'var(--danger-text)',
+    backgroundColor: 'var(--danger-soft)',
+    padding: '1px 7px',
+    borderRadius: '10px',
+    whiteSpace: 'nowrap' as const,
+  },
+  modActions: {
+    display: 'flex',
+    gap: '8px',
+    marginTop: '8px',
+  },
+  modBtn: {
+    padding: '3px 10px',
+    fontSize: '11.5px',
+    fontWeight: '600' as const,
+    color: 'var(--text-muted)',
+    backgroundColor: 'transparent',
+    border: '1px solid var(--border-strong)',
+    borderRadius: '10px',
+    cursor: 'pointer',
   },
   commentHeader: {
     display: 'flex',

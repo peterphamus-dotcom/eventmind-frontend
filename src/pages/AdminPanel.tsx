@@ -13,8 +13,9 @@ import AdminViewAs from './admin/AdminViewAs';
 import AdminReminders from './admin/AdminReminders';
 import AdminSocialIntel from './admin/AdminSocialIntel';
 import AdminUserReports from './admin/AdminUserReports';
+import AdminContentReports from './admin/AdminContentReports';
 
-type AdminTab = 'approvals' | 'users' | 'teams' | 'locations' | 'tags' | 'banner' | 'export' | 'viewAs' | 'reminders' | 'socialIntel' | 'userReports';
+type AdminTab = 'approvals' | 'users' | 'teams' | 'locations' | 'tags' | 'banner' | 'export' | 'viewAs' | 'reminders' | 'socialIntel' | 'userReports' | 'contentReports';
 
 const GearIcon = (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -34,6 +35,7 @@ const TABS: { id: AdminTab; label: string; adminOnly?: boolean }[] = [
   { id: 'reminders', label: 'Reminders' },
   { id: 'socialIntel', label: 'Social Intel' },
   { id: 'userReports', label: 'User Reports' },
+  { id: 'contentReports', label: 'Content Reports' },
   { id: 'banner', label: 'Banner', adminOnly: true },
 ];
 
@@ -141,6 +143,7 @@ export function AdminPanel() {
         {activeTab === 'reminders' && <AdminReminders />}
         {activeTab === 'socialIntel' && <AdminSocialIntel />}
         {activeTab === 'userReports' && <AdminUserReports />}
+        {activeTab === 'contentReports' && <AdminContentReports />}
         {activeTab === 'banner' && <AdminBanner />}
       </div>
 

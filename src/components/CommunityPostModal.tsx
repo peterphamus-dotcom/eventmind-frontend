@@ -5,7 +5,11 @@ import { api } from '../api';
 import { Modal } from './Modal';
 import { CommentsSection } from './CommentsSection';
 import { ReactionBar } from './ReactionBar';
-import type { CommunityPost } from '../types';
+import { ReportContentDialog } from './ReportContentDialog';
+import type { CommunityPost, UserReportReason } from '../types';
+
+/** What's being reported: the post itself, or one of its comments. */
+type ReportTarget = { kind: 'post' } | { kind: 'comment'; commentId: string };
 
 const TYPE_META: Record<string, { label: string; color: string }> = {
   MEETUP: { label: 'Meetup', color: 'var(--accent)' },
@@ -39,6 +43,7 @@ export function CommunityPostModal({ postId, onClose, onChanged }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [reportTarget, setReportTarget] = useState<ReportTarget | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -93,8 +98,36 @@ export function CommunityPostModal({ postId, onClose, onChanged }: Props) {
     }
   }
 
+  async function submitReport(reason: UserReportReason, details: string) {
+    if (!post || !reportTarget) return;
+    if (reportTarget.kind === 'post') {
+      await api.reportCommunityPost(post.id, reason, details);
+    } else {
+      await api.reportCommunityComment(post.id, reportTarget.commentId, reason, details);
+    }
+    setReportTarget(null);
+    showToast('Report sent to moderators');
+  }
+
   const isExpo = user?.role === 'EXPO';
+  // Expo AND admin/core can comment and react; RSVP + follow stay Expo-only.
+  const canParticipate = isExpo || user?.role === 'ADMIN' || user?.role === 'CORE_TEAM';
   const meta = post ? TYPE_META[post.type] : null;
+
+  async function togglePin() {
+    if (!post || busy) return;
+    setBusy(true);
+    try {
+      const res = await api.toggleCommunityPin(post.id);
+      setPost({ ...post, isPinned: res.data.data!.isPinned });
+      showToast(res.data.data!.isPinned ? 'Pinned to top' : 'Unpinned');
+      onChanged?.();
+    } catch (err: any) {
+      showToast(err.response?.data?.error || 'Failed to pin');
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <Modal title={post?.title || 'Post'} onClose={onClose}>
@@ -104,6 +137,7 @@ export function CommunityPostModal({ postId, onClose, onChanged }: Props) {
       {post && (
         <>
           <div style={styles.topRow}>
+            {post.isPinned && <span style={styles.pinnedBadge}>📌 Pinned</span>}
             {meta && <span style={{ ...styles.typeBadge, backgroundColor: meta.color }}>{meta.label}</span>}
             <span style={styles.byline}>by {post.author.name}</span>
             {isExpo && post.author.id !== user?.id && (
@@ -145,7 +179,7 @@ export function CommunityPostModal({ postId, onClose, onChanged }: Props) {
             </div>
           )}
 
-          {isExpo && (
+          {canParticipate && (
             <div style={styles.reactRow}>
               <ReactionBar
                 reactions={post.reactions || []}
@@ -159,17 +193,37 @@ export function CommunityPostModal({ postId, onClose, onChanged }: Props) {
 
           {(post.canManage || post.canModerate) && (
             <div style={styles.manageRow}>
+              {post.canModerate && (
+                <button onClick={togglePin} disabled={busy} style={styles.pinBtn}>
+                  {post.isPinned ? 'Unpin' : '📌 Pin to top'}
+                </button>
+              )}
               <button onClick={deletePost} style={styles.deleteBtn}>
                 {post.canManage ? 'Delete' : 'Delete (moderate)'}
               </button>
             </div>
           )}
 
+          {post.canReport && (
+            <div style={styles.manageRow}>
+              <button onClick={() => setReportTarget({ kind: 'post' })} style={styles.reportBtn}>
+                ⚑ Report post
+              </button>
+            </div>
+          )}
+
           <div style={styles.divider} />
 
-          {isExpo ? (
+          {canParticipate ? (
             <CommentsSection
               initialComments={post.comments || []}
+              currentUserId={user?.id}
+              canModerate={post.canModerate}
+              onReport={(commentId) => setReportTarget({ kind: 'comment', commentId })}
+              onHide={async (commentId) => {
+                const res = await api.toggleCommunityCommentHide(post.id, commentId);
+                return res.data.data!.isHidden;
+              }}
               onAdd={async (text) => {
                 const res = await api.addCommunityComment(post.id, text);
                 return res.data.data!;
@@ -204,6 +258,14 @@ export function CommunityPostModal({ postId, onClose, onChanged }: Props) {
           )}
         </>
       )}
+
+      {reportTarget && (
+        <ReportContentDialog
+          what={reportTarget.kind === 'post' ? 'post' : 'comment'}
+          onSubmit={submitReport}
+          onClose={() => setReportTarget(null)}
+        />
+      )}
     </Modal>
   );
 }
@@ -213,6 +275,7 @@ const styles: Record<string, React.CSSProperties> = {
   error: { padding: '12px 16px', backgroundColor: 'var(--danger-bg)', color: 'var(--danger-text)', borderRadius: '4px', fontSize: '14px', marginBottom: '16px' },
   topRow: { display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '12px' },
   typeBadge: { color: 'white', fontSize: '11px', fontWeight: 700, padding: '2px 9px', borderRadius: '10px' },
+  pinnedBadge: { fontSize: '11px', fontWeight: 700, color: 'var(--warning-text2)', whiteSpace: 'nowrap' },
   byline: { fontSize: '13px', color: 'var(--text-muted)' },
   followBtn: { padding: '4px 12px', borderRadius: '14px', border: '1px solid var(--accent)', backgroundColor: 'transparent', color: 'var(--accent)', cursor: 'pointer', fontSize: '12.5px', fontWeight: 600 },
   followingBtn: { backgroundColor: 'var(--accent-soft)' },
@@ -227,8 +290,10 @@ const styles: Record<string, React.CSSProperties> = {
   rsvpCount: { fontSize: '13px', fontWeight: 600, color: 'var(--text)' },
   attendees: { fontSize: '12.5px', color: 'var(--text-muted)' },
   reactRow: { marginBottom: '14px' },
-  manageRow: { marginBottom: '10px' },
+  manageRow: { display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' },
+  pinBtn: { padding: '6px 12px', backgroundColor: 'transparent', border: '1px solid var(--border-strong)', color: 'var(--text)', borderRadius: '6px', cursor: 'pointer', fontSize: '12.5px', fontWeight: 500 },
   deleteBtn: { padding: '6px 12px', backgroundColor: 'transparent', border: '1px solid #dc3545', color: '#dc3545', borderRadius: '6px', cursor: 'pointer', fontSize: '12.5px', fontWeight: 500 },
+  reportBtn: { padding: '6px 12px', backgroundColor: 'transparent', border: '1px solid var(--border-strong)', color: 'var(--text-muted)', borderRadius: '6px', cursor: 'pointer', fontSize: '12.5px', fontWeight: 500 },
   divider: { borderTop: '1px solid var(--border)', margin: '6px 0 16px' },
   commentsTitle: { fontSize: '14px', fontWeight: 700, color: 'var(--text)', margin: '0 0 10px' },
   readComment: { fontSize: '13.5px', color: 'var(--text)', padding: '6px 0', lineHeight: 1.5 },

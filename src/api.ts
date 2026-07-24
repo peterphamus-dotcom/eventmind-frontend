@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType, ContentReport } from './types';
 
 type TeamPreview<T> = PaginatedResponse<T> & { team: { id: string; name: string; tags: Tag[] } };
 
@@ -283,6 +283,12 @@ export const api = {
   updateUserReportStatus: (id: string, status: UserReportStatus) =>
     client.patch<ApiResponse<UserReport>>(`/user-reports/${id}`, { status }),
 
+  // Content reports (reported community posts/comments) — moderator queue
+  listContentReports: (filters?: { status?: UserReportStatus }) =>
+    client.get<ApiResponse<{ items: ContentReport[]; total: number }>>('/content-reports', { params: filters }),
+  updateContentReportStatus: (id: string, status: UserReportStatus) =>
+    client.patch<ApiResponse<ContentReport>>(`/content-reports/${id}`, { status }),
+
   // Document library (single source of truth docs)
   listLibraryDocuments: (filters?: { search?: string; tagIds?: string[] }) =>
     client.get<ApiResponse<{ items: LibraryDocument[]; total: number }>>('/library', {
@@ -379,6 +385,14 @@ export const api = {
     client.delete<ApiResponse<unknown>>(`/community/${postId}/comments/${commentId}`),
   toggleCommunityCommentReaction: (postId: string, commentId: string, emoji: string) =>
     client.post<ApiResponse<ReactionsPayload>>(`/community/${postId}/comments/${commentId}/reactions`, { emoji }),
+  toggleCommunityPin: (id: string) =>
+    client.post<ApiResponse<{ isPinned: boolean }>>(`/community/${id}/pin`),
+  reportCommunityPost: (id: string, reason: UserReportReason, details?: string) =>
+    client.post<ApiResponse<unknown>>(`/community/${id}/report`, { reason, details }),
+  reportCommunityComment: (postId: string, commentId: string, reason: UserReportReason, details?: string) =>
+    client.post<ApiResponse<unknown>>(`/community/${postId}/comments/${commentId}/report`, { reason, details }),
+  toggleCommunityCommentHide: (postId: string, commentId: string) =>
+    client.post<ApiResponse<{ isHidden: boolean }>>(`/community/${postId}/comments/${commentId}/hide`),
   toggleCommunityFollow: (userId: string) =>
     client.post<ApiResponse<{ following: boolean }>>(`/community/follow/${userId}`),
   communityMentionCandidates: () =>
