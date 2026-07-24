@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../AuthContext';
 import { useToast } from '../Toast';
 import { api } from '../api';
 import { Modal } from './Modal';
@@ -36,7 +35,6 @@ function shortWhen(iso: string | null): string {
  * moderate but not post; Members never reach this tab.
  */
 export function CommunityPanel() {
-  const { user } = useAuth();
   const showToast = useToast();
 
   const [posts, setPosts] = useState<CommunityPost[]>([]);
