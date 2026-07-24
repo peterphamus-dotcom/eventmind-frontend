@@ -36,7 +36,22 @@ export interface PendingUser {
   avatarUrl?: string | null;
   phone?: string | null;
   invitedBy?: { id: string; name: string } | null;
+  joinedViaQr?: { id: string; label: string } | null;
   createdAt: string;
+}
+
+/** A reusable, admin/core-generated sign-up QR code (see AdminSignupQr). */
+export interface SignupQrCode {
+  id: string;
+  label: string;
+  token: string;
+  suggestedRole: Role | null;
+  team: { id: string; name: string } | null;
+  homeLocation: { id: string; name: string } | null;
+  isActive: boolean;
+  createdBy: { id: string; name: string };
+  createdAt: string;
+  joinedCount: number;
 }
 
 export interface PublicUserProfile {

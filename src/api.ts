@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType, CommunitySortBy, ContentReport } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType, CommunitySortBy, ContentReport, SignupQrCode, Role } from './types';
 
 type TeamPreview<T> = PaginatedResponse<T> & { team: { id: string; name: string; tags: Tag[] } };
 
@@ -59,6 +59,28 @@ export const api = {
       teamId,
       homeLocationId,
     }),
+
+  // Signup QR codes (ADMIN/CORE_TEAM management)
+  listSignupQrCodes: () => client.get<ApiResponse<{ items: SignupQrCode[] }>>('/signup-qr'),
+  createSignupQrCode: (data: { label: string; suggestedRole?: Role; teamId?: string; homeLocationId?: string }) =>
+    client.post<ApiResponse<SignupQrCode>>('/signup-qr', data),
+  toggleSignupQrCode: (id: string, isActive: boolean) =>
+    client.patch<ApiResponse<SignupQrCode>>(`/signup-qr/${id}`, { isActive }),
+  // Signup QR codes (public join flow)
+  getSignupQrInfo: (token: string) =>
+    client.get<
+      ApiResponse<{
+        label: string;
+        suggestedRole: Role | null;
+        team: { id: string; name: string } | null;
+        homeLocation: { id: string; name: string } | null;
+      }>
+    >(`/signup-qr/public/${token}`),
+  joinViaSignupQr: (token: string, email: string, password: string, name: string) =>
+    client.post<ApiResponse<{ needsVerification: boolean; email: string; message: string }>>(
+      `/signup-qr/public/${token}/join`,
+      { email, password, name }
+    ),
 
   // Users
   getMe: () => client.get<ApiResponse<User>>('/users/me'),

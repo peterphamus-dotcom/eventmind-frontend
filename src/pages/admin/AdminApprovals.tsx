@@ -139,8 +139,12 @@ export default function AdminApprovals({ onCountChange }: AdminApprovalsProps) {
                   <div style={styles.userName}>{user.name}</div>
                   <div style={styles.userMeta}>{user.email}</div>
                   <div style={styles.userMeta}>
-                    {user.invitedBy ? `Invited by ${user.invitedBy.name}` : 'Public sign-up'} ·{' '}
-                    {relativeTime(user.createdAt)}
+                    {user.invitedBy
+                      ? `Invited by ${user.invitedBy.name}`
+                      : user.joinedViaQr
+                        ? `Via QR: ${user.joinedViaQr.label}`
+                        : 'Public sign-up'}{' '}
+                    · {relativeTime(user.createdAt)}
                   </div>
                   {user.bio && <div style={styles.userBio}>“{user.bio}”</div>}
                 </div>
