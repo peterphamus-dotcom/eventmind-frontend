@@ -15,8 +15,9 @@ import AdminSocialIntel from './admin/AdminSocialIntel';
 import AdminUserReports from './admin/AdminUserReports';
 import AdminContentReports from './admin/AdminContentReports';
 import AdminSignupQr from './admin/AdminSignupQr';
+import AdminEvents from './admin/AdminEvents';
 
-type AdminTab = 'approvals' | 'users' | 'teams' | 'locations' | 'tags' | 'banner' | 'export' | 'viewAs' | 'reminders' | 'socialIntel' | 'userReports' | 'contentReports' | 'signupQr';
+type AdminTab = 'approvals' | 'users' | 'teams' | 'locations' | 'tags' | 'banner' | 'export' | 'viewAs' | 'reminders' | 'socialIntel' | 'userReports' | 'contentReports' | 'signupQr' | 'events';
 
 const GearIcon = (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -27,6 +28,7 @@ const GearIcon = (
 
 const TABS: { id: AdminTab; label: string; adminOnly?: boolean }[] = [
   { id: 'approvals', label: 'Approvals' },
+  { id: 'events', label: 'Events', adminOnly: true },
   { id: 'signupQr', label: 'Sign-up QR' },
   { id: 'users', label: 'Users' },
   { id: 'teams', label: 'Teams' },
@@ -136,6 +138,7 @@ export function AdminPanel() {
       {/* Content */}
       <div style={styles.content}>
         {activeTab === 'approvals' && <AdminApprovals onCountChange={setPendingCount} />}
+        {activeTab === 'events' && <AdminEvents />}
         {activeTab === 'signupQr' && <AdminSignupQr />}
         {activeTab === 'users' && <AdminUsers />}
         {activeTab === 'teams' && <AdminTeams />}
