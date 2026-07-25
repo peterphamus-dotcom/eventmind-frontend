@@ -90,6 +90,8 @@ export const api = {
     client.get<ApiResponse<PaginatedResponse<User>>>('/users', { params: { page, pageSize, ...filters } }),
   updateUser: (id: string, role?: string, teamIds?: string[]) =>
     client.patch<ApiResponse<User>>(`/users/${id}`, { role, teamIds }),
+  createUser: (data: { name: string; email: string; password: string; role: Role; homeLocationId: string; teamIds?: string[] }) =>
+    client.post<ApiResponse<User>>('/users', data),
   updateMyProfile: (updates: { name?: string; phone?: string; bio?: string; viewDensity?: ViewDensity; shareContactInCommunity?: boolean; communityHandle?: string | null; communityBooth?: string | null }) =>
     client.patch<ApiResponse<User>>('/users/me', updates),
   uploadMyAvatar: (file: File) => {

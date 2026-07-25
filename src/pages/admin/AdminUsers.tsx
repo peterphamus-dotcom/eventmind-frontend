@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api, photoSrc } from '../../api';
+import { useToast } from '../../Toast';
 import { styles as shared, roleBadge } from '../../components/AdminShared';
-import type { User } from '../../types';
+import { Modal } from '../../components/Modal';
+import type { User, Role, Team, Location } from '../../types';
 
 const FlagIcon = (
   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: '-1px' }}>
@@ -20,17 +22,40 @@ function relativeTime(iso: string): string {
   return `${Math.round(hours / 24)}d ago`;
 }
 
+interface ComposerState {
+  name: string;
+  email: string;
+  password: string;
+  role: Role;
+  homeLocationId: string;
+  teamIds: string[];
+}
+
+const emptyComposer: ComposerState = { name: '', email: '', password: '', role: 'MEMBER', homeLocationId: '', teamIds: [] };
+
 export default function AdminUsers() {
+  const showToast = useToast();
   const [users, setUsers] = useState<User[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editRole, setEditRole] = useState<string>('');
 
+  const [composer, setComposer] = useState<ComposerState | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [composerError, setComposerError] = useState<string | null>(null);
+
   useEffect(() => {
     loadUsers();
   }, [selectedRole]);
+
+  useEffect(() => {
+    api.listTeams().then((res) => setTeams(res.data.data?.items || [])).catch(() => {});
+    api.listLocations().then((res) => setLocations(res.data.data?.items || [])).catch(() => {});
+  }, []);
 
   async function loadUsers() {
     setIsLoading(true);
@@ -43,6 +68,59 @@ export default function AdminUsers() {
       setError(err.response?.data?.error || 'Failed to load users');
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  function openComposer() {
+    setComposer({ ...emptyComposer, homeLocationId: locations[0]?.id || '' });
+    setComposerError(null);
+  }
+
+  function toggleComposerTeam(id: string) {
+    if (!composer) return;
+    setComposer({
+      ...composer,
+      teamIds: composer.teamIds.includes(id) ? composer.teamIds.filter((t) => t !== id) : [...composer.teamIds, id],
+    });
+  }
+
+  async function submitNewUser() {
+    if (!composer || submitting) return;
+    if (!composer.name.trim()) {
+      setComposerError('Please enter a name');
+      return;
+    }
+    if (!composer.email.trim()) {
+      setComposerError('Please enter an email address');
+      return;
+    }
+    if (composer.password.length < 8) {
+      setComposerError('Password must be at least 8 characters');
+      return;
+    }
+    if (!composer.homeLocationId) {
+      setComposerError('Please choose a home location');
+      return;
+    }
+    setSubmitting(true);
+    setComposerError(null);
+    try {
+      const res = await api.createUser({
+        name: composer.name.trim(),
+        email: composer.email.trim(),
+        password: composer.password,
+        role: composer.role,
+        homeLocationId: composer.homeLocationId,
+        teamIds: composer.teamIds,
+      });
+      const created = res.data.data!;
+      setUsers((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
+      setComposer(null);
+      showToast(`${created.name} added`);
+    } catch (err: any) {
+      setComposerError(err.response?.data?.error || 'Failed to create user');
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -66,7 +144,7 @@ export default function AdminUsers() {
 
       {error && <div style={styles.error}>{error}</div>}
 
-      {/* Filter */}
+      {/* Filter + add */}
       <div style={styles.filterRow}>
         <label style={styles.label}>Filter by role:</label>
         <select
@@ -80,6 +158,9 @@ export default function AdminUsers() {
           <option value="MEMBER">Member</option>
           <option value="EXPO">Expo</option>
         </select>
+        <button onClick={openComposer} style={shared.addBtn}>
+          + Add User
+        </button>
       </div>
 
       {/* Users Table */}
@@ -181,6 +262,98 @@ export default function AdminUsers() {
           </table>
         </div>
       )}
+
+      {composer && (
+        <Modal title="Add User" onClose={() => setComposer(null)}>
+          {composerError && <div style={styles.error}>{composerError}</div>}
+          <p style={styles.composerHint}>
+            Creates the account immediately with the role and location below — no approval step needed.
+          </p>
+
+          <div style={styles.field}>
+            <label style={styles.fieldLabel}>Name</label>
+            <input
+              value={composer.name}
+              onChange={(e) => setComposer({ ...composer, name: e.target.value })}
+              style={shared.input}
+              maxLength={100}
+            />
+          </div>
+
+          <div style={styles.field}>
+            <label style={styles.fieldLabel}>Email</label>
+            <input
+              type="email"
+              value={composer.email}
+              onChange={(e) => setComposer({ ...composer, email: e.target.value })}
+              style={shared.input}
+            />
+          </div>
+
+          <div style={styles.field}>
+            <label style={styles.fieldLabel}>Password</label>
+            <input
+              type="text"
+              value={composer.password}
+              onChange={(e) => setComposer({ ...composer, password: e.target.value })}
+              style={shared.input}
+              placeholder="At least 8 characters"
+            />
+          </div>
+
+          <div style={styles.field}>
+            <label style={styles.fieldLabel}>Role</label>
+            <select
+              value={composer.role}
+              onChange={(e) => setComposer({ ...composer, role: e.target.value as Role })}
+              style={styles.select}
+            >
+              <option value="MEMBER">Member</option>
+              <option value="CORE_TEAM">Core Team</option>
+              <option value="ADMIN">Admin</option>
+              <option value="EXPO">Expo</option>
+            </select>
+          </div>
+
+          <div style={styles.field}>
+            <label style={styles.fieldLabel}>Home location</label>
+            <select
+              value={composer.homeLocationId}
+              onChange={(e) => setComposer({ ...composer, homeLocationId: e.target.value })}
+              style={styles.select}
+            >
+              <option value="">Select…</option>
+              {locations.map((loc) => (
+                <option key={loc.id} value={loc.id}>{loc.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={styles.field}>
+            <label style={styles.fieldLabel}>Teams (optional)</label>
+            {teams.length === 0 ? (
+              <span style={styles.noTeams}>No teams yet — you can assign them later.</span>
+            ) : (
+              <div style={styles.teamChecks}>
+                {teams.map((team) => (
+                  <label key={team.id} style={styles.teamCheck}>
+                    <input
+                      type="checkbox"
+                      checked={composer.teamIds.includes(team.id)}
+                      onChange={() => toggleComposerTeam(team.id)}
+                    />
+                    {team.name}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button onClick={submitNewUser} style={styles.primaryBtn} disabled={submitting}>
+            {submitting ? 'Creating…' : 'Create user'}
+          </button>
+        </Modal>
+      )}
     </div>
   );
 }
@@ -273,4 +446,49 @@ const styles = {
     fontWeight: '600' as const,
   },
   empty: shared.empty,
+  composerHint: {
+    fontSize: '13px',
+    color: 'var(--text-muted)',
+    margin: '0 0 16px',
+  },
+  field: {
+    marginBottom: '14px',
+  },
+  fieldLabel: {
+    display: 'block',
+    fontSize: '12px',
+    fontWeight: '600' as const,
+    color: 'var(--text-muted)',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.5px',
+    marginBottom: '6px',
+  },
+  teamChecks: {
+    display: 'flex',
+    flexWrap: 'wrap' as const,
+    gap: '8px',
+  },
+  teamCheck: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '14px',
+    color: 'var(--text)',
+  },
+  noTeams: {
+    fontSize: '13px',
+    color: 'var(--text-faint)',
+    fontStyle: 'italic' as const,
+  },
+  primaryBtn: {
+    padding: '10px 20px',
+    backgroundColor: '#007bff',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '600' as const,
+    width: '100%',
+  },
 };
