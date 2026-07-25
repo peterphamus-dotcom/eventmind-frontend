@@ -43,6 +43,19 @@ export const api = {
   acceptInvite: (token: string, name: string, password: string) =>
     client.post<ApiResponse<User>>('/auth/accept-invite', { token, name, password }),
 
+  // Events (multi-instance management)
+  listEvents: () =>
+    client.get<ApiResponse<{ items: Array<{ eventName: string; dbName: string; createdAt: string }>; total: number }>>(
+      '/events'
+    ),
+  switchEvent: (eventName: string) =>
+    client.post<ApiResponse<{ eventName: string; message: string }>>('/events/switch', { eventName }),
+  createEvent: (eventName: string, cloneFrom?: string) =>
+    client.post<ApiResponse<{ eventName: string; dbName: string; adminEmail: string; adminPassword: string }>>(
+      '/events',
+      { eventName, cloneFrom }
+    ),
+
   // Invites
   getInvite: (token: string) =>
     client.get<

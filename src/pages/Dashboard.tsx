@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
+import { api } from '../api';
+import { useToast } from '../Toast';
 import { TicketsPanel } from '../components/TicketsPanel';
 import { ReportsPanel } from '../components/ReportsPanel';
 import { FloorplanPanel } from '../components/FloorplanPanel';
@@ -171,6 +173,8 @@ export function Dashboard() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [displaySettingsOpen, setDisplaySettingsOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [events, setEvents] = useState<Array<{ eventName: string; dbName: string; createdAt: string }>>([]);
+  const showToast = useToast();
   const isActive = user?.status === 'ACTIVE';
   const isPending = !!user && user.status !== 'ACTIVE';
   const canSeeAdminPanel = isActive && (user?.role === 'ADMIN' || user?.role === 'CORE_TEAM');
@@ -178,6 +182,20 @@ export function Dashboard() {
   function selectTab(tab: Tab) {
     setActiveTab(tab);
     sessionStorage.setItem('dashboardTab', tab);
+  }
+
+  useEffect(() => {
+    api.listEvents().then((res) => setEvents(res.data.data?.items || [])).catch(() => {});
+  }, []);
+
+  async function handleSwitchEvent(eventName: string) {
+    try {
+      await api.switchEvent(eventName);
+      showToast(`Switched to "${eventName}"`);
+      window.location.href = '/dashboard';
+    } catch (err: any) {
+      showToast(err.response?.data?.error || 'Failed to switch event');
+    }
   }
 
   async function handleLogout() {
@@ -228,6 +246,22 @@ export function Dashboard() {
                 <div style={styles.menuBackdrop} onClick={() => setMenuOpen(false)} />
                 <div style={styles.menuPopover}>
                   {menuItem(paths.profile, 'My Profile', () => navigate('/profile'))}
+                  {events.length > 1 && (
+                    <div style={styles.menuDivider}>
+                      <div style={styles.menuLabel}>Switch Event</div>
+                      <div style={styles.eventsList}>
+                        {events.map((event) => (
+                          <button
+                            key={event.eventName}
+                            onClick={() => handleSwitchEvent(event.eventName)}
+                            style={styles.eventItem}
+                          >
+                            {event.eventName}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {isActive && menuItem(paths.mail, 'Invite Someone', () => setInviteOpen(true))}
                   {canSeeAdminPanel &&
                     menuItem(paths.sliders, 'Admin Panel', () => navigate('/admin'))}
@@ -376,6 +410,36 @@ const styles = {
     borderRadius: '7px',
     cursor: 'pointer',
     fontSize: '14px',
+    color: 'var(--text)',
+    whiteSpace: 'nowrap' as const,
+  },
+  menuDivider: {
+    padding: '8px 0',
+    borderTop: '1px solid var(--border)',
+    borderBottom: '1px solid var(--border)',
+  },
+  menuLabel: {
+    fontSize: '12px',
+    fontWeight: '600' as const,
+    color: 'var(--text-muted)',
+    textTransform: 'uppercase' as const,
+    padding: '6px 12px',
+    marginBottom: '4px',
+  },
+  eventsList: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+  },
+  eventItem: {
+    display: 'flex',
+    width: '100%',
+    textAlign: 'left' as const,
+    padding: '8px 12px',
+    backgroundColor: 'transparent',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '13px',
     color: 'var(--text)',
     whiteSpace: 'nowrap' as const,
   },

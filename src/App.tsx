@@ -10,6 +10,7 @@ import { Signup } from './pages/Signup';
 import { VerifyEmail } from './pages/VerifyEmail';
 import { AcceptInvite } from './pages/AcceptInvite';
 import { JoinViaQr } from './pages/JoinViaQr';
+import { EventSelector } from './pages/EventSelector';
 import { Dashboard } from './pages/Dashboard';
 import { CreateReport } from './pages/CreateReport';
 import { ReportDetail } from './pages/ReportDetail';
@@ -41,6 +42,14 @@ function AppRoutes() {
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/invite/:token" element={<AcceptInvite />} />
       <Route path="/join/:token" element={<JoinViaQr />} />
+      <Route
+        path="/select-event"
+        element={
+          <ProtectedRoute>
+            <EventSelector />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/dashboard"
         element={
