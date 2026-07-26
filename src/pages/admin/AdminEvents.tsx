@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../api';
 import { useToast } from '../../Toast';
+import { useAuth } from '../../AuthContext';
 
 interface Event {
   eventName: string;
@@ -13,14 +14,16 @@ interface CreatedEvent {
   dbName: string;
   adminEmail: string;
   adminPassword: string;
+  clonedFrom: string;
 }
 
 export default function AdminEvents() {
   const showToast = useToast();
+  const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [formData, setFormData] = useState({ eventName: '', cloneFrom: '' });
+  const [formData, setFormData] = useState({ eventName: '', cloneFromCurrent: false });
   const [createdEvent, setCreatedEvent] = useState<CreatedEvent | null>(null);
   const [showForm, setShowForm] = useState(false);
 
@@ -48,15 +51,16 @@ export default function AdminEvents() {
 
     try {
       setCreating(true);
-      const res = await api.createEvent(formData.eventName, formData.cloneFrom || undefined);
+      const res = await api.createEvent(formData.eventName, formData.cloneFromCurrent);
       const newEvent = res.data.data as CreatedEvent;
       setCreatedEvent(newEvent);
-      setFormData({ eventName: '', cloneFrom: '' });
+      setFormData({ eventName: '', cloneFromCurrent: false });
       setShowForm(false);
       await loadEvents();
       showToast(`Event "${newEvent.eventName}" created successfully`);
     } catch (error: any) {
-      showToast(error.response?.data?.error || 'Failed to create event');
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Failed to create event';
+      showToast(errorMsg);
     } finally {
       setCreating(false);
     }
@@ -82,6 +86,12 @@ export default function AdminEvents() {
               <span style={styles.label}>Event Name:</span>
               <div style={styles.valueGroup}>
                 <code style={styles.code}>{createdEvent.eventName}</code>
+              </div>
+            </div>
+            <div style={styles.credentialRow}>
+              <span style={styles.label}>Cloned From:</span>
+              <div style={styles.valueGroup}>
+                <code style={styles.code}>{createdEvent.clonedFrom}</code>
               </div>
             </div>
             <div style={styles.credentialRow}>
@@ -129,22 +139,36 @@ export default function AdminEvents() {
               <p style={styles.hint}>Human-readable event identifier (spaces allowed)</p>
             </div>
 
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Clone From (Optional)</label>
-              <select
-                value={formData.cloneFrom}
-                onChange={(e) => setFormData({ ...formData, cloneFrom: e.target.value })}
-                style={styles.select}
-              >
-                <option value="">Start fresh (use template)</option>
-                {events.map((event) => (
-                  <option key={event.eventName} value={event.eventName}>
-                    {event.eventName}
-                  </option>
-                ))}
-              </select>
-              <p style={styles.hint}>Clone locations, teams, and tags from an existing event</p>
-            </div>
+            <fieldset style={styles.fieldset}>
+              <legend style={styles.label}>Initialize Event</legend>
+              <div style={styles.radioGroup}>
+                <label style={styles.radioLabel}>
+                  <input
+                    type="radio"
+                    name="initMode"
+                    checked={!formData.cloneFromCurrent}
+                    onChange={() => setFormData({ ...formData, cloneFromCurrent: false })}
+                    style={styles.radio}
+                  />
+                  <span>Start fresh from template</span>
+                </label>
+                <p style={styles.hint}>Creates blank database with "Main Venue" location only</p>
+              </div>
+              <div style={styles.radioGroup}>
+                <label style={styles.radioLabel}>
+                  <input
+                    type="radio"
+                    name="initMode"
+                    checked={formData.cloneFromCurrent}
+                    onChange={() => setFormData({ ...formData, cloneFromCurrent: true })}
+                    disabled={!user || events.length === 0}
+                    style={styles.radio}
+                  />
+                  <span>Clone from current event</span>
+                </label>
+                <p style={styles.hint}>Copies locations, teams, and tags from your current event</p>
+              </div>
+            </fieldset>
 
             <div style={styles.formActions}>
               <button
@@ -241,6 +265,25 @@ const styles = {
     backgroundColor: 'var(--bg)',
     color: 'var(--text)',
     boxSizing: 'border-box' as const,
+  },
+  fieldset: {
+    border: 'none',
+    padding: 0,
+    margin: '20px 0 0',
+  },
+  radioGroup: {
+    marginBottom: '16px',
+  },
+  radioLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    fontSize: '14px',
+    color: 'var(--text)',
+    cursor: 'pointer',
+  },
+  radio: {
+    cursor: 'pointer',
   },
   hint: {
     fontSize: '12px',

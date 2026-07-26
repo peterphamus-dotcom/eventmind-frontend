@@ -46,14 +46,14 @@ export const api = {
   // Events (multi-instance management)
   listEvents: () =>
     client.get<ApiResponse<{ items: Array<{ eventName: string; dbName: string; createdAt: string }>; total: number }>>(
-      '/events'
+      '/admin/events'
     ),
   switchEvent: (eventName: string) =>
     client.post<ApiResponse<{ eventName: string; message: string }>>('/events/switch', { eventName }),
-  createEvent: (eventName: string, cloneFrom?: string) =>
+  createEvent: (eventName: string, cloneFromCurrent?: boolean) =>
     client.post<ApiResponse<{ eventName: string; dbName: string; adminEmail: string; adminPassword: string }>>(
-      '/events',
-      { eventName, cloneFrom }
+      '/admin/events/create',
+      { eventName, cloneFromCurrent }
     ),
 
   // Invites
