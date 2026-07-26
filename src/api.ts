@@ -263,6 +263,8 @@ export const api = {
     client.get('/admin/export/tickets.csv', { responseType: 'blob' }),
   exportReportsCsv: () =>
     client.get('/admin/export/reports.csv', { responseType: 'blob' }),
+  exportAuditLogsCsv: () =>
+    client.get('/admin/export/audit-logs.csv', { responseType: 'blob' }),
   getPostMortem: (params?: { startDate?: string; endDate?: string; locationId?: string }) =>
     client.get<ApiResponse<PostMortemReport>>('/admin/post-mortem', { params }),
   exportPostMortemMarkdown: (params?: { startDate?: string; endDate?: string; locationId?: string }) =>

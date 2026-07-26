@@ -4,7 +4,7 @@ import { useToast } from '../../Toast';
 import { styles as shared } from '../../components/AdminShared';
 import { PostMortemPanel } from '../../components/PostMortemPanel';
 
-type Which = 'tickets' | 'reports';
+type Which = 'tickets' | 'reports' | 'auditLogs';
 
 const TicketIcon = (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -20,6 +20,13 @@ const ReportIcon = (
   </svg>
 );
 
+const AuditIcon = (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
+    <path d="M12 6v6l4 2" />
+  </svg>
+);
+
 /** Admin data export: pull every ticket / report as a CSV download. */
 export default function AdminExport() {
   const showToast = useToast();
@@ -30,13 +37,26 @@ export default function AdminExport() {
     setBusy(which);
     setError(null);
     try {
-      const res =
-        which === 'tickets' ? await api.exportTicketsCsv() : await api.exportReportsCsv();
+      let res;
+      if (which === 'tickets') {
+        res = await api.exportTicketsCsv();
+      } else if (which === 'reports') {
+        res = await api.exportReportsCsv();
+      } else {
+        res = await api.exportAuditLogsCsv();
+      }
       const date = new Date().toISOString().slice(0, 10);
-      triggerDownload(res.data as Blob, `${which}-${date}.csv`);
-      showToast(`${which === 'tickets' ? 'Tickets' : 'Reports'} exported ✓`);
+      const filename =
+        which === 'tickets'
+          ? `tickets-${date}.csv`
+          : which === 'reports'
+            ? `reports-${date}.csv`
+            : `audit-logs-${date}.csv`;
+      triggerDownload(res.data as Blob, filename);
+      const label = which === 'tickets' ? 'Tickets' : which === 'reports' ? 'Reports' : 'Audit logs';
+      showToast(`${label} exported ✓`);
     } catch (err: any) {
-      setError(`Failed to export ${which}. Please try again.`);
+      setError(`Failed to export. Please try again.`);
     } finally {
       setBusy(null);
     }
@@ -88,6 +108,24 @@ export default function AdminExport() {
             disabled={busy !== null}
           >
             {busy === 'reports' ? 'Preparing…' : 'Download CSV'}
+          </button>
+        </div>
+
+        <div style={styles.tile}>
+          {AuditIcon}
+          <div style={styles.tileBody}>
+            <h3 style={styles.tileTitle}>Audit Logs</h3>
+            <p style={styles.tileText}>
+              Complete activity trail: admin actions, user activity, who did
+              what and when, before/after state changes.
+            </p>
+          </div>
+          <button
+            onClick={() => download('auditLogs')}
+            style={styles.btn}
+            disabled={busy !== null}
+          >
+            {busy === 'auditLogs' ? 'Preparing…' : 'Download CSV'}
           </button>
         </div>
       </div>
