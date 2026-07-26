@@ -24,6 +24,12 @@ export interface User {
   shareContactInCommunity?: boolean;
   communityHandle?: string | null;
   communityBooth?: string | null;
+  isSuspended?: boolean;
+  suspendedAt?: string | null;
+  suspensionReason?: string | null;
+  isMuted?: boolean;
+  mutedAt?: string | null;
+  mutedReason?: string | null;
   createdAt: string;
 }
 

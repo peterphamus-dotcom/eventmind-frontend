@@ -118,6 +118,10 @@ export const api = {
     client.delete<ApiResponse<{ avatarUrl: null }>>('/users/me/avatar'),
   changeMyPassword: (currentPassword: string, newPassword: string) =>
     client.post<ApiResponse<{ message: string }>>('/users/me/password', { currentPassword, newPassword }),
+  suspendUser: (userId: string, suspend: boolean, reason?: string) =>
+    client.post<ApiResponse<{ id: string; email: string; isSuspended: boolean; suspendedAt: string | null; suspensionReason: string | null }>>(`/admin/users/${userId}/suspend`, { suspend, reason }),
+  muteUser: (userId: string, mute: boolean, reason?: string) =>
+    client.post<ApiResponse<{ id: string; email: string; isMuted: boolean; mutedAt: string | null; mutedReason: string | null }>>(`/admin/users/${userId}/mute`, { mute, reason }),
 
   // Locations
   listLocations: () =>

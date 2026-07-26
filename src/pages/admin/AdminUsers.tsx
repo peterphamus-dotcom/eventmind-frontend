@@ -31,6 +31,12 @@ interface ComposerState {
   teamIds: string[];
 }
 
+interface SuspensionModalState {
+  userId: string;
+  type: 'suspend' | 'mute';
+  reason: string;
+}
+
 const emptyComposer: ComposerState = { name: '', email: '', password: '', role: 'MEMBER', homeLocationId: '', teamIds: [] };
 
 export default function AdminUsers() {
@@ -47,6 +53,7 @@ export default function AdminUsers() {
   const [composer, setComposer] = useState<ComposerState | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [composerError, setComposerError] = useState<string | null>(null);
+  const [suspensionModal, setSuspensionModal] = useState<SuspensionModalState | null>(null);
 
   useEffect(() => {
     loadUsers();
@@ -138,6 +145,44 @@ export default function AdminUsers() {
     }
   }
 
+  async function handleSuspendConfirm() {
+    if (!suspensionModal || suspensionModal.type !== 'suspend') return;
+    try {
+      const isCurrentlySuspended = users.find(u => u.id === suspensionModal.userId)?.isSuspended;
+      await api.suspendUser(suspensionModal.userId, !isCurrentlySuspended, suspensionModal.reason || undefined);
+      setUsers(
+        users.map((u) =>
+          u.id === suspensionModal.userId
+            ? { ...u, isSuspended: !isCurrentlySuspended }
+            : u
+        )
+      );
+      setSuspensionModal(null);
+      showToast(`User ${!isCurrentlySuspended ? 'suspended' : 'unsuspended'}`);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to update suspension status');
+    }
+  }
+
+  async function handleMuteConfirm() {
+    if (!suspensionModal || suspensionModal.type !== 'mute') return;
+    try {
+      const isCurrentlyMuted = users.find(u => u.id === suspensionModal.userId)?.isMuted;
+      await api.muteUser(suspensionModal.userId, !isCurrentlyMuted, suspensionModal.reason || undefined);
+      setUsers(
+        users.map((u) =>
+          u.id === suspensionModal.userId
+            ? { ...u, isMuted: !isCurrentlyMuted }
+            : u
+        )
+      );
+      setSuspensionModal(null);
+      showToast(`User ${!isCurrentlyMuted ? 'muted' : 'unmuted'}`);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to update mute status');
+    }
+  }
+
   return (
     <div style={styles.card}>
       <h2 style={styles.title}>User Management</h2>
@@ -180,6 +225,7 @@ export default function AdminUsers() {
                 <th style={styles.headerCell}>Last Report</th>
                 <th style={styles.headerCell}>Reports</th>
                 <th style={styles.headerCell}>Current Role</th>
+                <th style={styles.headerCell}>Status</th>
                 <th style={styles.headerCell}>Actions</th>
               </tr>
             </thead>
@@ -217,6 +263,13 @@ export default function AdminUsers() {
                     <span style={roleBadge(user.role)}>{user.role}</span>
                   </td>
                   <td style={styles.cell}>
+                    <div style={styles.statusContainer}>
+                      {user.isSuspended && <span style={styles.suspendedBadge}>SUSPENDED</span>}
+                      {user.isMuted && <span style={styles.mutedBadge}>MUTED</span>}
+                      {!user.isSuspended && !user.isMuted && <span style={styles.activeBadge}>ACTIVE</span>}
+                    </div>
+                  </td>
+                  <td style={styles.cell}>
                     {editingId === user.id ? (
                       <div style={styles.editRow}>
                         <select
@@ -245,15 +298,29 @@ export default function AdminUsers() {
                         </button>
                       </div>
                     ) : (
-                      <button
-                        onClick={() => {
-                          setEditingId(user.id);
-                          setEditRole(user.role);
-                        }}
-                        style={styles.btnEdit}
-                      >
-                        Edit Role
-                      </button>
+                      <div style={styles.actionButtons}>
+                        <button
+                          onClick={() => {
+                            setEditingId(user.id);
+                            setEditRole(user.role);
+                          }}
+                          style={styles.btnEdit}
+                        >
+                          Edit Role
+                        </button>
+                        <button
+                          onClick={() => setSuspensionModal({ userId: user.id, type: 'suspend', reason: '' })}
+                          style={{...styles.btnSmall, backgroundColor: user.isSuspended ? 'var(--success)' : 'var(--danger)'}}
+                        >
+                          {user.isSuspended ? 'Unsuspend' : 'Suspend'}
+                        </button>
+                        <button
+                          onClick={() => setSuspensionModal({ userId: user.id, type: 'mute', reason: '' })}
+                          style={{...styles.btnSmall, backgroundColor: user.isMuted ? 'var(--success)' : 'var(--warning)'}}
+                        >
+                          {user.isMuted ? 'Unmute' : 'Mute'}
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>
@@ -261,6 +328,63 @@ export default function AdminUsers() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {suspensionModal && (
+        <Modal
+          title={suspensionModal.type === 'suspend' ? 'Suspend User' : 'Mute User'}
+          onClose={() => setSuspensionModal(null)}
+        >
+          {(() => {
+            const user = users.find(u => u.id === suspensionModal.userId);
+            const isSuspending = suspensionModal.type === 'suspend';
+            const isSuspended = user?.isSuspended;
+            return (
+              <>
+                <p style={styles.modalText}>
+                  {isSuspending
+                    ? `${isSuspended ? 'Unsuspend' : 'Suspend'} ${user?.name}?`
+                    : `${user?.isMuted ? 'Unmute' : 'Mute'} ${user?.name}?`}
+                </p>
+                <p style={styles.modalSubtext}>
+                  {isSuspending
+                    ? isSuspended
+                      ? 'They will regain access to the platform.'
+                      : 'They will see "Contact Admin" when trying to log in.'
+                    : user?.isMuted
+                    ? 'They can view content but still cannot interact.'
+                    : 'They will be unable to create or interact (comments, tickets, reports, social).'}
+                </p>
+                {!isSuspended && (
+                  <div style={styles.field}>
+                    <label style={styles.fieldLabel}>Optional reason</label>
+                    <input
+                      type="text"
+                      value={suspensionModal.reason}
+                      onChange={(e) => setSuspensionModal({ ...suspensionModal, reason: e.target.value })}
+                      style={shared.input}
+                      placeholder="e.g., Violation of terms"
+                    />
+                  </div>
+                )}
+                <div style={styles.modalActions}>
+                  <button
+                    onClick={() => (isSuspending ? handleSuspendConfirm() : handleMuteConfirm())}
+                    style={{...styles.btnPrimary, backgroundColor: isSuspending ? 'var(--danger)' : 'var(--warning)'}}
+                  >
+                    {isSuspending ? (isSuspended ? 'Unsuspend' : 'Suspend') : (user?.isMuted ? 'Unmute' : 'Mute')}
+                  </button>
+                  <button
+                    onClick={() => setSuspensionModal(null)}
+                    style={styles.btnSecondary}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            );
+          })()}
+        </Modal>
       )}
 
       {composer && (
@@ -490,5 +614,77 @@ const styles = {
     fontSize: '14px',
     fontWeight: '600' as const,
     width: '100%',
+  },
+  statusContainer: {
+    display: 'flex',
+    gap: '4px',
+    flexWrap: 'wrap' as const,
+  },
+  suspendedBadge: {
+    display: 'inline-block',
+    padding: '3px 8px',
+    backgroundColor: 'var(--danger-soft)',
+    color: 'var(--danger-text)',
+    borderRadius: '10px',
+    fontSize: '11px',
+    fontWeight: '600' as const,
+  },
+  mutedBadge: {
+    display: 'inline-block',
+    padding: '3px 8px',
+    backgroundColor: 'var(--warning-soft)',
+    color: 'var(--warning-text)',
+    borderRadius: '10px',
+    fontSize: '11px',
+    fontWeight: '600' as const,
+  },
+  activeBadge: {
+    display: 'inline-block',
+    padding: '3px 8px',
+    backgroundColor: 'var(--success-soft)',
+    color: 'var(--success-text)',
+    borderRadius: '10px',
+    fontSize: '11px',
+    fontWeight: '600' as const,
+  },
+  actionButtons: {
+    display: 'flex',
+    gap: '4px',
+    flexWrap: 'wrap' as const,
+  },
+  modalText: {
+    fontSize: '14px',
+    color: 'var(--text)',
+    margin: '0 0 8px',
+  },
+  modalSubtext: {
+    fontSize: '13px',
+    color: 'var(--text-muted)',
+    margin: '0 0 16px',
+  },
+  modalActions: {
+    display: 'flex',
+    gap: '8px',
+    marginTop: '20px',
+  },
+  btnPrimary: {
+    flex: 1,
+    padding: '10px 16px',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '600' as const,
+  },
+  btnSecondary: {
+    padding: '10px 16px',
+    backgroundColor: 'var(--surface)',
+    color: 'var(--text)',
+    border: '1px solid var(--border)',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '600' as const,
   },
 };
