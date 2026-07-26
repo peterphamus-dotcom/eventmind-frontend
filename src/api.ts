@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType, CommunitySortBy, ContentReport, SignupQrCode, Role } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType, CommunitySortBy, ContentReport, SignupQrCode, Role, AuditLog } from './types';
 
 type TeamPreview<T> = PaginatedResponse<T> & { team: { id: string; name: string; tags: Tag[] } };
 
@@ -122,6 +122,25 @@ export const api = {
     client.post<ApiResponse<{ id: string; email: string; isSuspended: boolean; suspendedAt: string | null; suspensionReason: string | null }>>(`/admin/users/${userId}/suspend`, { suspend, reason }),
   muteUser: (userId: string, mute: boolean, reason?: string) =>
     client.post<ApiResponse<{ id: string; email: string; isMuted: boolean; mutedAt: string | null; mutedReason: string | null }>>(`/admin/users/${userId}/mute`, { mute, reason }),
+  getAuditLogs: (filters?: {
+    page?: number;
+    pageSize?: number;
+    action?: string;
+    actorId?: string;
+    targetId?: string;
+    startDate?: string;
+    endDate?: string;
+  }) => {
+    const params = new URLSearchParams();
+    if (filters?.page) params.append('page', filters.page.toString());
+    if (filters?.pageSize) params.append('pageSize', filters.pageSize.toString());
+    if (filters?.action) params.append('action', filters.action);
+    if (filters?.actorId) params.append('actorId', filters.actorId);
+    if (filters?.targetId) params.append('targetId', filters.targetId);
+    if (filters?.startDate) params.append('startDate', filters.startDate);
+    if (filters?.endDate) params.append('endDate', filters.endDate);
+    return client.get<ApiResponse<PaginatedResponse<AuditLog>>>(`/admin/audit-logs?${params.toString()}`);
+  },
 
   // Locations
   listLocations: () =>

@@ -16,8 +16,9 @@ import AdminUserReports from './admin/AdminUserReports';
 import AdminContentReports from './admin/AdminContentReports';
 import AdminSignupQr from './admin/AdminSignupQr';
 import AdminEvents from './admin/AdminEvents';
+import AdminAuditLogs from './admin/AdminAuditLogs';
 
-type AdminTab = 'approvals' | 'users' | 'teams' | 'locations' | 'tags' | 'banner' | 'export' | 'viewAs' | 'reminders' | 'socialIntel' | 'userReports' | 'contentReports' | 'signupQr' | 'events';
+type AdminTab = 'approvals' | 'users' | 'teams' | 'locations' | 'tags' | 'banner' | 'export' | 'viewAs' | 'reminders' | 'socialIntel' | 'userReports' | 'contentReports' | 'signupQr' | 'events' | 'auditLogs';
 
 const GearIcon = (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -40,6 +41,7 @@ const TABS: { id: AdminTab; label: string; adminOnly?: boolean }[] = [
   { id: 'socialIntel', label: 'Social Intel' },
   { id: 'userReports', label: 'User Reports' },
   { id: 'contentReports', label: 'Content Reports' },
+  { id: 'auditLogs', label: 'Audit Logs', adminOnly: true },
   { id: 'banner', label: 'Banner', adminOnly: true },
 ];
 
@@ -150,6 +152,7 @@ export function AdminPanel() {
         {activeTab === 'socialIntel' && <AdminSocialIntel />}
         {activeTab === 'userReports' && <AdminUserReports />}
         {activeTab === 'contentReports' && <AdminContentReports />}
+        {activeTab === 'auditLogs' && <AdminAuditLogs />}
         {activeTab === 'banner' && <AdminBanner />}
       </div>
 

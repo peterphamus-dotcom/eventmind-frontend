@@ -430,3 +430,17 @@ export interface ContentReport {
   resolvedAt: string | null;
   createdAt: string;
 }
+
+// Audit log entry tracking admin and user actions
+export interface AuditLog {
+  id: string;
+  action: string;
+  category: 'ADMIN_ACTION' | 'USER_ACTION';
+  actor: { id: string; name: string; email: string };
+  targetId: string | null;
+  targetType: string | null;
+  details: Record<string, any> | null;
+  changesBefore: Record<string, any> | null;
+  changesAfter: Record<string, any> | null;
+  createdAt: string;
+}
