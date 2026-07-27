@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../../api';
 import { useToast } from '../../Toast';
 import { useAuth } from '../../AuthContext';
+import { Modal } from '../../components/Modal';
 
 interface Event {
   eventName: string;
@@ -26,6 +27,9 @@ export default function AdminEvents() {
   const [formData, setFormData] = useState({ eventName: '', cloneFromCurrent: false });
   const [createdEvent, setCreatedEvent] = useState<CreatedEvent | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Event | null>(null);
+  const [typedName, setTypedName] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadEvents();
@@ -63,6 +67,22 @@ export default function AdminEvents() {
       showToast(errorMsg);
     } finally {
       setCreating(false);
+    }
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deleteTarget || deleting) return;
+    setDeleting(true);
+    try {
+      await api.deleteEvent(deleteTarget.eventName);
+      setEvents(events.filter((e) => e.eventName !== deleteTarget.eventName));
+      showToast(`Event "${deleteTarget.eventName}" deleted`);
+      setDeleteTarget(null);
+      setTypedName('');
+    } catch (error: any) {
+      showToast(error.response?.data?.error || 'Failed to delete event');
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -204,11 +224,60 @@ export default function AdminEvents() {
                   <span style={styles.dbName}>{event.dbName}</span>
                 </div>
                 <p style={styles.eventDate}>Created {new Date(event.createdAt).toLocaleDateString()}</p>
+                <button
+                  onClick={() => {
+                    setDeleteTarget(event);
+                    setTypedName('');
+                  }}
+                  style={styles.deleteBtn}
+                >
+                  Delete
+                </button>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {deleteTarget && (
+        <Modal title="Delete Event" onClose={() => setDeleteTarget(null)}>
+          <p style={styles.modalText}>
+            Delete <strong>{deleteTarget.eventName}</strong>?
+          </p>
+          <p style={styles.modalSubtext}>
+            This permanently drops the event's entire database — every ticket, report, comment,
+            and user in it. This cannot be undone. Type <strong>{deleteTarget.eventName}</strong> to
+            confirm.
+          </p>
+          <div style={styles.formGroup}>
+            <input
+              type="text"
+              value={typedName}
+              onChange={(e) => setTypedName(e.target.value)}
+              style={styles.input}
+              placeholder={deleteTarget.eventName}
+              autoComplete="off"
+            />
+          </div>
+          <div style={styles.formActions}>
+            <button
+              onClick={handleDeleteConfirm}
+              disabled={typedName.trim() !== deleteTarget.eventName || deleting}
+              style={{
+                ...styles.submitBtn,
+                backgroundColor: 'var(--danger)',
+                opacity: typedName.trim() !== deleteTarget.eventName || deleting ? 0.5 : 1,
+                cursor: typedName.trim() !== deleteTarget.eventName || deleting ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {deleting ? 'Deleting…' : 'Delete Permanently'}
+            </button>
+            <button onClick={() => setDeleteTarget(null)} style={styles.cancelBtn}>
+              Cancel
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
@@ -427,7 +496,28 @@ const styles = {
   eventDate: {
     fontSize: '13px',
     color: 'var(--text-muted)',
-    margin: 0,
+    margin: '0 0 12px',
+  },
+  deleteBtn: {
+    padding: '6px 12px',
+    backgroundColor: 'transparent',
+    color: 'var(--danger-text)',
+    border: '1px solid var(--danger)',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    fontSize: '12px',
+    fontWeight: 600,
+  },
+  modalText: {
+    fontSize: '14px',
+    color: 'var(--text)',
+    margin: '0 0 8px',
+  },
+  modalSubtext: {
+    fontSize: '13px',
+    color: 'var(--text-muted)',
+    margin: '0 0 16px',
+    lineHeight: 1.5,
   },
   empty: {
     padding: '20px',

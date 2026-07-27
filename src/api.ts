@@ -55,6 +55,8 @@ export const api = {
       '/admin/events/create',
       { eventName, cloneFromCurrent }
     ),
+  deleteEvent: (eventName: string) =>
+    client.delete<ApiResponse<{ eventName: string }>>(`/admin/events/${encodeURIComponent(eventName)}`),
 
   // Invites
   getInvite: (token: string) =>
