@@ -141,6 +141,42 @@ const server = createServer((req, res) => {
   }
 });
 
+// Socket.IO's websocket transport needs the WebSocket upgrade handshake
+// proxied too — proxyToApi above only handles plain request/response (the
+// polling transport), which socket.io-client falls back to on its own if
+// this fails, but proxying the upgrade gets real low-latency websockets in
+// production instead of long-polling.
+server.on('upgrade', (req, clientSocket, head) => {
+  if (!req.url.startsWith('/api/socket.io')) {
+    clientSocket.destroy();
+    return;
+  }
+
+  const targetUrl = new URL(req.url.replace(/^\/api/, ''), API_ORIGIN);
+  const proxyReq = httpsRequest({
+    hostname: targetUrl.hostname,
+    port: 443,
+    path: targetUrl.pathname + targetUrl.search,
+    method: req.method,
+    headers: { ...req.headers, host: targetUrl.host },
+  });
+
+  proxyReq.on('upgrade', (proxyRes, proxySocket, proxyHead) => {
+    const responseHeaders = Object.entries(proxyRes.headers)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join('\r\n');
+    clientSocket.write(`HTTP/1.1 101 Switching Protocols\r\n${responseHeaders}\r\n\r\n`);
+    if (proxyHead && proxyHead.length) proxySocket.unshift(proxyHead);
+    if (head && head.length) clientSocket.unshift(head);
+    proxySocket.pipe(clientSocket);
+    clientSocket.pipe(proxySocket);
+  });
+
+  proxyReq.on('error', () => clientSocket.destroy());
+  clientSocket.on('error', () => proxyReq.destroy());
+  proxyReq.end();
+});
+
 server.listen(port, '0.0.0.0', () => {
   console.log(`Server running on http://0.0.0.0:${port}`);
 });

@@ -16,6 +16,7 @@ export function Profile() {
   const [shareContact, setShareContact] = useState(false);
   const [communityHandle, setCommunityHandle] = useState('');
   const [communityBooth, setCommunityBooth] = useState('');
+  const [allowDirectMessages, setAllowDirectMessages] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +35,7 @@ export function Profile() {
       setShareContact(user.shareContactInCommunity || false);
       setCommunityHandle(user.communityHandle || '');
       setCommunityBooth(user.communityBooth || '');
+      setAllowDirectMessages(user.allowDirectMessages || false);
     }
   }, [user]);
 
@@ -46,7 +48,8 @@ export function Profile() {
     bio !== (user.bio || '') ||
     shareContact !== (user.shareContactInCommunity || false) ||
     communityHandle !== (user.communityHandle || '') ||
-    communityBooth !== (user.communityBooth || '');
+    communityBooth !== (user.communityBooth || '') ||
+    allowDirectMessages !== (user.allowDirectMessages || false);
 
   async function handleSave() {
     if (isSaving) return;
@@ -57,6 +60,7 @@ export function Profile() {
         name,
         phone,
         bio,
+        allowDirectMessages,
         ...(isExpo ? { shareContactInCommunity: shareContact, communityHandle, communityBooth } : {}),
       });
       await refreshUser();
@@ -212,6 +216,22 @@ export function Profile() {
           placeholder="Say a little about yourself…"
         />
         <div style={styles.charCount}>{bio.length}/500</div>
+      </div>
+
+      <div style={styles.communityBox}>
+        <h3 style={styles.subtitle}>Direct messages</h3>
+        <p style={styles.communityNote}>
+          Off by default. Turn this on to let other members start a private conversation with you.
+          Threads you're already in keep working even if you turn this back off.
+        </p>
+        <label style={styles.toggleRow}>
+          <input
+            type="checkbox"
+            checked={allowDirectMessages}
+            onChange={(e) => setAllowDirectMessages(e.target.checked)}
+          />
+          Allow direct messages
+        </label>
       </div>
 
       {isExpo && (

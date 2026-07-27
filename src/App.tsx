@@ -20,6 +20,7 @@ import { AdminPanel } from './pages/AdminPanel';
 import { Profile } from './pages/Profile';
 import { UserProfile } from './pages/UserProfile';
 import { ScheduleDetail } from './pages/ScheduleDetail';
+import { Messages } from './pages/Messages';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -122,6 +123,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <ScheduleDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/messages"
+        element={
+          <ProtectedRoute>
+            <Messages />
           </ProtectedRoute>
         }
       />

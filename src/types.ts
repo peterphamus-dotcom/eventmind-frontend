@@ -24,6 +24,7 @@ export interface User {
   shareContactInCommunity?: boolean;
   communityHandle?: string | null;
   communityBooth?: string | null;
+  allowDirectMessages?: boolean;
   isSuspended?: boolean;
   suspendedAt?: string | null;
   suspensionReason?: string | null;
@@ -443,6 +444,42 @@ export interface AuditLog {
   changesBefore: Record<string, any> | null;
   changesAfter: Record<string, any> | null;
   createdAt: string;
+}
+
+// ---- Private messaging ----
+
+export interface MessageableUser {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+  role: Role;
+}
+
+export interface ConversationMessage {
+  id: string;
+  conversationId: string;
+  sender: { id: string; name: string; avatarUrl: string | null };
+  /** Null when isHidden is true and the viewer isn't the sender or a moderator. */
+  body: string | null;
+  isHidden: boolean;
+  createdAt: string;
+}
+
+export interface ConversationSummary {
+  id: string;
+  isGroup: boolean;
+  name: string | null;
+  /** Every participant except the viewer. */
+  participants: { id: string; name: string; avatarUrl: string | null }[];
+  lastMessage: {
+    body: string | null;
+    isHidden: boolean;
+    senderId: string;
+    senderName: string;
+    createdAt: string;
+  } | null;
+  unreadCount: number;
+  updatedAt: string;
 }
 
 // ---- Audit log AI summary ----

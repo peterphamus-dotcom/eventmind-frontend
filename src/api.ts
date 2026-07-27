@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType, CommunitySortBy, ContentReport, SignupQrCode, Role, AuditLog, AuditSummaryReport } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType, CommunitySortBy, ContentReport, SignupQrCode, Role, AuditLog, AuditSummaryReport, MessageableUser, ConversationSummary, ConversationMessage } from './types';
 
 type TeamPreview<T> = PaginatedResponse<T> & { team: { id: string; name: string; tags: Tag[] } };
 
@@ -107,7 +107,7 @@ export const api = {
     client.patch<ApiResponse<User>>(`/users/${id}`, { role, teamIds }),
   createUser: (data: { name: string; email: string; password: string; role: Role; homeLocationId: string; teamIds?: string[] }) =>
     client.post<ApiResponse<User>>('/users', data),
-  updateMyProfile: (updates: { name?: string; phone?: string; bio?: string; viewDensity?: ViewDensity; shareContactInCommunity?: boolean; communityHandle?: string | null; communityBooth?: string | null }) =>
+  updateMyProfile: (updates: { name?: string; phone?: string; bio?: string; viewDensity?: ViewDensity; shareContactInCommunity?: boolean; communityHandle?: string | null; communityBooth?: string | null; allowDirectMessages?: boolean }) =>
     client.patch<ApiResponse<User>>('/users/me', updates),
   uploadMyAvatar: (file: File) => {
     const fd = new FormData();
@@ -465,4 +465,36 @@ export const api = {
     client.post<ApiResponse<{ following: boolean }>>(`/community/follow/${userId}`),
   communityMentionCandidates: () =>
     client.get<ApiResponse<{ items: { id: string; name: string }[] }>>('/community/mention-candidates'),
+
+  // Direct messages
+  getMessageableUsers: () =>
+    client.get<ApiResponse<MessageableUser[]>>('/messages/messageable-users'),
+  listConversations: () =>
+    client.get<ApiResponse<ConversationSummary[]>>('/messages/conversations'),
+  getUnreadMessageCount: () =>
+    client.get<ApiResponse<{ count: number }>>('/messages/unread-count'),
+  createConversation: (data: { participantIds: string[]; isGroup?: boolean; name?: string }) =>
+    client.post<ApiResponse<{ id: string; created: boolean }>>('/messages/conversations', data),
+  getConversationMessages: (conversationId: string, page = 1, pageSize = 30) =>
+    client.get<ApiResponse<PaginatedResponse<ConversationMessage>>>(
+      `/messages/conversations/${conversationId}/messages`,
+      { params: { page, pageSize } }
+    ),
+  sendMessage: (conversationId: string, body: string) =>
+    client.post<ApiResponse<ConversationMessage>>(`/messages/conversations/${conversationId}/messages`, { body }),
+  markConversationRead: (conversationId: string) =>
+    client.post<ApiResponse<unknown>>(`/messages/conversations/${conversationId}/read`),
+  hideMessage: (messageId: string) =>
+    client.post<ApiResponse<{ isHidden: boolean }>>(`/messages/${messageId}/hide`),
+  reportMessage: (messageId: string, reason: UserReportReason, details?: string) =>
+    client.post<ApiResponse<unknown>>(`/messages/${messageId}/report`, { reason, details }),
 };
+
+// Socket.IO needs a real origin (not the relative '/api' used for axios) plus
+// the matching handshake path — in prod that's the same-origin /api proxy
+// (see server.js) so the session cookie stays first-party; in dev it's the
+// backend port directly, same as API_URL above.
+export const SOCKET_ORIGIN = import.meta.env.DEV
+  ? import.meta.env.VITE_API_URL || 'http://localhost:3000'
+  : window.location.origin;
+export const SOCKET_PATH = import.meta.env.DEV ? '/socket.io/' : '/api/socket.io/';

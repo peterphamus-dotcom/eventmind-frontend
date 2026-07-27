@@ -12,6 +12,7 @@ import { SideSchedulePanel } from '../components/SideSchedulePanel';
 import { CommunityPanel } from '../components/CommunityPanel';
 import { EventSummary } from '../components/EventSummary';
 import { NotificationBell } from '../components/NotificationBell';
+import { MessagesButton } from '../components/MessagesButton';
 import { AboutModal } from '../components/AboutModal';
 import { FeedbackModal } from '../components/FeedbackModal';
 import { DisplaySettingsModal } from '../components/DisplaySettingsModal';
@@ -237,6 +238,7 @@ export function Dashboard() {
           <span style={styles.userName}>
             {user?.name} <span style={styles.userRole}>({formatRole(user?.role)})</span>
           </span>
+          <MessagesButton />
           <NotificationBell />
           <div style={styles.menuAnchor}>
             <button
