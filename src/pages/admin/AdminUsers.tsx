@@ -46,6 +46,15 @@ interface DeleteModalState {
 
 const emptyComposer: ComposerState = { name: '', email: '', password: '', role: 'MEMBER', homeLocationId: '', teamIds: [] };
 
+/** Below 700px the 9-column table is unusable — swap to stacked cards. */
+const RESPONSIVE_CSS = `
+.au-cards { display: none; }
+@media (max-width: 700px) {
+  .au-table-wrap { display: none; }
+  .au-cards { display: flex; }
+}
+`;
+
 export default function AdminUsers() {
   const showToast = useToast();
   const [users, setUsers] = useState<User[]>([]);
@@ -207,8 +216,78 @@ export default function AdminUsers() {
     }
   }
 
+  function renderStatusBadges(user: User) {
+    return (
+      <div style={styles.statusContainer}>
+        {user.isSuspended && <span style={styles.suspendedBadge}>SUSPENDED</span>}
+        {user.isMuted && <span style={styles.mutedBadge}>MUTED</span>}
+        {!user.isSuspended && !user.isMuted && <span style={styles.activeBadge}>ACTIVE</span>}
+      </div>
+    );
+  }
+
+  function renderActions(user: User) {
+    if (editingId === user.id) {
+      return (
+        <div style={styles.editRow}>
+          <select
+            value={editRole}
+            onChange={(e) => setEditRole(e.target.value)}
+            style={styles.selectSmall}
+          >
+            <option value="ADMIN">Admin</option>
+            <option value="CORE_TEAM">Core Team</option>
+            <option value="MEMBER">Member</option>
+            <option value="EXPO">Expo</option>
+          </select>
+          <button onClick={() => handleUpdateRole(user.id, editRole)} style={styles.btnSmall}>
+            Save
+          </button>
+          <button
+            onClick={() => setEditingId(null)}
+            style={{ ...styles.btnSmall, backgroundColor: 'var(--neutral)' }}
+          >
+            Cancel
+          </button>
+        </div>
+      );
+    }
+    return (
+      <div style={styles.actionButtons}>
+        <button
+          onClick={() => {
+            setEditingId(user.id);
+            setEditRole(user.role);
+          }}
+          style={styles.btnEdit}
+        >
+          Edit Role
+        </button>
+        <button
+          onClick={() => setSuspensionModal({ userId: user.id, type: 'suspend', reason: '' })}
+          style={{ ...styles.btnSmall, backgroundColor: user.isSuspended ? 'var(--success)' : 'var(--danger)' }}
+        >
+          {user.isSuspended ? 'Unsuspend' : 'Suspend'}
+        </button>
+        <button
+          onClick={() => setSuspensionModal({ userId: user.id, type: 'mute', reason: '' })}
+          style={{ ...styles.btnSmall, backgroundColor: user.isMuted ? 'var(--success)' : 'var(--warning)' }}
+        >
+          {user.isMuted ? 'Unmute' : 'Mute'}
+        </button>
+        <button
+          onClick={() => setDeleteModal({ userId: user.id, step: 'confirm-suspend-first', typedEmail: '', reason: '' })}
+          style={styles.btnDelete}
+        >
+          Delete
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div style={styles.card}>
+      <style>{RESPONSIVE_CSS}</style>
       <h2 style={styles.title}>User Management</h2>
 
       {error && <div style={styles.error}>{error}</div>}
@@ -232,132 +311,119 @@ export default function AdminUsers() {
         </button>
       </div>
 
-      {/* Users Table */}
+      {/* Users Table (desktop) / Cards (mobile) — see RESPONSIVE_CSS below */}
       {isLoading ? (
         <p>Loading users...</p>
       ) : users.length === 0 ? (
         <p style={styles.empty}>No users found</p>
       ) : (
-        <div style={styles.tableContainer}>
-          <table style={styles.table}>
-            <thead>
-              <tr style={styles.headerRow}>
-                <th style={styles.headerCell}>Name</th>
-                <th style={styles.headerCell}>Email</th>
-                <th style={styles.headerCell}>Phone</th>
-                <th style={styles.headerCell}>Bio</th>
-                <th style={styles.headerCell}>Last Report</th>
-                <th style={styles.headerCell}>Reports</th>
-                <th style={styles.headerCell}>Current Role</th>
-                <th style={styles.headerCell}>Status</th>
-                <th style={styles.headerCell}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id} style={styles.row}>
-                  <td style={styles.cell}>
-                    <Link to={`/users/${user.id}`} style={styles.nameCell}>
-                      {user.avatarUrl ? (
-                        <img src={photoSrc(user.avatarUrl)} alt="" style={styles.avatar} />
-                      ) : (
-                        <div style={styles.avatarPlaceholder}>
-                          {user.name.slice(0, 1).toUpperCase()}
-                        </div>
-                      )}
-                      {user.name}
-                    </Link>
-                  </td>
-                  <td style={styles.cell}>{user.email}</td>
-                  <td style={styles.cell}>{user.phone || '—'}</td>
-                  <td style={styles.cell} title={user.bio || undefined}>
-                    <span style={styles.bioText}>{user.bio || '—'}</span>
-                  </td>
-                  <td style={styles.cell} title={user.lastReportAt ? new Date(user.lastReportAt).toLocaleString() : undefined}>
-                    {user.lastReportAt ? relativeTime(user.lastReportAt) : '—'}
-                  </td>
-                  <td style={styles.cell}>
-                    {user.reportCount ? (
-                      <span style={styles.reportBadge}>{FlagIcon} {user.reportCount}</span>
-                    ) : (
-                      '—'
-                    )}
-                  </td>
-                  <td style={styles.cell}>
-                    <span style={roleBadge(user.role)}>{user.role}</span>
-                  </td>
-                  <td style={styles.cell}>
-                    <div style={styles.statusContainer}>
-                      {user.isSuspended && <span style={styles.suspendedBadge}>SUSPENDED</span>}
-                      {user.isMuted && <span style={styles.mutedBadge}>MUTED</span>}
-                      {!user.isSuspended && !user.isMuted && <span style={styles.activeBadge}>ACTIVE</span>}
-                    </div>
-                  </td>
-                  <td style={styles.cell}>
-                    {editingId === user.id ? (
-                      <div style={styles.editRow}>
-                        <select
-                          value={editRole}
-                          onChange={(e) => setEditRole(e.target.value)}
-                          style={styles.selectSmall}
-                        >
-                          <option value="ADMIN">Admin</option>
-                          <option value="CORE_TEAM">Core Team</option>
-                          <option value="MEMBER">Member</option>
-                          <option value="EXPO">Expo</option>
-                        </select>
-                        <button
-                          onClick={() =>
-                            handleUpdateRole(user.id, editRole)
-                          }
-                          style={styles.btnSmall}
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={() => setEditingId(null)}
-                          style={{ ...styles.btnSmall, backgroundColor: 'var(--neutral)' }}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <div style={styles.actionButtons}>
-                        <button
-                          onClick={() => {
-                            setEditingId(user.id);
-                            setEditRole(user.role);
-                          }}
-                          style={styles.btnEdit}
-                        >
-                          Edit Role
-                        </button>
-                        <button
-                          onClick={() => setSuspensionModal({ userId: user.id, type: 'suspend', reason: '' })}
-                          style={{...styles.btnSmall, backgroundColor: user.isSuspended ? 'var(--success)' : 'var(--danger)'}}
-                        >
-                          {user.isSuspended ? 'Unsuspend' : 'Suspend'}
-                        </button>
-                        <button
-                          onClick={() => setSuspensionModal({ userId: user.id, type: 'mute', reason: '' })}
-                          style={{...styles.btnSmall, backgroundColor: user.isMuted ? 'var(--success)' : 'var(--warning)'}}
-                        >
-                          {user.isMuted ? 'Unmute' : 'Mute'}
-                        </button>
-                        <button
-                          onClick={() => setDeleteModal({ userId: user.id, step: 'confirm-suspend-first', typedEmail: '', reason: '' })}
-                          style={styles.btnDelete}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </td>
+        <>
+          <div style={styles.tableContainer} className="au-table-wrap">
+            <table style={styles.table}>
+              <thead>
+                <tr style={styles.headerRow}>
+                  <th style={styles.headerCell}>Name</th>
+                  <th style={styles.headerCell}>Email</th>
+                  <th style={styles.headerCell}>Phone</th>
+                  <th style={styles.headerCell}>Bio</th>
+                  <th style={styles.headerCell}>Last Report</th>
+                  <th style={styles.headerCell}>Reports</th>
+                  <th style={styles.headerCell}>Current Role</th>
+                  <th style={styles.headerCell}>Status</th>
+                  <th style={styles.headerCell}>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr key={user.id} style={styles.row}>
+                    <td style={styles.cell}>
+                      <Link to={`/users/${user.id}`} style={styles.nameCell}>
+                        {user.avatarUrl ? (
+                          <img src={photoSrc(user.avatarUrl)} alt="" style={styles.avatar} />
+                        ) : (
+                          <div style={styles.avatarPlaceholder}>
+                            {user.name.slice(0, 1).toUpperCase()}
+                          </div>
+                        )}
+                        {user.name}
+                      </Link>
+                    </td>
+                    <td style={styles.cell}>{user.email}</td>
+                    <td style={styles.cell}>{user.phone || '—'}</td>
+                    <td style={styles.cell} title={user.bio || undefined}>
+                      <span style={styles.bioText}>{user.bio || '—'}</span>
+                    </td>
+                    <td style={styles.cell} title={user.lastReportAt ? new Date(user.lastReportAt).toLocaleString() : undefined}>
+                      {user.lastReportAt ? relativeTime(user.lastReportAt) : '—'}
+                    </td>
+                    <td style={styles.cell}>
+                      {user.reportCount ? (
+                        <span style={styles.reportBadge}>{FlagIcon} {user.reportCount}</span>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                    <td style={styles.cell}>
+                      <span style={roleBadge(user.role)}>{user.role}</span>
+                    </td>
+                    <td style={styles.cell}>{renderStatusBadges(user)}</td>
+                    <td style={styles.cell}>{renderActions(user)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="au-cards" style={styles.cardsList}>
+            {users.map((user) => (
+              <div key={user.id} style={styles.userCard}>
+                <div style={styles.userCardHeader}>
+                  <Link to={`/users/${user.id}`} style={styles.nameCell}>
+                    {user.avatarUrl ? (
+                      <img src={photoSrc(user.avatarUrl)} alt="" style={styles.avatar} />
+                    ) : (
+                      <div style={styles.avatarPlaceholder}>{user.name.slice(0, 1).toUpperCase()}</div>
+                    )}
+                    <span style={styles.userCardName}>{user.name}</span>
+                  </Link>
+                  <span style={roleBadge(user.role)}>{user.role}</span>
+                </div>
+
+                {renderStatusBadges(user)}
+
+                <div style={styles.userCardFields}>
+                  <div style={styles.userCardField}>
+                    <span style={styles.userCardFieldLabel}>Email</span>
+                    <span style={styles.userCardFieldValue}>{user.email}</span>
+                  </div>
+                  <div style={styles.userCardField}>
+                    <span style={styles.userCardFieldLabel}>Phone</span>
+                    <span style={styles.userCardFieldValue}>{user.phone || '—'}</span>
+                  </div>
+                  {user.bio && (
+                    <div style={styles.userCardField}>
+                      <span style={styles.userCardFieldLabel}>Bio</span>
+                      <span style={styles.userCardFieldValue}>{user.bio}</span>
+                    </div>
+                  )}
+                  <div style={styles.userCardField}>
+                    <span style={styles.userCardFieldLabel}>Last Report</span>
+                    <span style={styles.userCardFieldValue}>
+                      {user.lastReportAt ? relativeTime(user.lastReportAt) : '—'}
+                      {!!user.reportCount && (
+                        <span style={{ ...styles.reportBadge, marginLeft: '6px' }}>
+                          {FlagIcon} {user.reportCount}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                </div>
+
+                <div style={styles.userCardActions}>{renderActions(user)}</div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {suspensionModal && (
@@ -808,5 +874,51 @@ const styles = {
     cursor: 'pointer',
     fontSize: '14px',
     fontWeight: '600' as const,
+  },
+  cardsList: {
+    flexDirection: 'column' as const,
+    gap: '12px',
+  },
+  userCard: {
+    border: '1px solid var(--border)',
+    borderRadius: '10px',
+    padding: '14px',
+    backgroundColor: 'var(--surface)',
+  },
+  userCardHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '8px',
+    marginBottom: '8px',
+  },
+  userCardName: {
+    fontWeight: '600' as const,
+  },
+  userCardFields: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '6px',
+    margin: '10px 0',
+  },
+  userCardField: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    gap: '12px',
+    fontSize: '13.5px',
+  },
+  userCardFieldLabel: {
+    color: 'var(--text-faint)',
+    flexShrink: 0,
+  },
+  userCardFieldValue: {
+    color: 'var(--text)',
+    textAlign: 'right' as const,
+    overflowWrap: 'anywhere' as const,
+  },
+  userCardActions: {
+    marginTop: '10px',
+    paddingTop: '10px',
+    borderTop: '1px solid var(--border)',
   },
 };
