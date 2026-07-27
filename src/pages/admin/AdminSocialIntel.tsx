@@ -437,7 +437,7 @@ const styles = {
     alignItems: 'center',
     padding: '2px 8px',
     backgroundColor: 'var(--warning-soft)',
-    color: 'var(--warning-text-on)',
+    color: 'var(--warning-text-on-soft)',
     borderRadius: '10px',
     fontSize: '11px',
     fontWeight: '700' as const,

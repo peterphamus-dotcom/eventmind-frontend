@@ -195,7 +195,7 @@ const styles: Record<string, React.CSSProperties> = {
   notice: {
     padding: '10px 14px',
     backgroundColor: 'var(--warning-soft)',
-    color: 'var(--warning-text-on)',
+    color: 'var(--warning-text-on-soft)',
     borderRadius: '8px',
     fontSize: '13px',
     marginBottom: '18px',

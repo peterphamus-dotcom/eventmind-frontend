@@ -46,6 +46,7 @@
   --warning: oklch(72% 0.14 80);
   --warning-text-on: oklch(30% 0.05 80);
   --warning-soft: oklch(96% 0.04 80);
+  --warning-text-on-soft: oklch(30% 0.05 80);
   --warning-alt: oklch(70% 0.15 80);
   --warning-soft2: oklch(96% 0.05 80);
   --warning-text2: oklch(38% 0.09 75);
@@ -99,6 +100,7 @@
   --warning: oklch(72% 0.14 80);
   --warning-text-on: oklch(20% 0.04 80);
   --warning-soft: oklch(32% 0.08 80);
+  --warning-text-on-soft: oklch(90% 0.05 80);
   --warning-alt: oklch(70% 0.15 80);
   --warning-soft2: oklch(34% 0.09 80);
   --warning-text2: oklch(88% 0.1 75);
