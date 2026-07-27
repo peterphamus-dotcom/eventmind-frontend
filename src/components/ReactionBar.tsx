@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import type { ReactionSummary } from '../types';
 
 const PALETTE = ['👍', '❤️', '🎉', '👀', '🚨', '✅'];
@@ -13,6 +13,28 @@ export function ReactionBar({ reactions, onToggle }: ReactionBarProps) {
   const [current, setCurrent] = useState<ReactionSummary[]>(reactions);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const pickerRef = useRef<HTMLDivElement>(null);
+  const [shiftX, setShiftX] = useState(0);
+
+  // The picker's default anchor (right edge of the "+" button) can overflow
+  // either side of the viewport depending on how many reaction chips sit
+  // before it, so measure and clamp after it renders rather than guessing.
+  useLayoutEffect(() => {
+    if (!pickerOpen || !pickerRef.current) {
+      setShiftX(0);
+      return;
+    }
+    const margin = 8;
+    const rect = pickerRef.current.getBoundingClientRect();
+    let shift = 0;
+    if (rect.right > window.innerWidth - margin) {
+      shift -= rect.right - (window.innerWidth - margin);
+    }
+    if (rect.left + shift < margin) {
+      shift += margin - (rect.left + shift);
+    }
+    setShiftX(shift);
+  }, [pickerOpen]);
 
   async function toggle(emoji: string) {
     if (busy) return;
@@ -62,7 +84,7 @@ export function ReactionBar({ reactions, onToggle }: ReactionBarProps) {
         {pickerOpen && (
           <>
             <div style={styles.backdrop} onClick={() => setPickerOpen(false)} />
-            <div style={styles.picker}>
+            <div ref={pickerRef} style={{ ...styles.picker, transform: `translateX(${shiftX}px)` }}>
               {PALETTE.map((emoji) => (
                 <button
                   key={emoji}
