@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { api, photoSrc } from '../../api';
 import { useToast } from '../../Toast';
@@ -46,12 +46,41 @@ interface DeleteModalState {
 
 const emptyComposer: ComposerState = { name: '', email: '', password: '', role: 'MEMBER', homeLocationId: '', teamIds: [] };
 
+type StatusFilter = 'all' | 'active' | 'suspended' | 'muted';
+type SortKey = 'name' | 'email' | 'lastReportAt' | 'reportCount' | 'role';
+
+function userStatus(user: User): 'suspended' | 'muted' | 'active' {
+  if (user.isSuspended) return 'suspended';
+  if (user.isMuted) return 'muted';
+  return 'active';
+}
+
+function compareUsers(a: User, b: User, key: SortKey): number {
+  switch (key) {
+    case 'name':
+      return a.name.localeCompare(b.name);
+    case 'email':
+      return a.email.localeCompare(b.email);
+    case 'role':
+      return a.role.localeCompare(b.role);
+    case 'reportCount':
+      return (a.reportCount || 0) - (b.reportCount || 0);
+    case 'lastReportAt': {
+      const at = a.lastReportAt ? new Date(a.lastReportAt).getTime() : -Infinity;
+      const bt = b.lastReportAt ? new Date(b.lastReportAt).getTime() : -Infinity;
+      return at - bt;
+    }
+  }
+}
+
 /** Below 700px the 9-column table is unusable — swap to stacked cards. */
 const RESPONSIVE_CSS = `
 .au-cards { display: none; }
+.au-cards-sort { display: none; }
 @media (max-width: 700px) {
   .au-table-wrap { display: none; }
   .au-cards { display: flex; }
+  .au-cards-sort { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
 }
 `;
 
@@ -63,6 +92,10 @@ export default function AdminUsers() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [search, setSearch] = useState('');
+  const [sortKey, setSortKey] = useState<SortKey>('name');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editRole, setEditRole] = useState<string>('');
 
@@ -93,6 +126,31 @@ export default function AdminUsers() {
       setError(err.response?.data?.error || 'Failed to load users');
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  const displayedUsers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const filtered = users.filter((user) => {
+      if (statusFilter !== 'all' && userStatus(user) !== statusFilter) return false;
+      if (!q) return true;
+      return (
+        user.name.toLowerCase().includes(q) ||
+        user.email.toLowerCase().includes(q) ||
+        (user.phone || '').toLowerCase().includes(q) ||
+        (user.bio || '').toLowerCase().includes(q)
+      );
+    });
+    const sorted = [...filtered].sort((a, b) => compareUsers(a, b, sortKey));
+    return sortDir === 'asc' ? sorted : sorted.reverse();
+  }, [users, search, statusFilter, sortKey, sortDir]);
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
     }
   }
 
@@ -285,6 +343,21 @@ export default function AdminUsers() {
     );
   }
 
+  function sortHeader(label: string, key: SortKey) {
+    const active = sortKey === key;
+    return (
+      <th style={styles.headerCell}>
+        <button
+          onClick={() => toggleSort(key)}
+          style={{ ...styles.sortBtn, color: active ? 'var(--accent)' : 'var(--text-secondary)' }}
+        >
+          {label}
+          <span style={styles.sortArrow}>{active ? (sortDir === 'asc' ? '▲' : '▼') : ''}</span>
+        </button>
+      </th>
+    );
+  }
+
   return (
     <div style={styles.card}>
       <style>{RESPONSIVE_CSS}</style>
@@ -306,6 +379,23 @@ export default function AdminUsers() {
           <option value="MEMBER">Member</option>
           <option value="EXPO">Expo</option>
         </select>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+          style={styles.select}
+        >
+          <option value="all">All statuses</option>
+          <option value="active">Active</option>
+          <option value="suspended">Suspended</option>
+          <option value="muted">Muted</option>
+        </select>
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search name, email, phone, bio…"
+          style={styles.searchInput}
+        />
         <button onClick={openComposer} style={shared.addBtn}>
           + Add User
         </button>
@@ -316,25 +406,30 @@ export default function AdminUsers() {
         <p>Loading users...</p>
       ) : users.length === 0 ? (
         <p style={styles.empty}>No users found</p>
+      ) : displayedUsers.length === 0 ? (
+        <p style={styles.empty}>No users match your filters</p>
       ) : (
         <>
+          <p style={styles.resultCount}>
+            Showing {displayedUsers.length} of {users.length} users
+          </p>
           <div style={styles.tableContainer} className="au-table-wrap">
             <table style={styles.table}>
               <thead>
                 <tr style={styles.headerRow}>
-                  <th style={styles.headerCell}>Name</th>
-                  <th style={styles.headerCell}>Email</th>
+                  {sortHeader('Name', 'name')}
+                  {sortHeader('Email', 'email')}
                   <th style={styles.headerCell}>Phone</th>
                   <th style={styles.headerCell}>Bio</th>
-                  <th style={styles.headerCell}>Last Report</th>
-                  <th style={styles.headerCell}>Reports</th>
-                  <th style={styles.headerCell}>Current Role</th>
+                  {sortHeader('Last Report', 'lastReportAt')}
+                  {sortHeader('Reports', 'reportCount')}
+                  {sortHeader('Current Role', 'role')}
                   <th style={styles.headerCell}>Status</th>
                   <th style={styles.headerCell}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
+                {displayedUsers.map((user) => (
                   <tr key={user.id} style={styles.row}>
                     <td style={styles.cell}>
                       <Link to={`/users/${user.id}`} style={styles.nameCell}>
@@ -374,8 +469,29 @@ export default function AdminUsers() {
             </table>
           </div>
 
+          <div className="au-cards-sort">
+            <label style={styles.label}>Sort by:</label>
+            <select
+              value={sortKey}
+              onChange={(e) => setSortKey(e.target.value as SortKey)}
+              style={styles.select}
+            >
+              <option value="name">Name</option>
+              <option value="email">Email</option>
+              <option value="lastReportAt">Last Report</option>
+              <option value="reportCount">Reports</option>
+              <option value="role">Role</option>
+            </select>
+            <button
+              onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+              style={styles.sortDirBtn}
+            >
+              {sortDir === 'asc' ? '▲ Ascending' : '▼ Descending'}
+            </button>
+          </div>
+
           <div className="au-cards" style={styles.cardsList}>
-            {users.map((user) => (
+            {displayedUsers.map((user) => (
               <div key={user.id} style={styles.userCard}>
                 <div style={styles.userCardHeader}>
                   <Link to={`/users/${user.id}`} style={styles.nameCell}>
@@ -674,6 +790,16 @@ const styles = {
   filterRow: shared.filterRow,
   label: shared.filterLabel,
   select: shared.selectSmall,
+  searchInput: {
+    ...shared.input,
+    flex: '1 1 220px',
+    minWidth: '160px',
+  },
+  resultCount: {
+    ...shared.footerCount,
+    marginTop: 0,
+    marginBottom: '12px',
+  },
   tableContainer: {
     overflowX: 'auto' as const,
   },
@@ -920,5 +1046,30 @@ const styles = {
     marginTop: '10px',
     paddingTop: '10px',
     borderTop: '1px solid var(--border)',
+  },
+  sortBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    padding: 0,
+    border: 'none',
+    background: 'none',
+    cursor: 'pointer',
+    font: 'inherit',
+    fontSize: '12.5px',
+    fontWeight: '700' as const,
+  },
+  sortArrow: {
+    fontSize: '9px',
+  },
+  sortDirBtn: {
+    padding: '8px 11px',
+    border: '1px solid var(--border-strong)',
+    borderRadius: '7px',
+    backgroundColor: 'var(--surface)',
+    color: 'var(--text)',
+    fontSize: '13px',
+    fontWeight: '600' as const,
+    cursor: 'pointer',
   },
 };
