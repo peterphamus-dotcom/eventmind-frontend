@@ -122,6 +122,8 @@ export const api = {
     client.post<ApiResponse<{ id: string; email: string; isSuspended: boolean; suspendedAt: string | null; suspensionReason: string | null }>>(`/admin/users/${userId}/suspend`, { suspend, reason }),
   muteUser: (userId: string, mute: boolean, reason?: string) =>
     client.post<ApiResponse<{ id: string; email: string; isMuted: boolean; mutedAt: string | null; mutedReason: string | null }>>(`/admin/users/${userId}/mute`, { mute, reason }),
+  deleteUser: (userId: string, reason?: string) =>
+    client.delete<ApiResponse<{ id: string }>>(`/admin/users/${userId}`, { data: { reason } }),
   getAuditLogs: (filters?: {
     page?: number;
     pageSize?: number;

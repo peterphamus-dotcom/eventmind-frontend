@@ -37,6 +37,13 @@ interface SuspensionModalState {
   reason: string;
 }
 
+interface DeleteModalState {
+  userId: string;
+  step: 'confirm-suspend-first' | 'type-to-confirm';
+  typedEmail: string;
+  reason: string;
+}
+
 const emptyComposer: ComposerState = { name: '', email: '', password: '', role: 'MEMBER', homeLocationId: '', teamIds: [] };
 
 export default function AdminUsers() {
@@ -54,6 +61,8 @@ export default function AdminUsers() {
   const [submitting, setSubmitting] = useState(false);
   const [composerError, setComposerError] = useState<string | null>(null);
   const [suspensionModal, setSuspensionModal] = useState<SuspensionModalState | null>(null);
+  const [deleteModal, setDeleteModal] = useState<DeleteModalState | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadUsers();
@@ -180,6 +189,21 @@ export default function AdminUsers() {
       showToast(`User ${!isCurrentlyMuted ? 'muted' : 'unmuted'}`);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to update mute status');
+    }
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deleteModal || deleting) return;
+    setDeleting(true);
+    try {
+      await api.deleteUser(deleteModal.userId, deleteModal.reason || undefined);
+      setUsers(users.filter((u) => u.id !== deleteModal.userId));
+      setDeleteModal(null);
+      showToast('User deleted');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to delete user');
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -320,6 +344,12 @@ export default function AdminUsers() {
                         >
                           {user.isMuted ? 'Unmute' : 'Mute'}
                         </button>
+                        <button
+                          onClick={() => setDeleteModal({ userId: user.id, step: 'confirm-suspend-first', typedEmail: '', reason: '' })}
+                          style={styles.btnDelete}
+                        >
+                          Delete
+                        </button>
                       </div>
                     )}
                   </td>
@@ -386,6 +416,88 @@ export default function AdminUsers() {
           })()}
         </Modal>
       )}
+
+      {deleteModal && (() => {
+        const user = users.find((u) => u.id === deleteModal.userId);
+        if (!user) return null;
+
+        if (deleteModal.step === 'confirm-suspend-first') {
+          return (
+            <Modal title="Delete User" onClose={() => setDeleteModal(null)}>
+              <p style={styles.modalText}>Delete {user.name}?</p>
+              <p style={styles.modalSubtext}>
+                Deletion is permanent — their tickets, reports, and comments stay in the system, but
+                the account and all personal info (email, phone, bio, avatar) are gone forever and
+                cannot be recovered. Consider suspending instead, which is reversible.
+              </p>
+              <div style={styles.modalActions}>
+                <button
+                  onClick={() => {
+                    setDeleteModal(null);
+                    setSuspensionModal({ userId: user.id, type: 'suspend', reason: '' });
+                  }}
+                  style={{ ...styles.btnPrimary, backgroundColor: 'var(--accent)' }}
+                >
+                  Suspend Instead
+                </button>
+                <button
+                  onClick={() => setDeleteModal({ ...deleteModal, step: 'type-to-confirm' })}
+                  style={styles.btnSecondary}
+                >
+                  Continue to Delete
+                </button>
+              </div>
+            </Modal>
+          );
+        }
+
+        const confirmMatches = deleteModal.typedEmail.trim() === user.email;
+        return (
+          <Modal title="Delete User" onClose={() => setDeleteModal(null)}>
+            <p style={styles.modalText}>
+              Type <strong>{user.email}</strong> to confirm permanent deletion.
+            </p>
+            <div style={styles.field}>
+              <label style={styles.fieldLabel}>Email</label>
+              <input
+                type="text"
+                value={deleteModal.typedEmail}
+                onChange={(e) => setDeleteModal({ ...deleteModal, typedEmail: e.target.value })}
+                style={shared.input}
+                placeholder={user.email}
+                autoComplete="off"
+              />
+            </div>
+            <div style={styles.field}>
+              <label style={styles.fieldLabel}>Optional reason</label>
+              <input
+                type="text"
+                value={deleteModal.reason}
+                onChange={(e) => setDeleteModal({ ...deleteModal, reason: e.target.value })}
+                style={shared.input}
+                placeholder="e.g., Requested account removal"
+              />
+            </div>
+            <div style={styles.modalActions}>
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={!confirmMatches || deleting}
+                style={{
+                  ...styles.btnPrimary,
+                  backgroundColor: 'var(--danger)',
+                  opacity: !confirmMatches || deleting ? 0.5 : 1,
+                  cursor: !confirmMatches || deleting ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {deleting ? 'Deleting…' : 'Delete Permanently'}
+              </button>
+              <button onClick={() => setDeleteModal(null)} style={styles.btnSecondary}>
+                Cancel
+              </button>
+            </div>
+          </Modal>
+        );
+      })()}
 
       {composer && (
         <Modal title="Add User" onClose={() => setComposer(null)}>
@@ -567,6 +679,16 @@ const styles = {
     borderRadius: '6px',
     cursor: 'pointer',
     fontSize: '12.5px',
+    fontWeight: '600' as const,
+  },
+  btnDelete: {
+    padding: '6px 10px',
+    backgroundColor: 'transparent',
+    color: 'var(--danger-text)',
+    border: '1px solid var(--danger)',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    fontSize: '12px',
     fontWeight: '600' as const,
   },
   empty: shared.empty,
