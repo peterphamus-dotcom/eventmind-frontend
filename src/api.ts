@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType, CommunitySortBy, ContentReport, SignupQrCode, Role, AuditLog } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType, CommunitySortBy, ContentReport, SignupQrCode, Role, AuditLog, AuditSummaryReport } from './types';
 
 type TeamPreview<T> = PaginatedResponse<T> & { team: { id: string; name: string; tags: Tag[] } };
 
@@ -265,6 +265,8 @@ export const api = {
     client.get('/admin/export/reports.csv', { responseType: 'blob' }),
   exportAuditLogsCsv: () =>
     client.get('/admin/export/audit-logs.csv', { responseType: 'blob' }),
+  getAuditLogSummary: () =>
+    client.get<ApiResponse<AuditSummaryReport>>('/admin/audit-logs/summary'),
   getPostMortem: (params?: { startDate?: string; endDate?: string; locationId?: string }) =>
     client.get<ApiResponse<PostMortemReport>>('/admin/post-mortem', { params }),
   exportPostMortemMarkdown: (params?: { startDate?: string; endDate?: string; locationId?: string }) =>

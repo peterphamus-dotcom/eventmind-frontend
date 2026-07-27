@@ -444,3 +444,30 @@ export interface AuditLog {
   changesAfter: Record<string, any> | null;
   createdAt: string;
 }
+
+// ---- Audit log AI summary ----
+
+export interface AuditSummaryStats {
+  totalActions: number;
+  dateRange: { earliest: string | null; latest: string | null };
+  byCategory: { ADMIN_ACTION: number; USER_ACTION: number };
+  byAction: Array<{ action: string; count: number }>;
+  byActor: Array<{ actorId: string; name: string; email: string; count: number }>;
+  byTargetType: Array<{ targetType: string; count: number }>;
+  uniqueActors: number;
+  uniqueTargets: number;
+  topRepeatedTargets: Array<{ targetId: string; targetType: string; count: number; actions: string[] }>;
+  dailyVolume: Array<{ date: string; count: number }>;
+}
+
+export interface AuditSummaryNarrative {
+  wentWell: string;
+  needsWork: string;
+  futureEventChanges: string;
+  criticalFlags: string;
+}
+
+export interface AuditSummaryReport {
+  stats: AuditSummaryStats;
+  narrative: AuditSummaryNarrative | null;
+}

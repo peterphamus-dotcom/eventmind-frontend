@@ -3,6 +3,7 @@ import { api } from '../../api';
 import { useToast } from '../../Toast';
 import { styles as shared } from '../../components/AdminShared';
 import { PostMortemPanel } from '../../components/PostMortemPanel';
+import { AuditSummaryPanel } from '../../components/AuditSummaryPanel';
 
 type Which = 'tickets' | 'reports' | 'auditLogs';
 
@@ -117,7 +118,9 @@ export default function AdminExport() {
             <h3 style={styles.tileTitle}>Audit Logs</h3>
             <p style={styles.tileText}>
               Complete activity trail: admin actions, user activity, who did
-              what and when, before/after state changes.
+              what and when, before/after state changes. Includes an AI
+              summary block up top — totals plus what went well, what needs
+              work, and any critical flags.
             </p>
           </div>
           <button
@@ -132,6 +135,7 @@ export default function AdminExport() {
     </div>
 
     <PostMortemPanel />
+    <AuditSummaryPanel />
     </>
   );
 }
