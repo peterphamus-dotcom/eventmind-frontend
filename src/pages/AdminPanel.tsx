@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { api } from '../api';
@@ -59,6 +59,11 @@ export function AdminPanel() {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<AdminTab>('approvals');
   const [pendingCount, setPendingCount] = useState(0);
+  const tabRefs = useRef<Partial<Record<AdminTab, HTMLButtonElement | null>>>({});
+
+  useEffect(() => {
+    tabRefs.current[activeTab]?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }, [activeTab]);
 
   // Badge the Approvals tab with how many people are waiting. This fetch keeps
   // the badge right while the admin is on other tabs; once the Approvals panel
@@ -123,6 +128,9 @@ export function AdminPanel() {
         {TABS.filter((tab) => !tab.adminOnly || user?.role === 'ADMIN').map((tab) => (
           <button
             key={tab.id}
+            ref={(el) => {
+              tabRefs.current[tab.id] = el;
+            }}
             onClick={() => setActiveTab(tab.id)}
             style={{
               ...styles.tab,

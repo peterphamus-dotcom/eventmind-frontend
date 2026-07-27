@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { api } from '../api';
@@ -175,6 +175,11 @@ export function Dashboard() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [events, setEvents] = useState<Array<{ eventName: string; dbName: string; createdAt: string }>>([]);
   const showToast = useToast();
+  const tabRefs = useRef<Partial<Record<Tab, HTMLButtonElement | null>>>({});
+
+  useEffect(() => {
+    tabRefs.current[activeTab]?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }, [activeTab]);
   const isActive = user?.status === 'ACTIVE';
   const isPending = !!user && user.status !== 'ACTIVE';
   const canSeeAdminPanel = isActive && (user?.role === 'ADMIN' || user?.role === 'CORE_TEAM');
@@ -298,6 +303,9 @@ export function Dashboard() {
             {tabsForRole(user?.role).map((tab) => (
               <button
                 key={tab.id}
+                ref={(el) => {
+                  tabRefs.current[tab.id] = el;
+                }}
                 onClick={() => selectTab(tab.id)}
                 style={{
                   ...styles.tab,
