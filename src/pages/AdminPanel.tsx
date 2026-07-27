@@ -45,6 +45,14 @@ const TABS: { id: AdminTab; label: string; adminOnly?: boolean }[] = [
   { id: 'banner', label: 'Banner', adminOnly: true },
 ];
 
+/** Groups the flat 15-tab list into a two-level nav so it's scannable instead of one long scroller. */
+const CATEGORIES: { id: string; label: string; tabs: AdminTab[] }[] = [
+  { id: 'people', label: 'People', tabs: ['approvals', 'users', 'teams', 'signupQr'] },
+  { id: 'eventSetup', label: 'Event Setup', tabs: ['events', 'locations', 'tags', 'banner'] },
+  { id: 'trustSafety', label: 'Trust & Safety', tabs: ['socialIntel', 'userReports', 'contentReports', 'auditLogs'] },
+  { id: 'reportsTools', label: 'Reports & Tools', tabs: ['export', 'reminders', 'viewAs'] },
+];
+
 /** MEMBER -> Member, CORE_TEAM -> Core Team */
 function formatRole(role?: string) {
   if (!role) return '';
@@ -81,6 +89,16 @@ export function AdminPanel() {
       active = false;
     };
   }, [activeTab]);
+
+  const visibleTabs = TABS.filter((tab) => !tab.adminOnly || user?.role === 'ADMIN');
+  const visibleTabIds = new Set(visibleTabs.map((t) => t.id));
+  const activeCategory = CATEGORIES.find((cat) => cat.tabs.includes(activeTab)) || CATEGORIES[0];
+
+  function selectCategory(category: typeof CATEGORIES[number]) {
+    if (category.id === activeCategory.id) return;
+    const firstVisible = category.tabs.find((id) => visibleTabIds.has(id));
+    if (firstVisible) setActiveTab(firstVisible);
+  }
 
   if (user?.role !== 'ADMIN' && user?.role !== 'CORE_TEAM') {
     return (
@@ -123,26 +141,59 @@ export function AdminPanel() {
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Category row */}
+      <div style={styles.categories}>
+        {CATEGORIES.map((category) => {
+          const hasVisibleTab = category.tabs.some((id) => visibleTabIds.has(id));
+          if (!hasVisibleTab) return null;
+          const categoryHasBadge = category.tabs.includes('approvals') && pendingCount > 0;
+          return (
+            <button
+              key={category.id}
+              onClick={() => selectCategory(category)}
+              style={{
+                ...styles.category,
+                ...(activeCategory.id === category.id ? styles.categoryActive : {}),
+              }}
+            >
+              {category.label}
+              {categoryHasBadge && (
+                <span
+                  style={{
+                    ...styles.badge,
+                    ...(activeCategory.id === category.id ? styles.badgeOnActive : {}),
+                  }}
+                >
+                  {pendingCount}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Tabs within the active category */}
       <div style={styles.tabs}>
-        {TABS.filter((tab) => !tab.adminOnly || user?.role === 'ADMIN').map((tab) => (
-          <button
-            key={tab.id}
-            ref={(el) => {
-              tabRefs.current[tab.id] = el;
-            }}
-            onClick={() => setActiveTab(tab.id)}
-            style={{
-              ...styles.tab,
-              ...(activeTab === tab.id ? styles.tabActive : {}),
-            }}
-          >
-            {tab.label}
-            {tab.id === 'approvals' && pendingCount > 0 && (
-              <span style={styles.badge}>{pendingCount}</span>
-            )}
-          </button>
-        ))}
+        {visibleTabs
+          .filter((tab) => activeCategory.tabs.includes(tab.id))
+          .map((tab) => (
+            <button
+              key={tab.id}
+              ref={(el) => {
+                tabRefs.current[tab.id] = el;
+              }}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                ...styles.tab,
+                ...(activeTab === tab.id ? styles.tabActive : {}),
+              }}
+            >
+              {tab.label}
+              {tab.id === 'approvals' && pendingCount > 0 && (
+                <span style={styles.badge}>{pendingCount}</span>
+              )}
+            </button>
+          ))}
       </div>
 
       {/* Content */}
@@ -222,6 +273,31 @@ const styles = {
     fontSize: '13.5px',
     fontWeight: 600,
   },
+  categories: {
+    display: 'flex',
+    gap: '8px',
+    backgroundColor: 'var(--surface-alt)',
+    padding: '10px clamp(16px, 4vw, 40px)',
+    overflowX: 'auto' as const,
+  },
+  category: {
+    display: 'flex',
+    alignItems: 'center',
+    padding: '7px 14px',
+    border: '1px solid var(--border-strong)',
+    borderRadius: '999px',
+    backgroundColor: 'var(--surface)',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: 600,
+    color: 'var(--text-muted)',
+    whiteSpace: 'nowrap' as const,
+  },
+  categoryActive: {
+    backgroundColor: 'var(--accent)',
+    borderColor: 'var(--accent)',
+    color: 'white',
+  },
   tabs: {
     display: 'flex',
     gap: '2px',
@@ -258,6 +334,10 @@ const styles = {
     padding: '1px 7px',
     fontSize: '11px',
     fontWeight: 700,
+  },
+  badgeOnActive: {
+    backgroundColor: 'white',
+    color: 'var(--accent)',
   },
   content: {
     maxWidth: '1200px',
