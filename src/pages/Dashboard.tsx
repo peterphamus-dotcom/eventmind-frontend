@@ -18,6 +18,7 @@ import { FeedbackModal } from '../components/FeedbackModal';
 import { DisplaySettingsModal } from '../components/DisplaySettingsModal';
 import { InviteModal } from '../components/InviteModal';
 import { AwaitingApproval } from '../components/AwaitingApproval';
+import type { EffectiveTabSettingsMap } from '../types';
 
 type Tab = 'tickets' | 'reports' | 'floorplan' | 'library' | 'schedule' | 'sideSchedule' | 'community';
 
@@ -153,6 +154,17 @@ function tabsForRole(role?: string) {
   return ALL_TABS.filter((t) => t.id !== 'community' || role === 'EXPO' || role === 'ADMIN' || role === 'CORE_TEAM');
 }
 
+/**
+ * Which tabs a user actually sees. Prefers the server-computed
+ * effectiveTabSettings (user override -> team override -> role default,
+ * with ADMIN/CORE_TEAM always seeing everything); falls back to the plain
+ * role rule if that hasn't loaded yet.
+ */
+function visibleTabsForUser(user?: { role?: string; effectiveTabSettings?: EffectiveTabSettingsMap }) {
+  if (!user?.effectiveTabSettings) return tabsForRole(user?.role);
+  return ALL_TABS.filter((t) => user.effectiveTabSettings![t.id].visible);
+}
+
 /** MEMBER -> Member, CORE_TEAM -> Core Team */
 function formatRole(role?: string) {
   if (!role) return '';
@@ -181,6 +193,16 @@ export function Dashboard() {
   useEffect(() => {
     tabRefs.current[activeTab]?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   }, [activeTab]);
+
+  // If the active tab becomes hidden (admin restricted it, or it was stale
+  // from a previous session), fall back to the first tab still visible.
+  useEffect(() => {
+    const visible = visibleTabsForUser(user);
+    if (visible.length > 0 && !visible.some((t) => t.id === activeTab)) {
+      selectTab(visible[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.effectiveTabSettings, user?.role]);
   const isActive = user?.status === 'ACTIVE';
   const isPending = !!user && user.status !== 'ACTIVE';
   const canSeeAdminPanel = isActive && (user?.role === 'ADMIN' || user?.role === 'CORE_TEAM');
@@ -302,7 +324,7 @@ export function Dashboard() {
 
           {/* Tab switcher */}
           <div style={styles.tabs}>
-            {tabsForRole(user?.role).map((tab) => (
+            {visibleTabsForUser(user).map((tab) => (
               <button
                 key={tab.id}
                 ref={(el) => {

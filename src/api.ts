@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType, CommunitySortBy, ContentReport, SignupQrCode, Role, AuditLog, AuditSummaryReport, MessageableUser, ConversationSummary, ConversationMessage } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType, CommunitySortBy, ContentReport, SignupQrCode, Role, AuditLog, AuditSummaryReport, MessageableUser, ConversationSummary, ConversationMessage, TabSettingsMap, TabSettingsPatch } from './types';
 
 type TeamPreview<T> = PaginatedResponse<T> & { team: { id: string; name: string; tags: Tag[] } };
 
@@ -124,6 +124,8 @@ export const api = {
     client.post<ApiResponse<{ id: string; email: string; isSuspended: boolean; suspendedAt: string | null; suspensionReason: string | null }>>(`/admin/users/${userId}/suspend`, { suspend, reason }),
   muteUser: (userId: string, mute: boolean, reason?: string) =>
     client.post<ApiResponse<{ id: string; email: string; isMuted: boolean; mutedAt: string | null; mutedReason: string | null }>>(`/admin/users/${userId}/mute`, { mute, reason }),
+  updateUserTabSettings: (userId: string, tabSettings: TabSettingsPatch) =>
+    client.patch<ApiResponse<{ id: string; email: string; tabSettings: TabSettingsMap }>>(`/admin/users/${userId}/tab-settings`, { tabSettings }),
   deleteUser: (userId: string, reason?: string) =>
     client.delete<ApiResponse<{ id: string }>>(`/admin/users/${userId}`, { data: { reason } }),
   getAuditLogs: (filters?: {
@@ -232,7 +234,7 @@ export const api = {
     client.get<ApiResponse<{ items: Team[]; total: number }>>('/teams'),
   createTeam: (name: string, tagIds?: string[], memberIds?: string[]) =>
     client.post<ApiResponse<Team>>('/teams', { name, tagIds, memberIds }),
-  updateTeam: (id: string, updates: { name?: string; tagIds?: string[]; memberIds?: string[] }) =>
+  updateTeam: (id: string, updates: { name?: string; tagIds?: string[]; memberIds?: string[]; tabSettings?: TabSettingsPatch }) =>
     client.patch<ApiResponse<Team>>(`/teams/${id}`, updates),
   deleteTeam: (id: string) =>
     client.delete<ApiResponse<{ message: string }>>(`/teams/${id}`),

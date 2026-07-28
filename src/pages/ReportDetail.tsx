@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { api, photoSrc } from '../api';
 import { useToast } from '../Toast';
+import { useAuth } from '../AuthContext';
 import { CommentsSection } from '../components/CommentsSection';
 import { ReactionBar } from '../components/ReactionBar';
 import { DetailPage, DetailSection, DetailRow, BellIcon, styles } from '../components/DetailPage';
@@ -10,6 +11,7 @@ import type { Report } from '../types';
 export function ReportDetail() {
   const navigate = useNavigate();
   const showToast = useToast();
+  const { user } = useAuth();
   const { reportId } = useParams<{ reportId: string }>();
   const [report, setReport] = useState<Report | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -143,6 +145,7 @@ export function ReportDetail() {
       {/* Comments */}
       <CommentsSection
         initialComments={report.comments || []}
+        canComment={user?.effectiveTabSettings?.reports.canComment ?? true}
         onAdd={async (text) => {
           const res = await api.addReportComment(report.id, text);
           return res.data.data!;

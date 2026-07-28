@@ -4,6 +4,7 @@ import { api, photoSrc } from '../../api';
 import { useToast } from '../../Toast';
 import { styles as shared, roleBadge } from '../../components/AdminShared';
 import { Modal } from '../../components/Modal';
+import { TabAccessModal } from '../../components/TabAccessModal';
 import type { User, Role, Team, Location } from '../../types';
 
 const FlagIcon = (
@@ -105,6 +106,7 @@ export default function AdminUsers() {
   const [suspensionModal, setSuspensionModal] = useState<SuspensionModalState | null>(null);
   const [deleteModal, setDeleteModal] = useState<DeleteModalState | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [tabAccessUserId, setTabAccessUserId] = useState<string | null>(null);
 
   useEffect(() => {
     loadUsers();
@@ -332,6 +334,12 @@ export default function AdminUsers() {
           style={{ ...styles.btnSmall, backgroundColor: user.isMuted ? 'var(--success)' : 'var(--warning)' }}
         >
           {user.isMuted ? 'Unmute' : 'Mute'}
+        </button>
+        <button
+          onClick={() => setTabAccessUserId(user.id)}
+          style={{ ...styles.btnSmall, backgroundColor: 'var(--neutral)' }}
+        >
+          Manage Access
         </button>
         <button
           onClick={() => setDeleteModal({ userId: user.id, step: 'confirm-suspend-first', typedEmail: '', reason: '' })}
@@ -598,6 +606,26 @@ export default function AdminUsers() {
           })()}
         </Modal>
       )}
+
+      {tabAccessUserId && (() => {
+        const user = users.find((u) => u.id === tabAccessUserId);
+        if (!user) return null;
+        return (
+          <TabAccessModal
+            subjectLabel={user.name}
+            scope="user"
+            tabSettings={user.tabSettings}
+            onClose={() => setTabAccessUserId(null)}
+            onSave={async (patch) => {
+              const res = await api.updateUserTabSettings(user.id, patch);
+              setUsers((prev) =>
+                prev.map((u) => (u.id === user.id ? { ...u, tabSettings: res.data.data!.tabSettings } : u))
+              );
+              showToast('Access settings updated');
+            }}
+          />
+        );
+      })()}
 
       {deleteModal && (() => {
         const user = users.find((u) => u.id === deleteModal.userId);

@@ -17,9 +17,11 @@ interface CommentsSectionProps {
   onReport?: (commentId: string) => void;
   /** Toggle a comment's hidden state; resolves to its new isHidden value. */
   onHide?: (commentId: string) => Promise<boolean>;
+  /** Whether the viewer is allowed to post new comments here (default true). */
+  canComment?: boolean;
 }
 
-export function CommentsSection({ initialComments, onAdd, onReact, currentUserId, canModerate, onReport, onHide }: CommentsSectionProps) {
+export function CommentsSection({ initialComments, onAdd, onReact, currentUserId, canModerate, onReport, onHide, canComment = true }: CommentsSectionProps) {
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [text, setText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -103,23 +105,27 @@ export function CommentsSection({ initialComments, onAdd, onReact, currentUserId
 
       {error && <div style={styles.error}>{error}</div>}
 
-      <form onSubmit={handleSubmit} style={styles.form}>
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Add a comment..."
-          style={styles.textarea}
-          rows={3}
-          disabled={isSubmitting}
-        />
-        <button
-          type="submit"
-          style={styles.submitBtn}
-          disabled={isSubmitting || !text.trim()}
-        >
-          {isSubmitting ? 'Posting…' : 'Post Comment'}
-        </button>
-      </form>
+      {canComment ? (
+        <form onSubmit={handleSubmit} style={styles.form}>
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Add a comment..."
+            style={styles.textarea}
+            rows={3}
+            disabled={isSubmitting}
+          />
+          <button
+            type="submit"
+            style={styles.submitBtn}
+            disabled={isSubmitting || !text.trim()}
+          >
+            {isSubmitting ? 'Posting…' : 'Post Comment'}
+          </button>
+        </form>
+      ) : (
+        <p style={styles.restricted}>Commenting has been restricted for your account in this section.</p>
+      )}
     </div>
   );
 }
@@ -218,6 +224,12 @@ const styles = {
     borderRadius: '9px',
     fontSize: '13px',
     marginBottom: '12px',
+  },
+  restricted: {
+    fontSize: '13px',
+    color: 'var(--text-faint)',
+    fontStyle: 'italic',
+    margin: 0,
   },
   form: {
     display: 'flex',

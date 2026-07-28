@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { api } from '../api';
 import { useToast } from '../Toast';
+import { useAuth } from '../AuthContext';
 import { CommentsSection } from '../components/CommentsSection';
 import { DetailPage, DetailSection, DetailRow, BellIcon, styles } from '../components/DetailPage';
 import type { ScheduleItem } from '../types';
@@ -24,6 +25,7 @@ const ClockIcon = (
 export function ScheduleDetail() {
   const navigate = useNavigate();
   const showToast = useToast();
+  const { user } = useAuth();
   const { itemId } = useParams<{ itemId: string }>();
   const [item, setItem] = useState<ScheduleItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -144,6 +146,7 @@ export function ScheduleDetail() {
 
       <CommentsSection
         initialComments={item.comments || []}
+        canComment={user?.effectiveTabSettings?.schedule.canComment ?? true}
         onAdd={async (text) => {
           const res = await api.addScheduleComment(item.id, text);
           return res.data.data!;

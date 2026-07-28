@@ -6,6 +6,38 @@ export type UserStatus = 'UNVERIFIED' | 'PENDING' | 'ACTIVE' | 'REJECTED';
 
 export type Role = 'MEMBER' | 'CORE_TEAM' | 'ADMIN' | 'EXPO';
 
+export type TabId =
+  | 'tickets'
+  | 'reports'
+  | 'floorplan'
+  | 'library'
+  | 'schedule'
+  | 'sideSchedule'
+  | 'community';
+
+export const COMMENTABLE_TAB_IDS: TabId[] = ['tickets', 'reports', 'schedule', 'community'];
+
+export interface TabSetting {
+  visible?: boolean;
+  canComment?: boolean;
+}
+
+export type TabSettingsMap = Partial<Record<TabId, TabSetting>>;
+
+/**
+ * A patch sent to the tab-settings update endpoints: per tab id, `null`
+ * clears that tab's override (falls back to team/role default), an object
+ * replaces it, and omitting a tab id leaves its existing override untouched.
+ */
+export type TabSettingsPatch = Partial<Record<TabId, TabSetting | null>>;
+
+export interface EffectiveTabSetting {
+  visible: boolean;
+  canComment: boolean;
+}
+
+export type EffectiveTabSettingsMap = Record<TabId, EffectiveTabSetting>;
+
 export interface User {
   id: string;
   email: string;
@@ -31,6 +63,8 @@ export interface User {
   isMuted?: boolean;
   mutedAt?: string | null;
   mutedReason?: string | null;
+  tabSettings?: TabSettingsMap | null;
+  effectiveTabSettings?: EffectiveTabSettingsMap;
   createdAt: string;
 }
 
@@ -84,6 +118,7 @@ export interface Team {
   name: string;
   tags?: Tag[];
   members?: TeamMember[];
+  tabSettings?: TabSettingsMap | null;
   createdAt?: string;
 }
 

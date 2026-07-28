@@ -220,6 +220,7 @@ export function CommunityPostModal({ postId, onClose, onChanged }: Props) {
               initialComments={post.comments || []}
               currentUserId={user?.id}
               canModerate={post.canModerate}
+              canComment={user?.effectiveTabSettings?.community.canComment ?? true}
               onReport={(commentId) => setReportTarget({ kind: 'comment', commentId })}
               onHide={async (commentId) => {
                 const res = await api.toggleCommunityCommentHide(post.id, commentId);

@@ -339,6 +339,7 @@ export function TicketDetail() {
       {/* Comments */}
       <CommentsSection
         initialComments={ticket.comments || []}
+        canComment={user?.effectiveTabSettings?.tickets.canComment ?? true}
         onAdd={async (text) => {
           const res = await api.addTicketComment(ticket.id, text);
           return res.data.data!;

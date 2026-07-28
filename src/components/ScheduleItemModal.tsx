@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useToast } from '../Toast';
+import { useAuth } from '../AuthContext';
 import { Modal } from './Modal';
 import { CommentsSection } from './CommentsSection';
 import { DetailRow, BellIcon, styles as detailStyles } from './DetailPage';
@@ -30,6 +31,7 @@ interface ScheduleItemModalProps {
 /** Click-to-preview: the same content as the schedule item detail page, in a modal. */
 export function ScheduleItemModal({ itemId, onClose }: ScheduleItemModalProps) {
   const showToast = useToast();
+  const { user } = useAuth();
   const [item, setItem] = useState<ScheduleItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -149,6 +151,7 @@ export function ScheduleItemModal({ itemId, onClose }: ScheduleItemModalProps) {
 
           <CommentsSection
             initialComments={item.comments || []}
+            canComment={user?.effectiveTabSettings?.schedule.canComment ?? true}
             onAdd={async (text) => {
               const res = await api.addScheduleComment(item.id, text);
               return res.data.data!;

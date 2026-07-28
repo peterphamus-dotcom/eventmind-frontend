@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../api';
 import { styles as shared } from '../../components/AdminShared';
+import { TabAccessModal } from '../../components/TabAccessModal';
 import type { Team, Tag, User } from '../../types';
 
 export default function AdminTeams() {
@@ -18,6 +19,7 @@ export default function AdminTeams() {
   const [editTagIds, setEditTagIds] = useState<string[]>([]);
   const [editMemberIds, setEditMemberIds] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [tabAccessTeamId, setTabAccessTeamId] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -174,6 +176,9 @@ export default function AdminTeams() {
                       <button onClick={() => startEditing(team)} style={styles.btnEdit}>
                         Edit
                       </button>
+                      <button onClick={() => setTabAccessTeamId(team.id)} style={styles.btnCancel}>
+                        Manage Access
+                      </button>
                       <button
                         onClick={() => handleDelete(team.id)}
                         style={styles.btnDelete}
@@ -263,6 +268,23 @@ export default function AdminTeams() {
       <p style={styles.info}>
         Total teams: <strong>{teams.length}</strong>
       </p>
+
+      {tabAccessTeamId && (() => {
+        const team = teams.find((t) => t.id === tabAccessTeamId);
+        if (!team) return null;
+        return (
+          <TabAccessModal
+            subjectLabel={team.name}
+            scope="team"
+            tabSettings={team.tabSettings}
+            onClose={() => setTabAccessTeamId(null)}
+            onSave={async (patch) => {
+              const response = await api.updateTeam(team.id, { tabSettings: patch });
+              setTeams((prev) => prev.map((t) => (t.id === team.id ? response.data.data! : t)));
+            }}
+          />
+        );
+      })()}
     </div>
   );
 }
