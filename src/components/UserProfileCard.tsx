@@ -69,6 +69,7 @@ export function UserProfileCard({ userId, name, onClose }: UserProfileCardProps)
           </div>
           <div style={styles.name}>{profile?.name || name}</div>
           {profile && <span style={styles.roleBadge}>{profile.role.replace('_', ' ')}</span>}
+          {profile?.statusLine && <div style={styles.statusLine}>{truncateBio(profile.statusLine)}</div>}
         </div>
 
         {isLoading ? (
@@ -174,6 +175,12 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '11px',
     fontWeight: 600,
     textTransform: 'capitalize',
+  },
+  statusLine: {
+    fontSize: '12px',
+    color: 'var(--text-muted)',
+    fontStyle: 'italic',
+    textAlign: 'center',
   },
   loading: {
     textAlign: 'center',

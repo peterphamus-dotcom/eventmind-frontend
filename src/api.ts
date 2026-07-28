@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType, CommunitySortBy, ContentReport, SignupQrCode, Role, AuditLog, AuditSummaryReport, MessageableUser, ConversationSummary, ConversationMessage, TabSettingsMap, TabSettingsPatch, MessagePrivacy, MeetingRequest, MeetingRequestStatus, TagPair, NetworkingProfile, SuggestedMatch } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType, CommunitySortBy, ContentReport, SignupQrCode, Role, AuditLog, AuditSummaryReport, MessageableUser, ConversationSummary, ConversationMessage, TabSettingsMap, TabSettingsPatch, MessagePrivacy, MeetingRequest, MeetingRequestStatus, TagPair, NetworkingProfile, SuggestedMatch, ProfileComment } from './types';
 
 type TeamPreview<T> = PaginatedResponse<T> & { team: { id: string; name: string; tags: Tag[] } };
 
@@ -107,7 +107,7 @@ export const api = {
     client.patch<ApiResponse<User>>(`/users/${id}`, { role, teamIds }),
   createUser: (data: { name: string; email: string; password: string; role: Role; homeLocationId: string; teamIds?: string[] }) =>
     client.post<ApiResponse<User>>('/users', data),
-  updateMyProfile: (updates: { name?: string; phone?: string; bio?: string; viewDensity?: ViewDensity; shareContactInCommunity?: boolean; communityHandle?: string | null; communityBooth?: string | null; messagePrivacy?: MessagePrivacy; networkingBlurb?: string; goalTagIds?: string[] }) =>
+  updateMyProfile: (updates: { name?: string; phone?: string; bio?: string; viewDensity?: ViewDensity; shareContactInCommunity?: boolean; communityHandle?: string | null; communityBooth?: string | null; messagePrivacy?: MessagePrivacy; networkingBlurb?: string; goalTagIds?: string[]; statusLine?: string; profileCommentsEnabled?: boolean }) =>
     client.patch<ApiResponse<User>>('/users/me', updates),
   uploadMyAvatar: (file: File) => {
     const fd = new FormData();
@@ -516,6 +516,16 @@ export const api = {
     client.post<ApiResponse<TagPair>>('/networking/tag-pairs', { tagAId, tagBId }),
   deleteTagPair: (id: string) =>
     client.delete<ApiResponse<{ message: string }>>(`/networking/tag-pairs/${id}`),
+
+  // Profile comments (a lightweight "wall" on every user's profile page)
+  listProfileComments: (userId: string) =>
+    client.get<ApiResponse<ProfileComment[]>>(`/profile-comments/${userId}`),
+  createProfileComment: (userId: string, text: string) =>
+    client.post<ApiResponse<ProfileComment>>(`/profile-comments/${userId}`, { text }),
+  deleteProfileComment: (commentId: string) =>
+    client.delete<ApiResponse<{ message: string }>>(`/profile-comments/${commentId}`),
+  hideProfileComment: (commentId: string) =>
+    client.post<ApiResponse<{ isHidden: boolean }>>(`/profile-comments/${commentId}/hide`),
 };
 
 // Socket.IO needs a real origin (not the relative '/api' used for axios) plus

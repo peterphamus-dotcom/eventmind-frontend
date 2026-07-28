@@ -4,6 +4,7 @@ import { useToast } from '../Toast';
 import { api, photoSrc } from '../api';
 import { DetailPage, styles as detail } from '../components/DetailPage';
 import { styles as form } from '../components/FormPage';
+import { ProfileCommentsSection } from '../components/ProfileCommentsSection';
 import type { MessagePrivacy, Tag } from '../types';
 
 export function Profile() {
@@ -21,6 +22,8 @@ export function Profile() {
   const [networkingBlurb, setNetworkingBlurb] = useState('');
   const [goalTagIds, setGoalTagIds] = useState<string[]>([]);
   const [availableGoalTags, setAvailableGoalTags] = useState<Tag[]>([]);
+  const [statusLine, setStatusLine] = useState('');
+  const [profileCommentsEnabled, setProfileCommentsEnabled] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +45,8 @@ export function Profile() {
       setMessagePrivacy(user.messagePrivacy || 'TEAM_ONLY');
       setNetworkingBlurb(user.networkingBlurb || '');
       setGoalTagIds((user.goalTags || []).map((t) => t.id));
+      setStatusLine(user.statusLine || '');
+      setProfileCommentsEnabled(user.profileCommentsEnabled !== false);
     }
   }, [user]);
 
@@ -66,7 +71,9 @@ export function Profile() {
     communityBooth !== (user.communityBooth || '') ||
     messagePrivacy !== (user.messagePrivacy || 'TEAM_ONLY') ||
     networkingBlurb !== (user.networkingBlurb || '') ||
-    !sameIds(goalTagIds, (user.goalTags || []).map((t) => t.id));
+    !sameIds(goalTagIds, (user.goalTags || []).map((t) => t.id)) ||
+    statusLine !== (user.statusLine || '') ||
+    profileCommentsEnabled !== (user.profileCommentsEnabled !== false);
 
   function toggleGoalTag(id: string) {
     setGoalTagIds((prev) => (prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]));
@@ -84,6 +91,8 @@ export function Profile() {
         messagePrivacy,
         networkingBlurb,
         goalTagIds,
+        statusLine,
+        profileCommentsEnabled,
         ...(isExpo ? { shareContactInCommunity: shareContact, communityHandle, communityBooth } : {}),
       });
       await refreshUser();
@@ -228,6 +237,19 @@ export function Profile() {
         />
       </div>
 
+      <div style={styles.field}>
+        <label style={form.uppercaseLabel}>Status</label>
+        <input
+          type="text"
+          value={statusLine}
+          onChange={(e) => setStatusLine(e.target.value)}
+          style={form.input}
+          maxLength={140}
+          placeholder="What are you up to right now?"
+        />
+        <div style={styles.charCount}>{statusLine.length}/140</div>
+      </div>
+
       <div style={styles.fieldLast}>
         <label style={form.uppercaseLabel}>Bio</label>
         <textarea
@@ -319,6 +341,19 @@ export function Profile() {
           />
           <div style={styles.charCount}>{networkingBlurb.length}/500</div>
         </div>
+      </div>
+
+      <div style={styles.communityBox}>
+        <h3 style={styles.subtitle}>Profile comments</h3>
+        <label style={styles.toggleRow}>
+          <input
+            type="checkbox"
+            checked={profileCommentsEnabled}
+            onChange={(e) => setProfileCommentsEnabled(e.target.checked)}
+          />
+          Allow other users to leave comments on my profile
+        </label>
+        <ProfileCommentsSection userId={user.id} commentsEnabled={profileCommentsEnabled} />
       </div>
 
       {isExpo && (

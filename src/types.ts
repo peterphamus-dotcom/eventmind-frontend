@@ -62,6 +62,8 @@ export interface User {
   avatarUrl?: string | null;
   networkingBlurb?: string | null;
   goalTags?: Tag[];
+  statusLine?: string | null;
+  profileCommentsEnabled?: boolean;
   lastReportAt?: string | null;
   reportCount?: number;
   viewDensity?: ViewDensity;
@@ -117,6 +119,8 @@ export interface PublicUserProfile {
   avatarUrl?: string | null;
   networkingBlurb?: string | null;
   goalTags?: Tag[];
+  statusLine?: string | null;
+  profileCommentsEnabled?: boolean;
   messagePrivacy: MessagePrivacy;
   isFollowing: boolean;
   existingConversationId: string | null;
@@ -189,6 +193,17 @@ export interface NetworkingProfile {
 export interface SuggestedMatch extends NetworkingProfile {
   matchCount: number;
   matchedOn: { mine: Tag[]; theirs: Tag[] };
+}
+
+/** A comment left on a user's profile page (see ProfileCommentsSection). */
+export interface ProfileComment {
+  id: string;
+  text: string;
+  author: { id: string; name: string; avatarUrl: string | null };
+  isHidden: boolean;
+  canManage: boolean;
+  canHide: boolean;
+  createdAt: string;
 }
 
 export const Urgency = {

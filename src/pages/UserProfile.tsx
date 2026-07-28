@@ -5,6 +5,7 @@ import { api, photoSrc } from '../api';
 import { DetailPage, styles as detail } from '../components/DetailPage';
 import { ReportUserDialog } from '../components/ReportUserDialog';
 import { RequestMeetingDialog } from '../components/RequestMeetingDialog';
+import { ProfileCommentsSection } from '../components/ProfileCommentsSection';
 import { useUserProfileActions } from '../useUserProfileActions';
 import type { PublicUserProfile } from '../types';
 
@@ -82,6 +83,7 @@ export function UserProfile() {
           </div>
           <h2 style={styles.name}>{profile.name}</h2>
           <span style={styles.roleBadge}>{profile.role.replace('_', ' ')}</span>
+          {profile.statusLine && <p style={styles.statusLine}>{profile.statusLine}</p>}
         </div>
 
         {profile.bio && (
@@ -140,6 +142,8 @@ export function UserProfile() {
             Report user
           </button>
         </div>
+
+        <ProfileCommentsSection userId={profile.id} commentsEnabled={profile.profileCommentsEnabled !== false} />
       </DetailPage>
 
       {isReportOpen && (
@@ -213,6 +217,13 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '12px',
     fontWeight: 600,
     textTransform: 'capitalize',
+  },
+  statusLine: {
+    fontSize: '13px',
+    color: 'var(--text-muted)',
+    fontStyle: 'italic',
+    margin: '2px 0 0',
+    textAlign: 'center',
   },
   section: {
     marginBottom: '20px',
