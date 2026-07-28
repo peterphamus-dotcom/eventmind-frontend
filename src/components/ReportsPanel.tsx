@@ -174,8 +174,14 @@ export function ReportsPanel() {
                       By {report.submitter?.id ? <UserLink id={report.submitter.id} name={report.submitter.name} /> : report.submitter?.name}
                     </span>
                     <span style={styles.metaText}>
-                      {new Date(report.submittedAt).toLocaleDateString()}
+                      {new Date(report.submittedAt).toLocaleString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      })}
                     </span>
+                    {!!report.commentCount && <span style={styles.metaText}>💬 {report.commentCount}</span>}
                     {report.photos && report.photos.length > 1 && (
                       <span style={styles.metaText}>
                         {CameraIcon}

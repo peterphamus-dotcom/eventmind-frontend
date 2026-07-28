@@ -145,8 +145,14 @@ export function TicketsPanel() {
             {ticket.location?.name}
           </span>
           <span style={styles.metaText}>
-            {new Date(ticket.createdAt).toLocaleDateString()}
+            {new Date(ticket.createdAt).toLocaleString(undefined, {
+              month: 'short',
+              day: 'numeric',
+              hour: 'numeric',
+              minute: '2-digit',
+            })}
           </span>
+          {!!ticket.commentCount && <span style={styles.metaText}>💬 {ticket.commentCount}</span>}
         </div>
       </div>
       <div style={styles.itemBadge}>

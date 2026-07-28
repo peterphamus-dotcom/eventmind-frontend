@@ -232,6 +232,7 @@ export interface Report {
   tags?: Tag[];
   photos?: Photo[];
   comments?: Comment[];
+  commentCount?: number;
   reactions?: ReactionSummary[];
   isSubscribed?: boolean;
   submittedAt: string;
@@ -257,6 +258,7 @@ export interface Ticket {
   photos?: Photo[];
   urgencyAudits?: UrgencyAudit[];
   comments?: Comment[];
+  commentCount?: number;
   reactions?: ReactionSummary[];
   userHasPersonalPin?: boolean;
   isSubscribed?: boolean;

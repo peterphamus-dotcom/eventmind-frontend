@@ -193,6 +193,7 @@ export function CommunityPanel() {
                 </div>
                 <div style={styles.cardMeta}>
                   <span>by <UserLink id={p.author.id} name={p.author.name} /></span>
+                  <span>· {shortWhen(p.createdAt)}</span>
                   {p.type === 'MEETUP' && p.startTime && <span>· 🗓️ {shortWhen(p.startTime)}{p.meetupLocation ? ` · 📍 ${p.meetupLocation}` : ''}</span>}
                   {p.type === 'MEETUP' && <span>· 👥 {p.rsvpCount || 0} going</span>}
                   {!!p.commentCount && <span>· 💬 {p.commentCount}</span>}
