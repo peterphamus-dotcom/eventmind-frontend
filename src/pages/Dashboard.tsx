@@ -158,9 +158,9 @@ const ALL_TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'networking', label: 'Networking', icon: paths.networking },
 ];
 
-/** The Community tab is Expo-only, with Admin/Core Team joining to moderate. */
-function tabsForRole(role?: string) {
-  return ALL_TABS.filter((t) => t.id !== 'community' || role === 'EXPO' || role === 'ADMIN' || role === 'CORE_TEAM');
+/** Fallback tab list before effectiveTabSettings has loaded — all tabs visible by default. */
+function tabsForRole(_role?: string) {
+  return ALL_TABS;
 }
 
 /**

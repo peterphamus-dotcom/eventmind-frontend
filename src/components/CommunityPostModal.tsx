@@ -110,9 +110,8 @@ export function CommunityPostModal({ postId, onClose, onChanged }: Props) {
     showToast('Report sent to moderators');
   }
 
-  const isExpo = user?.role === 'EXPO';
-  // Expo AND admin/core can comment and react; RSVP + follow stay Expo-only.
-  const canParticipate = isExpo || user?.role === 'ADMIN' || user?.role === 'CORE_TEAM';
+  // Every authenticated user can follow, RSVP, comment, and react.
+  const canParticipate = !!user;
   const meta = post ? TYPE_META[post.type] : null;
 
   async function togglePin() {
@@ -142,7 +141,7 @@ export function CommunityPostModal({ postId, onClose, onChanged }: Props) {
             {meta && <span style={{ ...styles.typeBadge, backgroundColor: meta.color }}>{meta.label}</span>}
             <span style={styles.byline}>by <UserLink id={post.author.id} name={post.author.name} /></span>
             {!!post.viewCount && <span style={styles.byline}>· 👁️ {post.viewCount}</span>}
-            {isExpo && post.author.id !== user?.id && (
+            {canParticipate && post.author.id !== user?.id && (
               <button onClick={toggleFollow} disabled={busy} style={{ ...styles.followBtn, ...(post.isFollowingAuthor ? styles.followingBtn : {}) }}>
                 {post.isFollowingAuthor ? 'Following' : '+ Follow'}
               </button>
@@ -169,7 +168,7 @@ export function CommunityPostModal({ postId, onClose, onChanged }: Props) {
 
           {post.type === 'MEETUP' && (
             <div style={styles.rsvpRow}>
-              {isExpo && (
+              {canParticipate && (
                 <button onClick={toggleRsvp} disabled={busy} style={{ ...styles.rsvpBtn, ...(post.myRsvp ? styles.rsvpBtnActive : {}) }}>
                   {post.myRsvp ? "✓ You're going" : "I'm going"}
                 </button>

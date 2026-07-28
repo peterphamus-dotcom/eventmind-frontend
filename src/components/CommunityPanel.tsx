@@ -37,9 +37,9 @@ function shortWhen(iso: string | null): string {
 }
 
 /**
- * B2B Community: Expo vendors post meetups/promos/discussions, RSVP, react,
- * comment, @mention, and follow each other. Admin/Core Team can view and
- * moderate but not post; Members never reach this tab.
+ * B2B Community: any user posts meetups/promos/discussions, RSVPs, reacts,
+ * comments, @mentions, and follows others. Admin/Core Team additionally
+ * moderate (pin, delete, hide) on top of the same participation rights.
  */
 export function CommunityPanel() {
   const showToast = useToast();
@@ -143,7 +143,7 @@ export function CommunityPanel() {
 
       <div style={styles.controls}>
         <p style={styles.blurb}>
-          Vendor networking — organize meetups, promote your booth, and talk shop with other Expo vendors.
+          Community — organize meetups, share updates, and talk shop with other attendees.
         </p>
         {canPost && <button onClick={() => { setComposer({ ...emptyComposer }); setComposerError(null); }} style={styles.addBtn}>+ New Post</button>}
       </div>
@@ -172,7 +172,7 @@ export function CommunityPanel() {
         <div style={styles.empty}>
           <p>🫙 Nothing here yet.</p>
           <p style={styles.emptyHint}>
-            {canPost ? 'Be the first — post a meetup, a promo, or start a discussion.' : filter === 'following' ? 'Follow some vendors to see their posts here.' : 'Expo vendor posts will appear here.'}
+            {canPost ? 'Be the first — post a meetup, a promo, or start a discussion.' : filter === 'following' ? 'Follow some people to see their posts here.' : 'Posts will appear here.'}
           </p>
         </div>
       ) : (
@@ -270,7 +270,7 @@ export function CommunityPanel() {
             <label style={styles.label}>Body</label>
             <textarea value={composer.body} onChange={(e) => setComposer({ ...composer, body: e.target.value })} style={styles.textarea} rows={5} maxLength={5000} placeholder="Write your post… tag others with @Name" />
             {mentionNames.length > 0 && (
-              <p style={styles.mentionHint}>Tip: @mention vendors in comments — {mentionNames.slice(0, 3).map((n) => `@${n}`).join(', ')}{mentionNames.length > 3 ? '…' : ''}</p>
+              <p style={styles.mentionHint}>Tip: @mention people in comments — {mentionNames.slice(0, 3).map((n) => `@${n}`).join(', ')}{mentionNames.length > 3 ? '…' : ''}</p>
             )}
           </div>
 
