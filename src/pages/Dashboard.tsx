@@ -160,7 +160,7 @@ function tabsForRole(role?: string) {
  * with ADMIN/CORE_TEAM always seeing everything); falls back to the plain
  * role rule if that hasn't loaded yet.
  */
-function visibleTabsForUser(user?: { role?: string; effectiveTabSettings?: EffectiveTabSettingsMap }) {
+function visibleTabsForUser(user?: { role?: string; effectiveTabSettings?: EffectiveTabSettingsMap } | null) {
   if (!user?.effectiveTabSettings) return tabsForRole(user?.role);
   return ALL_TABS.filter((t) => user.effectiveTabSettings![t.id].visible);
 }
