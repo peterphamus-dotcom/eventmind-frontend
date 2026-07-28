@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { api, photoSrc } from '../api';
 import { useToast } from '../Toast';
 import { useAuth } from '../AuthContext';
 import { CommentsSection } from '../components/CommentsSection';
+import { UserLink } from '../components/UserLink';
 import { ReactionBar } from '../components/ReactionBar';
 import { DetailPage, DetailSection, DetailRow, BellIcon, styles } from '../components/DetailPage';
 import type { Report } from '../types';
@@ -89,9 +90,7 @@ export function ReportDetail() {
           <DetailRow label="Location">{report.location?.name || 'Unknown'}</DetailRow>
           <DetailRow label="Reported by">
             {report.submitter?.id ? (
-              <Link to={`/users/${report.submitter.id}`} style={styles.userLink}>
-                {report.submitter.name}
-              </Link>
+              <UserLink id={report.submitter.id} name={report.submitter.name} style={styles.userLink} />
             ) : (
               report.submitter?.name
             )}{' '}

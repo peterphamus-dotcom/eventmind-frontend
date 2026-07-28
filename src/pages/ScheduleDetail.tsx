@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { useToast } from '../Toast';
 import { useAuth } from '../AuthContext';
 import { CommentsSection } from '../components/CommentsSection';
+import { UserLink } from '../components/UserLink';
 import { DetailPage, DetailSection, DetailRow, BellIcon, styles } from '../components/DetailPage';
 import type { ScheduleItem } from '../types';
 
@@ -137,9 +138,7 @@ export function ScheduleDetail() {
           {end && <DetailRow label="Ends">{end.toLocaleString()}</DetailRow>}
           {item.location && <DetailRow label="Location">{item.location.name}</DetailRow>}
           <DetailRow label="Added by">
-            <Link to={`/users/${item.createdBy.id}`} style={styles.userLink}>
-              {item.createdBy.name}
-            </Link>
+            <UserLink id={item.createdBy.id} name={item.createdBy.name} style={styles.userLink} />
           </DetailRow>
         </div>
       </DetailSection>

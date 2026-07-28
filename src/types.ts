@@ -38,6 +38,15 @@ export interface EffectiveTabSetting {
 
 export type EffectiveTabSettingsMap = Record<TabId, EffectiveTabSetting>;
 
+/**
+ * Who can start a new 1:1 conversation with this user without it landing in
+ * their Message Requests inbox first. DO_NOT_DISTURB blocks a brand-new
+ * thread entirely (an already-open thread still works); TEAM_ONLY
+ * auto-accepts only a shared-team sender (or ADMIN/CORE_TEAM); PUBLIC
+ * auto-accepts anyone.
+ */
+export type MessagePrivacy = 'DO_NOT_DISTURB' | 'TEAM_ONLY' | 'PUBLIC';
+
 export interface User {
   id: string;
   email: string;
@@ -56,7 +65,7 @@ export interface User {
   shareContactInCommunity?: boolean;
   communityHandle?: string | null;
   communityBooth?: string | null;
-  allowDirectMessages?: boolean;
+  messagePrivacy?: MessagePrivacy;
   isSuspended?: boolean;
   suspendedAt?: string | null;
   suspensionReason?: string | null;
@@ -103,6 +112,9 @@ export interface PublicUserProfile {
   teams?: Team[];
   bio?: string | null;
   avatarUrl?: string | null;
+  messagePrivacy: MessagePrivacy;
+  isFollowing: boolean;
+  existingConversationId: string | null;
   createdAt: string;
 }
 
@@ -488,6 +500,7 @@ export interface MessageableUser {
   name: string;
   avatarUrl: string | null;
   role: Role;
+  messagePrivacy: MessagePrivacy;
 }
 
 export interface ConversationMessage {
@@ -504,6 +517,11 @@ export interface ConversationSummary {
   id: string;
   isGroup: boolean;
   name: string | null;
+  /** True while this 1:1 thread is a pending Message Request. */
+  isRequest: boolean;
+  initiatorId: string | null;
+  /** Set when the viewer declined this pending request; hides it from the main Requests list. */
+  archivedAt: string | null;
   /** Every participant except the viewer. */
   participants: { id: string; name: string; avatarUrl: string | null }[];
   lastMessage: {

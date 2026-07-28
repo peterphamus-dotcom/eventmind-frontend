@@ -3,6 +3,7 @@ import { useToast } from '../Toast';
 import { api } from '../api';
 import { Modal } from './Modal';
 import { CommunityPostModal } from './CommunityPostModal';
+import { UserLink } from './UserLink';
 import type { CommunityPost, CommunityPostType, CommunitySortBy } from '../types';
 
 const TYPE_META: Record<CommunityPostType, { label: string; color: string; emoji: string }> = {
@@ -191,7 +192,7 @@ export function CommunityPanel() {
                   )}
                 </div>
                 <div style={styles.cardMeta}>
-                  <span>by {p.author.name}</span>
+                  <span>by <UserLink id={p.author.id} name={p.author.name} /></span>
                   {p.type === 'MEETUP' && p.startTime && <span>· 🗓️ {shortWhen(p.startTime)}{p.meetupLocation ? ` · 📍 ${p.meetupLocation}` : ''}</span>}
                   {p.type === 'MEETUP' && <span>· 👥 {p.rsvpCount || 0} going</span>}
                   {!!p.commentCount && <span>· 💬 {p.commentCount}</span>}

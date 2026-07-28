@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { api } from '../api';
 import { useToast } from '../Toast';
 import { useConversationRoom, useSocketEvent } from '../useSocket';
 import { NewMessageModal } from '../components/NewMessageModal';
 import { ReportContentDialog } from '../components/ReportContentDialog';
+import { UserLink } from '../components/UserLink';
 import type { ConversationSummary, ConversationMessage, UserReportReason } from '../types';
 
 function relativeTime(iso: string): string {
@@ -48,6 +49,7 @@ export function Messages() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const showToast = useToast();
+  const [searchParams] = useSearchParams();
 
   const [conversations, setConversations] = useState<ConversationSummary[] | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -59,9 +61,19 @@ export function Messages() {
   const [newMessageOpen, setNewMessageOpen] = useState(false);
   const [reportingMessageId, setReportingMessageId] = useState<string | null>(null);
   const [showThreadOnMobile, setShowThreadOnMobile] = useState(false);
+  const [activeTab, setActiveTab] = useState<'messages' | 'requests'>('messages');
+  const [showArchivedRequests, setShowArchivedRequests] = useState(false);
+  const [declining, setDeclining] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const canModerate = user?.role === 'ADMIN' || user?.role === 'CORE_TEAM';
+
+  // A pending Message Request, from the recipient's side (the initiator just
+  // sees it as a normal — if unaccepted — thread in their own Messages list).
+  const isPendingForMe = useCallback(
+    (c: ConversationSummary) => c.isRequest && c.initiatorId !== user?.id,
+    [user?.id]
+  );
 
   const loadConversations = useCallback(async () => {
     try {
@@ -75,6 +87,20 @@ export function Messages() {
   useEffect(() => {
     loadConversations();
   }, [loadConversations]);
+
+  // Deep-link support: /messages?conversation=<id> (used when starting a
+  // conversation from a UserProfileCard/UserProfile Message button). Only
+  // auto-opens once per navigation — otherwise every conversations refetch
+  // (e.g. after sending a message) would reopen/re-mark-read it.
+  const deepLinkedRef = useRef<string | null>(null);
+  useEffect(() => {
+    const target = searchParams.get('conversation');
+    if (target && target !== deepLinkedRef.current && conversations?.some((c) => c.id === target)) {
+      deepLinkedRef.current = target;
+      openConversation(target);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversations, searchParams]);
 
   useConversationRoom(activeId);
 
@@ -151,10 +177,11 @@ export function Messages() {
     }
   }
 
-  async function handleCreated(conversationId: string) {
+  async function handleCreated(conversationId: string, isRequest: boolean) {
     setNewMessageOpen(false);
     await loadConversations();
     openConversation(conversationId);
+    if (isRequest) showToast('Message request sent');
   }
 
   async function toggleHide(messageId: string) {
@@ -179,7 +206,31 @@ export function Messages() {
     showToast('Report submitted to moderators');
   }
 
+  async function handleDecline(id: string) {
+    if (declining) return;
+    setDeclining(true);
+    try {
+      await api.declineConversation(id);
+      if (activeId === id) {
+        setActiveId(null);
+        setShowThreadOnMobile(false);
+      }
+      await loadConversations();
+      showToast('Request declined');
+    } catch (err: any) {
+      showToast(err.response?.data?.error || 'Failed to decline request');
+    } finally {
+      setDeclining(false);
+    }
+  }
+
   const activeConversation = conversations?.find((c) => c.id === activeId) || null;
+  const mainConversations = (conversations || []).filter((c) => !isPendingForMe(c));
+  const openRequests = (conversations || []).filter((c) => isPendingForMe(c) && !c.archivedAt);
+  const archivedRequests = (conversations || []).filter((c) => isPendingForMe(c) && !!c.archivedAt);
+  const visibleConversations =
+    activeTab === 'messages' ? mainConversations : showArchivedRequests ? archivedRequests : openRequests;
+  const isActivePendingRequest = !!activeConversation && isPendingForMe(activeConversation);
 
   return (
     <div style={styles.container}>
@@ -199,37 +250,85 @@ export function Messages() {
 
       <div style={styles.body} className={`msg-body${showThreadOnMobile ? ' thread-active' : ''}`}>
         <div style={styles.listPane} className="msg-list-pane">
+          <div style={styles.tabRow}>
+            <button
+              style={{ ...styles.tabBtn, ...(activeTab === 'messages' ? styles.tabBtnActive : {}) }}
+              onClick={() => setActiveTab('messages')}
+            >
+              Messages
+            </button>
+            <button
+              style={{ ...styles.tabBtn, ...(activeTab === 'requests' ? styles.tabBtnActive : {}) }}
+              onClick={() => {
+                setActiveTab('requests');
+                setShowArchivedRequests(false);
+              }}
+            >
+              Requests{openRequests.length > 0 && <span style={styles.tabBadge}>{openRequests.length}</span>}
+            </button>
+          </div>
+
+          {activeTab === 'requests' && (
+            <button style={styles.archivedToggle} onClick={() => setShowArchivedRequests((v) => !v)}>
+              {showArchivedRequests ? '← Back to requests' : 'See archived messages'}
+            </button>
+          )}
+
           {conversations == null ? (
             <p style={styles.empty}>Loading…</p>
-          ) : conversations.length === 0 ? (
-            <p style={styles.empty}>No conversations yet. Start one with "+ New".</p>
+          ) : visibleConversations.length === 0 ? (
+            <p style={styles.empty}>
+              {activeTab === 'messages'
+                ? 'No conversations yet. Start one with "+ New".'
+                : showArchivedRequests
+                ? 'No archived requests.'
+                : 'No pending message requests.'}
+            </p>
           ) : (
-            conversations.map((c) => {
+            visibleConversations.map((c) => {
               const label = conversationLabel(c);
+              const pendingMine = c.isRequest && c.initiatorId === user?.id;
+              const pendingTheirs = isPendingForMe(c);
               return (
-                <button
-                  key={c.id}
-                  onClick={() => openConversation(c.id)}
-                  style={{ ...styles.convItem, ...(activeId === c.id ? styles.convItemActive : {}) }}
-                >
-                  <div style={styles.avatar}>{initialsOf(label)}</div>
-                  <div style={styles.convBody}>
-                    <div style={styles.convTopRow}>
-                      <span style={styles.convName}>{label}</span>
-                      {c.lastMessage && <span style={styles.convTime}>{relativeTime(c.lastMessage.createdAt)}</span>}
+                <div key={c.id} style={styles.convRow}>
+                  <button
+                    onClick={() => openConversation(c.id)}
+                    style={{ ...styles.convItem, ...(activeId === c.id ? styles.convItemActive : {}) }}
+                  >
+                    <div style={styles.avatar}>{initialsOf(label)}</div>
+                    <div style={styles.convBody}>
+                      <div style={styles.convTopRow}>
+                        <span style={styles.convName}>
+                          {label}
+                          {pendingMine && <span style={styles.pendingTag}>Pending</span>}
+                        </span>
+                        {c.lastMessage && <span style={styles.convTime}>{relativeTime(c.lastMessage.createdAt)}</span>}
+                      </div>
+                      <div style={styles.convPreviewRow}>
+                        <span style={styles.convPreview}>
+                          {c.lastMessage
+                            ? c.lastMessage.isHidden
+                              ? 'Message removed'
+                              : `${c.lastMessage.senderId === user?.id ? 'You: ' : ''}${c.lastMessage.body}`
+                            : 'No messages yet'}
+                        </span>
+                        {c.unreadCount > 0 && <span style={styles.unreadBadge}>{c.unreadCount}</span>}
+                      </div>
                     </div>
-                    <div style={styles.convPreviewRow}>
-                      <span style={styles.convPreview}>
-                        {c.lastMessage
-                          ? c.lastMessage.isHidden
-                            ? 'Message removed'
-                            : `${c.lastMessage.senderId === user?.id ? 'You: ' : ''}${c.lastMessage.body}`
-                          : 'No messages yet'}
-                      </span>
-                      {c.unreadCount > 0 && <span style={styles.unreadBadge}>{c.unreadCount}</span>}
-                    </div>
-                  </div>
-                </button>
+                  </button>
+                  {pendingTheirs && !showArchivedRequests && (
+                    <button
+                      style={styles.declineBtn}
+                      disabled={declining}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDecline(c.id);
+                      }}
+                    >
+                      Decline
+                    </button>
+                  )}
+                </div>
               );
             })
           )}
@@ -246,8 +345,27 @@ export function Messages() {
                     <polyline points="15 18 9 12 15 6" />
                   </svg>
                 </button>
-                <span style={styles.threadHeaderName}>{conversationLabel(activeConversation)}</span>
+                <span style={styles.threadHeaderName}>
+                  {!activeConversation.isGroup && activeConversation.participants[0] ? (
+                    <UserLink id={activeConversation.participants[0].id} name={conversationLabel(activeConversation)} />
+                  ) : (
+                    conversationLabel(activeConversation)
+                  )}
+                </span>
               </div>
+
+              {isActivePendingRequest && (
+                <div style={styles.requestBanner}>
+                  <span>This is a message request. Replying will accept it.</span>
+                  <button
+                    style={styles.declineBtnInline}
+                    disabled={declining}
+                    onClick={() => handleDecline(activeConversation.id)}
+                  >
+                    Decline
+                  </button>
+                </div>
+              )}
 
               <div ref={scrollRef} style={styles.messageList}>
                 {loadingMessages ? (
@@ -386,16 +504,86 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
   },
+  tabRow: {
+    display: 'flex',
+    borderBottom: '1px solid var(--border)',
+    flexShrink: 0,
+  },
+  tabBtn: {
+    flex: 1,
+    padding: '11px 8px',
+    background: 'none',
+    // Longhand: tabBtnActive overrides borderBottomColor alone, and mixing
+    // that with the border shorthand makes React warn on every tab switch.
+    borderWidth: '0 0 2px 0',
+    borderStyle: 'solid',
+    borderColor: 'transparent',
+    color: 'var(--text-muted)',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: 600,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+  },
+  tabBtnActive: {
+    color: 'var(--accent)',
+    borderColor: 'var(--accent)',
+  },
+  tabBadge: {
+    backgroundColor: 'var(--accent)',
+    color: 'white',
+    fontSize: '10.5px',
+    fontWeight: 700,
+    borderRadius: '999px',
+    padding: '1px 6px',
+  },
+  archivedToggle: {
+    padding: '9px 16px',
+    background: 'none',
+    border: 'none',
+    borderBottom: '1px solid var(--border)',
+    color: 'var(--accent)',
+    cursor: 'pointer',
+    fontSize: '12px',
+    fontWeight: 600,
+    textAlign: 'left',
+    flexShrink: 0,
+  },
+  convRow: {
+    display: 'flex',
+    alignItems: 'center',
+    borderBottom: '1px solid var(--border)',
+  },
   convItem: {
     display: 'flex',
     gap: '10px',
     padding: '13px 16px',
     backgroundColor: 'transparent',
     border: 'none',
-    borderBottom: '1px solid var(--border)',
     cursor: 'pointer',
     textAlign: 'left',
     width: '100%',
+  },
+  pendingTag: {
+    marginLeft: '6px',
+    fontSize: '10px',
+    fontWeight: 700,
+    color: 'var(--text-faint)',
+    textTransform: 'uppercase',
+  },
+  declineBtn: {
+    padding: '6px 10px',
+    marginRight: '10px',
+    backgroundColor: 'transparent',
+    border: '1px solid var(--border-strong)',
+    borderRadius: '8px',
+    color: 'var(--danger-text)',
+    cursor: 'pointer',
+    fontSize: '11.5px',
+    fontWeight: 600,
+    flexShrink: 0,
   },
   convItemActive: {
     backgroundColor: 'var(--accent-soft-translucent)',
@@ -488,6 +676,28 @@ const styles: Record<string, React.CSSProperties> = {
   threadHeaderName: {
     fontSize: '14.5px',
     fontWeight: 700,
+  },
+  requestBanner: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '10px',
+    padding: '10px 18px',
+    backgroundColor: 'var(--accent-soft)',
+    color: 'var(--accent-text)',
+    fontSize: '12.5px',
+    flexShrink: 0,
+  },
+  declineBtnInline: {
+    padding: '5px 12px',
+    backgroundColor: 'transparent',
+    border: '1px solid var(--danger)',
+    borderRadius: '7px',
+    color: 'var(--danger-text)',
+    cursor: 'pointer',
+    fontSize: '11.5px',
+    fontWeight: 600,
+    flexShrink: 0,
   },
   messageList: {
     flex: 1,

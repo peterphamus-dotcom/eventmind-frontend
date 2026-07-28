@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType, CommunitySortBy, ContentReport, SignupQrCode, Role, AuditLog, AuditSummaryReport, MessageableUser, ConversationSummary, ConversationMessage, TabSettingsMap, TabSettingsPatch } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType, CommunitySortBy, ContentReport, SignupQrCode, Role, AuditLog, AuditSummaryReport, MessageableUser, ConversationSummary, ConversationMessage, TabSettingsMap, TabSettingsPatch, MessagePrivacy } from './types';
 
 type TeamPreview<T> = PaginatedResponse<T> & { team: { id: string; name: string; tags: Tag[] } };
 
@@ -107,7 +107,7 @@ export const api = {
     client.patch<ApiResponse<User>>(`/users/${id}`, { role, teamIds }),
   createUser: (data: { name: string; email: string; password: string; role: Role; homeLocationId: string; teamIds?: string[] }) =>
     client.post<ApiResponse<User>>('/users', data),
-  updateMyProfile: (updates: { name?: string; phone?: string; bio?: string; viewDensity?: ViewDensity; shareContactInCommunity?: boolean; communityHandle?: string | null; communityBooth?: string | null; allowDirectMessages?: boolean }) =>
+  updateMyProfile: (updates: { name?: string; phone?: string; bio?: string; viewDensity?: ViewDensity; shareContactInCommunity?: boolean; communityHandle?: string | null; communityBooth?: string | null; messagePrivacy?: MessagePrivacy }) =>
     client.patch<ApiResponse<User>>('/users/me', updates),
   uploadMyAvatar: (file: File) => {
     const fd = new FormData();
@@ -476,7 +476,7 @@ export const api = {
   getUnreadMessageCount: () =>
     client.get<ApiResponse<{ count: number }>>('/messages/unread-count'),
   createConversation: (data: { participantIds: string[]; isGroup?: boolean; name?: string }) =>
-    client.post<ApiResponse<{ id: string; created: boolean }>>('/messages/conversations', data),
+    client.post<ApiResponse<{ id: string; created: boolean; isRequest: boolean }>>('/messages/conversations', data),
   getConversationMessages: (conversationId: string, page = 1, pageSize = 30) =>
     client.get<ApiResponse<PaginatedResponse<ConversationMessage>>>(
       `/messages/conversations/${conversationId}/messages`,
@@ -486,6 +486,8 @@ export const api = {
     client.post<ApiResponse<ConversationMessage>>(`/messages/conversations/${conversationId}/messages`, { body }),
   markConversationRead: (conversationId: string) =>
     client.post<ApiResponse<unknown>>(`/messages/conversations/${conversationId}/read`),
+  declineConversation: (conversationId: string) =>
+    client.post<ApiResponse<unknown>>(`/messages/conversations/${conversationId}/decline`),
   hideMessage: (messageId: string) =>
     client.post<ApiResponse<{ isHidden: boolean }>>(`/messages/${messageId}/hide`),
   reportMessage: (messageId: string, reason: UserReportReason, details?: string) =>

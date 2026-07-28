@@ -1,19 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import { useToast } from '../Toast';
 import { api, photoSrc } from '../api';
-import { Modal } from '../components/Modal';
 import { DetailPage, styles as detail } from '../components/DetailPage';
-import type { PublicUserProfile, UserReportReason } from '../types';
-
-const REASONS: { value: UserReportReason; label: string }[] = [
-  { value: 'HARASSMENT', label: 'Harassment' },
-  { value: 'INAPPROPRIATE_CONTENT', label: 'Inappropriate content' },
-  { value: 'SAFETY_CONCERN', label: 'Safety concern' },
-  { value: 'SPAM', label: 'Spam' },
-  { value: 'OTHER', label: 'Other' },
-];
+import { ReportUserDialog } from '../components/ReportUserDialog';
+import { useUserProfileActions } from '../useUserProfileActions';
+import type { PublicUserProfile } from '../types';
 
 const FlagIcon = (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -26,17 +18,13 @@ export function UserProfile() {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
-  const showToast = useToast();
 
   const [profile, setProfile] = useState<PublicUserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [isReportOpen, setIsReportOpen] = useState(false);
-  const [reason, setReason] = useState<UserReportReason>('HARASSMENT');
-  const [details, setDetails] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [reportError, setReportError] = useState<string | null>(null);
+
+  const { isFollowing, isMessaging, isTogglingFollow, messageUser, toggleFollow } = useUserProfileActions(profile);
 
   useEffect(() => {
     if (!userId) return;
@@ -59,23 +47,6 @@ export function UserProfile() {
       setError(err.response?.data?.error || 'Failed to load profile');
     } finally {
       setIsLoading(false);
-    }
-  }
-
-  async function handleSubmitReport() {
-    if (!userId || isSubmitting) return;
-    setIsSubmitting(true);
-    setReportError(null);
-    try {
-      await api.createUserReport({ reportedUserId: userId, reason, details: details.trim() || undefined });
-      setIsReportOpen(false);
-      setReason('HARASSMENT');
-      setDetails('');
-      showToast('Report submitted');
-    } catch (err: any) {
-      setReportError(err.response?.data?.error || 'Failed to submit report');
-    } finally {
-      setIsSubmitting(false);
     }
   }
 
@@ -138,48 +109,22 @@ export function UserProfile() {
 
         <div style={styles.divider} />
 
-        <button onClick={() => setIsReportOpen(true)} style={styles.reportBtn}>
-          {FlagIcon}
-          Report user
-        </button>
+        <div style={styles.actionsRow}>
+          <button onClick={messageUser} style={styles.actionBtn} disabled={isMessaging}>
+            {isMessaging ? 'Starting…' : 'Message'}
+          </button>
+          <button onClick={toggleFollow} style={styles.actionBtn} disabled={isTogglingFollow}>
+            {isFollowing ? 'Following ✓' : 'Follow'}
+          </button>
+          <button onClick={() => setIsReportOpen(true)} style={styles.reportBtn}>
+            {FlagIcon}
+            Report user
+          </button>
+        </div>
       </DetailPage>
 
       {isReportOpen && (
-        <Modal title={`Report ${profile.name}`} onClose={() => setIsReportOpen(false)}>
-          {reportError && <div style={styles.error}>{reportError}</div>}
-
-          <div style={styles.section}>
-            <label style={styles.label}>Reason</label>
-            <select
-              value={reason}
-              onChange={(e) => setReason(e.target.value as UserReportReason)}
-              style={styles.select}
-            >
-              {REASONS.map((r) => (
-                <option key={r.value} value={r.value}>
-                  {r.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div style={styles.section}>
-            <label style={styles.label}>Details (optional)</label>
-            <textarea
-              value={details}
-              onChange={(e) => setDetails(e.target.value)}
-              style={styles.textarea}
-              maxLength={1000}
-              rows={4}
-              placeholder="What happened?"
-            />
-            <div style={styles.charCount}>{details.length}/1000</div>
-          </div>
-
-          <button onClick={handleSubmitReport} style={styles.primaryBtn} disabled={isSubmitting}>
-            {isSubmitting ? 'Submitting…' : 'Submit report'}
-          </button>
-        </Modal>
+        <ReportUserDialog targetUserId={profile.id} targetName={profile.name} onClose={() => setIsReportOpen(false)} />
       )}
     </>
   );
@@ -290,8 +235,24 @@ const styles: Record<string, React.CSSProperties> = {
     borderTop: '1px solid var(--border)',
     margin: '20px 0',
   },
+  actionsRow: {
+    display: 'flex',
+    gap: '10px',
+    flexWrap: 'wrap',
+  },
+  actionBtn: {
+    flex: 1,
+    minWidth: '110px',
+    padding: '10px 16px',
+    backgroundColor: 'var(--surface-alt)',
+    color: 'var(--text)',
+    border: '1px solid var(--border-strong)',
+    borderRadius: '9px',
+    cursor: 'pointer',
+    fontSize: '13.5px',
+    fontWeight: 600,
+  },
   reportBtn: {
-    width: '100%',
     padding: '10px 20px',
     backgroundColor: 'transparent',
     color: 'var(--danger-text)',
@@ -304,44 +265,5 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     gap: '7px',
-  },
-  select: {
-    width: '100%',
-    padding: '10px 12px',
-    border: '1px solid var(--border-strong)',
-    borderRadius: '8px',
-    backgroundColor: 'var(--surface)',
-    color: 'var(--text)',
-    fontSize: '14px',
-    boxSizing: 'border-box',
-  },
-  textarea: {
-    width: '100%',
-    padding: '10px 12px',
-    border: '1px solid var(--border-strong)',
-    borderRadius: '8px',
-    backgroundColor: 'var(--surface)',
-    color: 'var(--text)',
-    fontSize: '14px',
-    fontFamily: 'inherit',
-    resize: 'vertical',
-    boxSizing: 'border-box',
-  },
-  charCount: {
-    fontSize: '11px',
-    color: 'var(--text-faint)',
-    textAlign: 'right',
-    marginTop: '4px',
-  },
-  primaryBtn: {
-    width: '100%',
-    padding: '10px 20px',
-    backgroundColor: 'var(--danger)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: 600,
   },
 };

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../api';
 import { styles as shared } from '../../components/AdminShared';
+import { UserLink } from '../../components/UserLink';
 import type { SocialSighting, SocialSightingType, SocialPlatform } from '../../types';
 
 const TrendIcon = (
@@ -273,7 +274,7 @@ export default function AdminSocialIntel() {
                 )}
                 {s.note && <div style={styles.note}>{s.note}</div>}
                 <div style={styles.sightingMeta}>
-                  logged by {s.loggedBy.name} · {relativeTime(s.createdAt)}
+                  logged by <UserLink id={s.loggedBy.id} name={s.loggedBy.name} /> · {relativeTime(s.createdAt)}
                 </div>
               </div>
               <button

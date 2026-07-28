@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import type { Comment, ReactionSummary } from '../types';
 import { ReactionBar } from './ReactionBar';
+import { UserLink } from './UserLink';
 
 interface CommentsSectionProps {
   initialComments: Comment[];
@@ -70,9 +70,7 @@ export function CommentsSection({ initialComments, onAdd, onReact, currentUserId
             return (
               <div key={c.id} style={{ ...styles.comment, ...(showHiddenBadge ? styles.commentHidden : {}) }}>
                 <div style={styles.commentHeader}>
-                  <Link to={`/users/${c.author.id}`} style={styles.author}>
-                    {c.author.name}
-                  </Link>
+                  <UserLink id={c.author.id} name={c.author.name} style={styles.author} />
                   {showHiddenBadge && <span style={styles.hiddenBadge} title="Hidden from everyone except the author">🚫 Hidden</span>}
                   <span style={styles.date}>{new Date(c.createdAt).toLocaleString()}</span>
                 </div>

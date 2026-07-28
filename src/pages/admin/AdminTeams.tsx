@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../../api';
 import { styles as shared } from '../../components/AdminShared';
 import { TabAccessModal } from '../../components/TabAccessModal';
+import { UserLink } from '../../components/UserLink';
 import type { Team, Tag, User } from '../../types';
 
 export default function AdminTeams() {
@@ -251,7 +252,7 @@ export default function AdminTeams() {
                     {team.members && team.members.length > 0 ? (
                       team.members.map((m) => (
                         <span key={m.id} style={styles.memberBadge}>
-                          {m.name}
+                          <UserLink id={m.id} name={m.name} />
                         </span>
                       ))
                     ) : (

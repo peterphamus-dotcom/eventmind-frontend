@@ -6,6 +6,7 @@ import { Modal } from './Modal';
 import { CommentsSection } from './CommentsSection';
 import { ReactionBar } from './ReactionBar';
 import { ReportContentDialog } from './ReportContentDialog';
+import { UserLink } from './UserLink';
 import type { CommunityPost, UserReportReason } from '../types';
 
 /** What's being reported: the post itself, or one of its comments. */
@@ -139,7 +140,7 @@ export function CommunityPostModal({ postId, onClose, onChanged }: Props) {
           <div style={styles.topRow}>
             {post.isPinned && <span style={styles.pinnedBadge}>📌 Pinned</span>}
             {meta && <span style={{ ...styles.typeBadge, backgroundColor: meta.color }}>{meta.label}</span>}
-            <span style={styles.byline}>by {post.author.name}</span>
+            <span style={styles.byline}>by <UserLink id={post.author.id} name={post.author.name} /></span>
             {!!post.viewCount && <span style={styles.byline}>· 👁️ {post.viewCount}</span>}
             {isExpo && post.author.id !== user?.id && (
               <button onClick={toggleFollow} disabled={busy} style={{ ...styles.followBtn, ...(post.isFollowingAuthor ? styles.followingBtn : {}) }}>
@@ -240,7 +241,7 @@ export function CommunityPostModal({ postId, onClose, onChanged }: Props) {
               <h3 style={styles.commentsTitle}>Comments ({post.comments?.length || 0})</h3>
               {(post.comments || []).map((c) => (
                 <div key={c.id} style={styles.readComment}>
-                  <span style={styles.readAuthor}>{c.author.name}</span> {c.text}
+                  <span style={styles.readAuthor}><UserLink id={c.author.id} name={c.author.name} /></span> {c.text}
                   {post.canModerate && (
                     <button
                       onClick={async () => {

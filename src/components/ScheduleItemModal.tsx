@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useToast } from '../Toast';
 import { useAuth } from '../AuthContext';
 import { Modal } from './Modal';
 import { CommentsSection } from './CommentsSection';
+import { UserLink } from './UserLink';
 import { DetailRow, BellIcon, styles as detailStyles } from './DetailPage';
 import type { ScheduleItem } from '../types';
 
@@ -143,9 +143,7 @@ export function ScheduleItemModal({ itemId, onClose }: ScheduleItemModalProps) {
             {end && <DetailRow label="Ends">{end.toLocaleString()}</DetailRow>}
             {item.location && <DetailRow label="Location">{item.location.name}</DetailRow>}
             <DetailRow label="Added by">
-              <Link to={`/users/${item.createdBy.id}`} style={detailStyles.userLink}>
-                {item.createdBy.name}
-              </Link>
+              <UserLink id={item.createdBy.id} name={item.createdBy.name} style={detailStyles.userLink} />
             </DetailRow>
           </div>
 

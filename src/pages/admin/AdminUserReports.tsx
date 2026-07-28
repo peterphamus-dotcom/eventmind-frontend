@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { api } from '../../api';
 import { styles as shared } from '../../components/AdminShared';
+import { UserLink } from '../../components/UserLink';
 import type { UserReport, UserReportStatus } from '../../types';
 
 const STATUS_TINT: Record<string, React.CSSProperties> = {
@@ -105,13 +105,9 @@ export default function AdminUserReports() {
               </div>
 
               <div style={styles.reportBody}>
-                <Link to={`/users/${r.reportedUser.id}`} style={styles.userLink}>
-                  {r.reportedUser.name}
-                </Link>{' '}
+                <UserLink id={r.reportedUser.id} name={r.reportedUser.name} style={styles.userLink} />{' '}
                 reported by{' '}
-                <Link to={`/users/${r.reporter.id}`} style={styles.userLink}>
-                  {r.reporter.name}
-                </Link>
+                <UserLink id={r.reporter.id} name={r.reporter.name} style={styles.userLink} />
               </div>
 
               {r.details && <p style={styles.details}>{r.details}</p>}

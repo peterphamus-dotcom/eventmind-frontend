@@ -5,10 +5,20 @@ import type { MessageableUser } from '../types';
 
 interface Props {
   onClose: () => void;
-  onCreated: (conversationId: string) => void;
+  onCreated: (conversationId: string, isRequest: boolean) => void;
 }
 
-/** Start a new 1:1 or group conversation with anyone who has opted in to direct messages. */
+const PRIVACY_BADGE: Record<string, string> = {
+  PUBLIC: 'Open',
+  TEAM_ONLY: 'Team only',
+  DO_NOT_DISTURB: 'Do not disturb',
+};
+
+/**
+ * Start a new 1:1 or group conversation with anyone. If the recipient's
+ * privacy tier doesn't auto-accept the sender, the first message lands in
+ * their Message Requests inbox instead of the main conversation list.
+ */
 export function NewMessageModal({ onClose, onCreated }: Props) {
   const [users, setUsers] = useState<MessageableUser[] | null>(null);
   const [search, setSearch] = useState('');
@@ -51,7 +61,7 @@ export function NewMessageModal({ onClose, onCreated }: Props) {
         isGroup,
         name: isGroup ? groupName.trim() : undefined,
       });
-      if (res.data.data) onCreated(res.data.data.id);
+      if (res.data.data) onCreated(res.data.data.id, res.data.data.isRequest);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to start conversation');
       setCreating(false);
@@ -74,15 +84,14 @@ export function NewMessageModal({ onClose, onCreated }: Props) {
         {users == null ? (
           <p style={styles.empty}>Loading…</p>
         ) : filtered.length === 0 ? (
-          <p style={styles.empty}>
-            {users.length === 0 ? 'No one has opted in to direct messages yet.' : 'No matches.'}
-          </p>
+          <p style={styles.empty}>{users.length === 0 ? 'No one to message yet.' : 'No matches.'}</p>
         ) : (
           filtered.map((u) => (
             <label key={u.id} style={styles.row}>
               <input type="checkbox" checked={selected.includes(u.id)} onChange={() => toggle(u.id)} />
               <span style={styles.name}>{u.name}</span>
               <span style={styles.role}>{u.role}</span>
+              <span style={styles.privacyBadge}>{PRIVACY_BADGE[u.messagePrivacy]}</span>
             </label>
           ))
         )}
@@ -152,6 +161,15 @@ const styles: Record<string, React.CSSProperties> = {
   },
   name: {
     flex: 1,
+  },
+  privacyBadge: {
+    fontSize: '10px',
+    fontWeight: 600,
+    color: 'var(--text-faint)',
+    backgroundColor: 'var(--bg)',
+    padding: '2px 8px',
+    borderRadius: '10px',
+    whiteSpace: 'nowrap' as const,
   },
   role: {
     fontSize: '11px',

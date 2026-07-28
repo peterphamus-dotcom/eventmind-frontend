@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { api, photoSrc } from '../api';
 import { useAuth } from '../AuthContext';
 import { useToast } from '../Toast';
 import { CommentsSection } from '../components/CommentsSection';
+import { UserLink } from '../components/UserLink';
 import { ReactionBar } from '../components/ReactionBar';
 import {
   DetailPage,
@@ -253,9 +254,7 @@ export function TicketDetail() {
           <DetailRow label="Location">{ticket.location?.name || 'Unknown'}</DetailRow>
           <DetailRow label="Reported by">
             {ticket.submitter?.id ? (
-              <Link to={`/users/${ticket.submitter.id}`} style={detail.userLink}>
-                {ticket.submitter.name}
-              </Link>
+              <UserLink id={ticket.submitter.id} name={ticket.submitter.name} style={detail.userLink} />
             ) : (
               ticket.submitter?.name
             )}{' '}

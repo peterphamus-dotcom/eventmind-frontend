@@ -5,6 +5,7 @@ import { useAuth } from '../AuthContext';
 import { LocationFilter } from './LocationFilter';
 import { CollapsibleSection } from './CollapsibleSection';
 import { SearchBar } from './SearchBar';
+import { UserLink } from './UserLink';
 import {
   LocationIcon,
   PlusIcon,
@@ -169,7 +170,9 @@ export function ReportsPanel() {
                       <LocationIcon />
                       {report.location?.name}
                     </span>
-                    <span style={styles.metaText}>By {report.submitter?.name}</span>
+                    <span style={styles.metaText}>
+                      By {report.submitter?.id ? <UserLink id={report.submitter.id} name={report.submitter.name} /> : report.submitter?.name}
+                    </span>
                     <span style={styles.metaText}>
                       {new Date(report.submittedAt).toLocaleDateString()}
                     </span>

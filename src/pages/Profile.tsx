@@ -4,6 +4,7 @@ import { useToast } from '../Toast';
 import { api, photoSrc } from '../api';
 import { DetailPage, styles as detail } from '../components/DetailPage';
 import { styles as form } from '../components/FormPage';
+import type { MessagePrivacy } from '../types';
 
 export function Profile() {
   const { user, refreshUser } = useAuth();
@@ -16,7 +17,7 @@ export function Profile() {
   const [shareContact, setShareContact] = useState(false);
   const [communityHandle, setCommunityHandle] = useState('');
   const [communityBooth, setCommunityBooth] = useState('');
-  const [allowDirectMessages, setAllowDirectMessages] = useState(false);
+  const [messagePrivacy, setMessagePrivacy] = useState<MessagePrivacy>('TEAM_ONLY');
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +36,7 @@ export function Profile() {
       setShareContact(user.shareContactInCommunity || false);
       setCommunityHandle(user.communityHandle || '');
       setCommunityBooth(user.communityBooth || '');
-      setAllowDirectMessages(user.allowDirectMessages || false);
+      setMessagePrivacy(user.messagePrivacy || 'TEAM_ONLY');
     }
   }, [user]);
 
@@ -49,7 +50,7 @@ export function Profile() {
     shareContact !== (user.shareContactInCommunity || false) ||
     communityHandle !== (user.communityHandle || '') ||
     communityBooth !== (user.communityBooth || '') ||
-    allowDirectMessages !== (user.allowDirectMessages || false);
+    messagePrivacy !== (user.messagePrivacy || 'TEAM_ONLY');
 
   async function handleSave() {
     if (isSaving) return;
@@ -60,7 +61,7 @@ export function Profile() {
         name,
         phone,
         bio,
-        allowDirectMessages,
+        messagePrivacy,
         ...(isExpo ? { shareContactInCommunity: shareContact, communityHandle, communityBooth } : {}),
       });
       await refreshUser();
@@ -221,17 +222,45 @@ export function Profile() {
       <div style={styles.communityBox}>
         <h3 style={styles.subtitle}>Direct messages</h3>
         <p style={styles.communityNote}>
-          Off by default. Turn this on to let other members start a private conversation with you.
-          Threads you're already in keep working even if you turn this back off.
+          Anyone can send you a first message — this setting controls whether it lands directly in
+          your inbox or in Message Requests first. Threads you're already in keep working no matter
+          what you pick here.
         </p>
-        <label style={styles.toggleRow}>
-          <input
-            type="checkbox"
-            checked={allowDirectMessages}
-            onChange={(e) => setAllowDirectMessages(e.target.checked)}
-          />
-          Allow direct messages
-        </label>
+        <div style={styles.privacyOptions}>
+          <label style={styles.toggleRow}>
+            <input
+              type="radio"
+              name="messagePrivacy"
+              checked={messagePrivacy === 'DO_NOT_DISTURB'}
+              onChange={() => setMessagePrivacy('DO_NOT_DISTURB')}
+            />
+            <span>
+              <strong>Do not disturb</strong> — no one can start a new conversation with you (existing threads still work)
+            </span>
+          </label>
+          <label style={styles.toggleRow}>
+            <input
+              type="radio"
+              name="messagePrivacy"
+              checked={messagePrivacy === 'TEAM_ONLY'}
+              onChange={() => setMessagePrivacy('TEAM_ONLY')}
+            />
+            <span>
+              <strong>Team only</strong> — teammates land in your inbox directly, everyone else goes to Message Requests
+            </span>
+          </label>
+          <label style={styles.toggleRow}>
+            <input
+              type="radio"
+              name="messagePrivacy"
+              checked={messagePrivacy === 'PUBLIC'}
+              onChange={() => setMessagePrivacy('PUBLIC')}
+            />
+            <span>
+              <strong>Public</strong> — anyone's first message lands directly in your inbox
+            </span>
+          </label>
+        </div>
       </div>
 
       {isExpo && (
@@ -471,6 +500,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '13.5px',
     color: 'var(--text)',
     cursor: 'pointer',
+  },
+  privacyOptions: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
   },
   communityFields: {
     display: 'flex',
