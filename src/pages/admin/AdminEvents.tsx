@@ -13,9 +13,8 @@ interface Event {
 interface CreatedEvent {
   eventName: string;
   dbName: string;
-  adminEmail: string;
-  adminPassword: string;
   clonedFrom: string;
+  message: string;
 }
 
 export default function AdminEvents() {
@@ -86,9 +85,15 @@ export default function AdminEvents() {
     }
   }
 
-  function copyToClipboard(text: string) {
-    navigator.clipboard.writeText(text);
-    showToast('Copied to clipboard');
+  async function handleSwitchToCreated() {
+    if (!createdEvent) return;
+    try {
+      await api.switchEvent(createdEvent.eventName);
+      showToast(`Switched to "${createdEvent.eventName}"`);
+      window.location.href = '/dashboard';
+    } catch (error: any) {
+      showToast(error.response?.data?.error || 'Failed to switch event');
+    }
   }
 
   if (loading) {
@@ -114,30 +119,15 @@ export default function AdminEvents() {
                 <code style={styles.code}>{createdEvent.clonedFrom}</code>
               </div>
             </div>
-            <div style={styles.credentialRow}>
-              <span style={styles.label}>Admin Email:</span>
-              <div style={styles.valueGroup}>
-                <code style={styles.code}>{createdEvent.adminEmail}</code>
-                <button onClick={() => copyToClipboard(createdEvent.adminEmail)} style={styles.copyBtn}>
-                  Copy
-                </button>
-              </div>
+            <p style={styles.credentialsNote}>{createdEvent.message}</p>
+            <div style={styles.formActions}>
+              <button onClick={handleSwitchToCreated} style={styles.submitBtn}>
+                Switch to this event now
+              </button>
+              <button onClick={() => setCreatedEvent(null)} style={styles.dismissBtn}>
+                Dismiss
+              </button>
             </div>
-            <div style={styles.credentialRow}>
-              <span style={styles.label}>Admin Password:</span>
-              <div style={styles.valueGroup}>
-                <code style={styles.code}>{createdEvent.adminPassword}</code>
-                <button onClick={() => copyToClipboard(createdEvent.adminPassword)} style={styles.copyBtn}>
-                  Copy
-                </button>
-              </div>
-            </div>
-            <p style={styles.credentialsNote}>
-              Save these credentials. The password cannot be recovered and must be changed on first login.
-            </p>
-            <button onClick={() => setCreatedEvent(null)} style={styles.dismissBtn}>
-              Dismiss
-            </button>
           </div>
         </div>
       )}

@@ -51,7 +51,7 @@ export const api = {
   switchEvent: (eventName: string) =>
     client.post<ApiResponse<{ eventName: string; message: string }>>('/events/switch', { eventName }),
   createEvent: (eventName: string, cloneFromCurrent?: boolean) =>
-    client.post<ApiResponse<{ eventName: string; dbName: string; adminEmail: string; adminPassword: string }>>(
+    client.post<ApiResponse<{ eventName: string; dbName: string; clonedFrom: string; message: string }>>(
       '/admin/events/create',
       { eventName, cloneFromCurrent }
     ),
