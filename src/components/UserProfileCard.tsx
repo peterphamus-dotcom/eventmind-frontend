@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api, photoSrc } from '../api';
 import { Modal } from './Modal';
 import { ReportUserDialog } from './ReportUserDialog';
+import { RequestMeetingDialog } from './RequestMeetingDialog';
 import { useUserProfileActions } from '../useUserProfileActions';
 import type { PublicUserProfile } from '../types';
 
@@ -26,6 +27,7 @@ export function UserProfileCard({ userId, name, onClose }: UserProfileCardProps)
   const [profile, setProfile] = useState<PublicUserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isReportOpen, setIsReportOpen] = useState(false);
+  const [isMeetingDialogOpen, setIsMeetingDialogOpen] = useState(false);
   const { isFollowing, isMessaging, isTogglingFollow, messageUser, toggleFollow } = useUserProfileActions(profile);
 
   useEffect(() => {
@@ -76,12 +78,24 @@ export function UserProfileCard({ userId, name, onClose }: UserProfileCardProps)
         ) : (
           <>
             {profile.bio && <p style={styles.bioText}>{truncateBio(profile.bio)}</p>}
+            {profile.goalTags && profile.goalTags.length > 0 && (
+              <div style={styles.goalTags}>
+                {profile.goalTags.map((tag) => (
+                  <span key={tag.id} style={styles.goalTagChip}>
+                    {tag.name}
+                  </span>
+                ))}
+              </div>
+            )}
             <div style={styles.actions}>
               <button onClick={messageUser} style={styles.actionBtn} disabled={isMessaging}>
                 {isMessaging ? 'Starting…' : 'Message'}
               </button>
               <button onClick={toggleFollow} style={styles.actionBtn} disabled={isTogglingFollow}>
                 {isFollowing ? 'Following ✓' : 'Follow'}
+              </button>
+              <button onClick={() => setIsMeetingDialogOpen(true)} style={styles.actionBtn}>
+                Request meeting
               </button>
               <button onClick={() => setIsReportOpen(true)} style={styles.reportBtn}>
                 Report
@@ -102,6 +116,13 @@ export function UserProfileCard({ userId, name, onClose }: UserProfileCardProps)
 
       {isReportOpen && profile && (
         <ReportUserDialog targetUserId={profile.id} targetName={profile.name} onClose={() => setIsReportOpen(false)} />
+      )}
+      {isMeetingDialogOpen && profile && (
+        <RequestMeetingDialog
+          targetUserId={profile.id}
+          targetName={profile.name}
+          onClose={() => setIsMeetingDialogOpen(false)}
+        />
       )}
     </>
   );
@@ -170,8 +191,25 @@ const styles: Record<string, React.CSSProperties> = {
     whiteSpace: 'pre-wrap',
     wordBreak: 'break-word',
   },
+  goalTags: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: '6px',
+    marginBottom: '14px',
+  },
+  goalTagChip: {
+    display: 'inline-block',
+    padding: '3px 10px',
+    backgroundColor: 'var(--bg)',
+    color: 'var(--text-muted)',
+    borderRadius: '12px',
+    fontSize: '11px',
+    fontWeight: 600,
+  },
   actions: {
     display: 'flex',
+    flexWrap: 'wrap',
     gap: '8px',
     marginBottom: '14px',
   },

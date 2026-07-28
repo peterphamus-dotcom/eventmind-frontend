@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType, CommunitySortBy, ContentReport, SignupQrCode, Role, AuditLog, AuditSummaryReport, MessageableUser, ConversationSummary, ConversationMessage, TabSettingsMap, TabSettingsPatch, MessagePrivacy } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType, CommunitySortBy, ContentReport, SignupQrCode, Role, AuditLog, AuditSummaryReport, MessageableUser, ConversationSummary, ConversationMessage, TabSettingsMap, TabSettingsPatch, MessagePrivacy, MeetingRequest, MeetingRequestStatus, TagPair, NetworkingProfile, SuggestedMatch } from './types';
 
 type TeamPreview<T> = PaginatedResponse<T> & { team: { id: string; name: string; tags: Tag[] } };
 
@@ -107,7 +107,7 @@ export const api = {
     client.patch<ApiResponse<User>>(`/users/${id}`, { role, teamIds }),
   createUser: (data: { name: string; email: string; password: string; role: Role; homeLocationId: string; teamIds?: string[] }) =>
     client.post<ApiResponse<User>>('/users', data),
-  updateMyProfile: (updates: { name?: string; phone?: string; bio?: string; viewDensity?: ViewDensity; shareContactInCommunity?: boolean; communityHandle?: string | null; communityBooth?: string | null; messagePrivacy?: MessagePrivacy }) =>
+  updateMyProfile: (updates: { name?: string; phone?: string; bio?: string; viewDensity?: ViewDensity; shareContactInCommunity?: boolean; communityHandle?: string | null; communityBooth?: string | null; messagePrivacy?: MessagePrivacy; networkingBlurb?: string; goalTagIds?: string[] }) =>
     client.patch<ApiResponse<User>>('/users/me', updates),
   uploadMyAvatar: (file: File) => {
     const fd = new FormData();
@@ -168,12 +168,14 @@ export const api = {
     client.delete<ApiResponse<{ floorplanUrl: null }>>(`/locations/${locationId}/floorplan`),
 
   // Tags
-  listTags: (page = 1, pageSize = 50) =>
-    client.get<ApiResponse<PaginatedResponse<Tag>>>('/tags', { params: { page, pageSize } }),
+  listTags: (page = 1, pageSize = 50, isGoalTag?: boolean) =>
+    client.get<ApiResponse<PaginatedResponse<Tag>>>('/tags', { params: { page, pageSize, isGoalTag } }),
   getTag: (id: string) =>
     client.get<ApiResponse<Tag>>(`/tags/${id}`),
-  createTag: (name: string) =>
-    client.post<ApiResponse<Tag>>('/tags', { name }),
+  createTag: (name: string, isGoalTag?: boolean) =>
+    client.post<ApiResponse<Tag>>('/tags', { name, isGoalTag }),
+  updateTag: (id: string, updates: { isGoalTag?: boolean }) =>
+    client.patch<ApiResponse<Tag>>(`/tags/${id}`, updates),
   deleteTag: (id: string) =>
     client.delete<ApiResponse<{ message: string }>>(`/tags/${id}`),
 
@@ -492,6 +494,28 @@ export const api = {
     client.post<ApiResponse<{ isHidden: boolean }>>(`/messages/${messageId}/hide`),
   reportMessage: (messageId: string, reason: UserReportReason, details?: string) =>
     client.post<ApiResponse<unknown>>(`/messages/${messageId}/report`, { reason, details }),
+
+  // Business networking
+  listNetworkingDirectory: (filters?: { goalTagId?: string; search?: string }) =>
+    client.get<ApiResponse<NetworkingProfile[]>>('/networking/directory', { params: filters }),
+  listSuggestedMatches: () =>
+    client.get<ApiResponse<SuggestedMatch[]>>('/networking/suggested'),
+  listMeetingRequests: (box: 'incoming' | 'outgoing', status?: MeetingRequestStatus) =>
+    client.get<ApiResponse<MeetingRequest[]>>('/networking/meeting-requests', { params: { box, status } }),
+  createMeetingRequest: (data: { recipientId: string; proposedTime: string; note?: string }) =>
+    client.post<ApiResponse<MeetingRequest>>('/networking/meeting-requests', data),
+  acceptMeetingRequest: (id: string) =>
+    client.post<ApiResponse<MeetingRequest>>(`/networking/meeting-requests/${id}/accept`),
+  declineMeetingRequest: (id: string) =>
+    client.post<ApiResponse<MeetingRequest>>(`/networking/meeting-requests/${id}/decline`),
+  cancelMeetingRequest: (id: string) =>
+    client.post<ApiResponse<MeetingRequest>>(`/networking/meeting-requests/${id}/cancel`),
+  listTagPairs: () =>
+    client.get<ApiResponse<TagPair[]>>('/networking/tag-pairs'),
+  createTagPair: (tagAId: string, tagBId: string) =>
+    client.post<ApiResponse<TagPair>>('/networking/tag-pairs', { tagAId, tagBId }),
+  deleteTagPair: (id: string) =>
+    client.delete<ApiResponse<{ message: string }>>(`/networking/tag-pairs/${id}`),
 };
 
 // Socket.IO needs a real origin (not the relative '/api' used for axios) plus

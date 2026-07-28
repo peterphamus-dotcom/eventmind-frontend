@@ -10,6 +10,7 @@ import { LibraryPanel } from '../components/LibraryPanel';
 import { SchedulePanel } from '../components/SchedulePanel';
 import { SideSchedulePanel } from '../components/SideSchedulePanel';
 import { CommunityPanel } from '../components/CommunityPanel';
+import { NetworkingPanel } from '../components/NetworkingPanel';
 import { EventSummary } from '../components/EventSummary';
 import { NotificationBell } from '../components/NotificationBell';
 import { MessagesButton } from '../components/MessagesButton';
@@ -20,7 +21,7 @@ import { InviteModal } from '../components/InviteModal';
 import { AwaitingApproval } from '../components/AwaitingApproval';
 import type { EffectiveTabSettingsMap } from '../types';
 
-type Tab = 'tickets' | 'reports' | 'floorplan' | 'library' | 'schedule' | 'sideSchedule' | 'community';
+type Tab = 'tickets' | 'reports' | 'floorplan' | 'library' | 'schedule' | 'sideSchedule' | 'community' | 'networking';
 
 /** Line icons at the two sizes the shell uses: 16px in menus and tabs, 17px in header buttons. */
 function Icon({ size = 16, children }: { size?: number; children: React.ReactNode }) {
@@ -137,6 +138,13 @@ const paths = {
       <path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </>
   ),
+  networking: (
+    <>
+      <path d="M11 21H5a2 2 0 0 1-2-2v-2a4 4 0 0 1 4-4h2" />
+      <circle cx="8.5" cy="7" r="4" />
+      <path d="m15 15 3 3 5-6" />
+    </>
+  ),
 };
 
 const ALL_TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
@@ -147,6 +155,7 @@ const ALL_TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'schedule', label: 'Schedule', icon: paths.schedule },
   { id: 'sideSchedule', label: 'Side Schedule', icon: paths.sideSchedule },
   { id: 'community', label: 'Community', icon: paths.community },
+  { id: 'networking', label: 'Networking', icon: paths.networking },
 ];
 
 /** The Community tab is Expo-only, with Admin/Core Team joining to moderate. */
@@ -350,6 +359,7 @@ export function Dashboard() {
           {activeTab === 'schedule' && <SchedulePanel />}
           {activeTab === 'sideSchedule' && <SideSchedulePanel />}
           {activeTab === 'community' && <CommunityPanel />}
+          {activeTab === 'networking' && <NetworkingPanel />}
         </div>
       )}
     </div>

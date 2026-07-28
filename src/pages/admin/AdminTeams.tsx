@@ -32,7 +32,7 @@ export default function AdminTeams() {
     try {
       const [teamsRes, tagsRes, usersRes] = await Promise.all([
         api.listTeams(),
-        api.listTags(1, 100),
+        api.listTags(1, 100, false),
         api.listUsers(1, 100),
       ]);
       setTeams(teamsRes.data.data?.items || []);

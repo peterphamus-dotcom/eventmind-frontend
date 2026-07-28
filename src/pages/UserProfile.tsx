@@ -4,6 +4,7 @@ import { useAuth } from '../AuthContext';
 import { api, photoSrc } from '../api';
 import { DetailPage, styles as detail } from '../components/DetailPage';
 import { ReportUserDialog } from '../components/ReportUserDialog';
+import { RequestMeetingDialog } from '../components/RequestMeetingDialog';
 import { useUserProfileActions } from '../useUserProfileActions';
 import type { PublicUserProfile } from '../types';
 
@@ -23,6 +24,7 @@ export function UserProfile() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isReportOpen, setIsReportOpen] = useState(false);
+  const [isMeetingDialogOpen, setIsMeetingDialogOpen] = useState(false);
 
   const { isFollowing, isMessaging, isTogglingFollow, messageUser, toggleFollow } = useUserProfileActions(profile);
 
@@ -89,6 +91,20 @@ export function UserProfile() {
           </div>
         )}
 
+        {profile.goalTags && profile.goalTags.length > 0 && (
+          <div style={styles.section}>
+            <label style={styles.label}>Networking goals</label>
+            <div style={styles.teamsList}>
+              {profile.goalTags.map((tag) => (
+                <span key={tag.id} style={styles.teamChip}>
+                  {tag.name}
+                </span>
+              ))}
+            </div>
+            {profile.networkingBlurb && <p style={{ ...styles.bioText, marginTop: '10px' }}>{profile.networkingBlurb}</p>}
+          </div>
+        )}
+
         <div style={styles.section}>
           <label style={styles.label}>Home location</label>
           <div style={styles.readOnlyValue}>{profile.homeLocation?.name || 'Unknown'}</div>
@@ -116,6 +132,9 @@ export function UserProfile() {
           <button onClick={toggleFollow} style={styles.actionBtn} disabled={isTogglingFollow}>
             {isFollowing ? 'Following ✓' : 'Follow'}
           </button>
+          <button onClick={() => setIsMeetingDialogOpen(true)} style={styles.actionBtn}>
+            Request meeting
+          </button>
           <button onClick={() => setIsReportOpen(true)} style={styles.reportBtn}>
             {FlagIcon}
             Report user
@@ -125,6 +144,13 @@ export function UserProfile() {
 
       {isReportOpen && (
         <ReportUserDialog targetUserId={profile.id} targetName={profile.name} onClose={() => setIsReportOpen(false)} />
+      )}
+      {isMeetingDialogOpen && (
+        <RequestMeetingDialog
+          targetUserId={profile.id}
+          targetName={profile.name}
+          onClose={() => setIsMeetingDialogOpen(false)}
+        />
       )}
     </>
   );

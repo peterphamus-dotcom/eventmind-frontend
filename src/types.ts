@@ -13,7 +13,8 @@ export type TabId =
   | 'library'
   | 'schedule'
   | 'sideSchedule'
-  | 'community';
+  | 'community'
+  | 'networking';
 
 export const COMMENTABLE_TAB_IDS: TabId[] = ['tickets', 'reports', 'schedule', 'community'];
 
@@ -59,6 +60,8 @@ export interface User {
   phone?: string | null;
   bio?: string | null;
   avatarUrl?: string | null;
+  networkingBlurb?: string | null;
+  goalTags?: Tag[];
   lastReportAt?: string | null;
   reportCount?: number;
   viewDensity?: ViewDensity;
@@ -112,6 +115,8 @@ export interface PublicUserProfile {
   teams?: Team[];
   bio?: string | null;
   avatarUrl?: string | null;
+  networkingBlurb?: string | null;
+  goalTags?: Tag[];
   messagePrivacy: MessagePrivacy;
   isFollowing: boolean;
   existingConversationId: string | null;
@@ -145,6 +150,45 @@ export interface Tag {
   id: string;
   name: string;
   isPredefined: boolean;
+  isGoalTag: boolean;
+}
+
+/**
+ * Business networking — goal-tag matching + structured meeting requests.
+ * See MeetingRequest below for the accept/decline flow.
+ */
+export type MeetingRequestStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'CANCELLED';
+
+export interface MeetingRequest {
+  id: string;
+  requester: { id: string; name: string; avatarUrl?: string | null };
+  recipient: { id: string; name: string; avatarUrl?: string | null };
+  proposedTime: string;
+  note: string | null;
+  status: MeetingRequestStatus;
+  respondedAt: string | null;
+  createdAt: string;
+}
+
+export interface TagPair {
+  id: string;
+  tagA: Tag;
+  tagB: Tag;
+}
+
+/** A directory/suggested-matches card — the "public-safe" networking view of a user. */
+export interface NetworkingProfile {
+  id: string;
+  name: string;
+  avatarUrl?: string | null;
+  role: Role;
+  networkingBlurb?: string | null;
+  goalTags: Tag[];
+}
+
+export interface SuggestedMatch extends NetworkingProfile {
+  matchCount: number;
+  matchedOn: { mine: Tag[]; theirs: Tag[] };
 }
 
 export const Urgency = {

@@ -20,7 +20,7 @@ export function useFormLists() {
     try {
       const [locRes, tagRes] = await Promise.all([
         api.listLocations(),
-        api.listTags(),
+        api.listTags(1, 50, false),
       ]);
       setLocations(locRes.data.data?.items || []);
       setTags(tagRes.data.data?.items || []);

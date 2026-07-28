@@ -4,7 +4,7 @@ import { useToast } from '../Toast';
 import { api, photoSrc } from '../api';
 import { DetailPage, styles as detail } from '../components/DetailPage';
 import { styles as form } from '../components/FormPage';
-import type { MessagePrivacy } from '../types';
+import type { MessagePrivacy, Tag } from '../types';
 
 export function Profile() {
   const { user, refreshUser } = useAuth();
@@ -18,6 +18,9 @@ export function Profile() {
   const [communityHandle, setCommunityHandle] = useState('');
   const [communityBooth, setCommunityBooth] = useState('');
   const [messagePrivacy, setMessagePrivacy] = useState<MessagePrivacy>('TEAM_ONLY');
+  const [networkingBlurb, setNetworkingBlurb] = useState('');
+  const [goalTagIds, setGoalTagIds] = useState<string[]>([]);
+  const [availableGoalTags, setAvailableGoalTags] = useState<Tag[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,12 +40,23 @@ export function Profile() {
       setCommunityHandle(user.communityHandle || '');
       setCommunityBooth(user.communityBooth || '');
       setMessagePrivacy(user.messagePrivacy || 'TEAM_ONLY');
+      setNetworkingBlurb(user.networkingBlurb || '');
+      setGoalTagIds((user.goalTags || []).map((t) => t.id));
     }
   }, [user]);
+
+  useEffect(() => {
+    api
+      .listTags(1, 100, true)
+      .then((res) => setAvailableGoalTags(res.data.data?.items || []))
+      .catch(() => setAvailableGoalTags([]));
+  }, []);
 
   if (!user) return <div style={detail.loading}>Loading…</div>;
 
   const isExpo = user.role === 'EXPO';
+  const sameIds = (a: string[], b: string[]) =>
+    a.length === b.length && [...a].sort().every((id, i) => id === [...b].sort()[i]);
   const isDirty =
     name !== user.name ||
     phone !== (user.phone || '') ||
@@ -50,7 +64,13 @@ export function Profile() {
     shareContact !== (user.shareContactInCommunity || false) ||
     communityHandle !== (user.communityHandle || '') ||
     communityBooth !== (user.communityBooth || '') ||
-    messagePrivacy !== (user.messagePrivacy || 'TEAM_ONLY');
+    messagePrivacy !== (user.messagePrivacy || 'TEAM_ONLY') ||
+    networkingBlurb !== (user.networkingBlurb || '') ||
+    !sameIds(goalTagIds, (user.goalTags || []).map((t) => t.id));
+
+  function toggleGoalTag(id: string) {
+    setGoalTagIds((prev) => (prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]));
+  }
 
   async function handleSave() {
     if (isSaving) return;
@@ -62,6 +82,8 @@ export function Profile() {
         phone,
         bio,
         messagePrivacy,
+        networkingBlurb,
+        goalTagIds,
         ...(isExpo ? { shareContactInCommunity: shareContact, communityHandle, communityBooth } : {}),
       });
       await refreshUser();
@@ -260,6 +282,42 @@ export function Profile() {
               <strong>Public</strong> — anyone's first message lands directly in your inbox
             </span>
           </label>
+        </div>
+      </div>
+
+      <div style={styles.communityBox}>
+        <h3 style={styles.subtitle}>Networking goals</h3>
+        <p style={styles.communityNote}>
+          Pick what you're looking for at this event — other attendees can browse or get matched
+          with you by goal in the Networking tab.
+        </p>
+        {availableGoalTags.length === 0 ? (
+          <p style={styles.communityNote}>No goal tags have been set up yet — check back later.</p>
+        ) : (
+          <div style={styles.goalTagOptions}>
+            {availableGoalTags.map((tag) => (
+              <label key={tag.id} style={styles.goalTagOption}>
+                <input
+                  type="checkbox"
+                  checked={goalTagIds.includes(tag.id)}
+                  onChange={() => toggleGoalTag(tag.id)}
+                />
+                {tag.name}
+              </label>
+            ))}
+          </div>
+        )}
+        <div style={{ marginTop: '14px' }}>
+          <label style={form.uppercaseLabel}>Elaborate (optional)</label>
+          <textarea
+            value={networkingBlurb}
+            onChange={(e) => setNetworkingBlurb(e.target.value)}
+            style={{ ...form.textarea, minHeight: '60px' }}
+            maxLength={500}
+            rows={2}
+            placeholder="Anything else worth knowing about what you're looking for?"
+          />
+          <div style={styles.charCount}>{networkingBlurb.length}/500</div>
         </div>
       </div>
 
@@ -511,6 +569,20 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '12px',
     marginTop: '14px',
     flexWrap: 'wrap' as const,
+  },
+  goalTagOptions: {
+    display: 'flex',
+    flexWrap: 'wrap' as const,
+    gap: '10px 16px',
+    marginTop: '10px',
+  },
+  goalTagOption: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '13px',
+    color: 'var(--text)',
+    cursor: 'pointer',
   },
   hint: {
     fontSize: '12.5px',

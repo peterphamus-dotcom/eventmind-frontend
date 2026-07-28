@@ -78,7 +78,7 @@ export function LibraryPanel() {
   }, [loadDocuments]);
 
   useEffect(() => {
-    api.listTags().then((res) => setAllTags(res.data.data?.items || []));
+    api.listTags(1, 50, false).then((res) => setAllTags(res.data.data?.items || []));
   }, []);
 
   function toggleTagFilter(tagId: string) {
