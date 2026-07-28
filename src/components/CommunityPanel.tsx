@@ -199,6 +199,15 @@ export function CommunityPanel() {
                   {!!p.viewCount && <span>· 👁️ {p.viewCount}</span>}
                   {p.author.contact && <span title="Shared contact">· 📇</span>}
                 </div>
+                {!!p.reactions?.length && (
+                  <div style={styles.reactionPreview}>
+                    {p.reactions.filter((r) => r.count > 0).map((r) => (
+                      <span key={r.emoji} style={styles.reactionChip}>
+                        {r.emoji} {r.count}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -291,6 +300,8 @@ const styles: Record<string, React.CSSProperties> = {
   typeBadge: { color: 'white', fontSize: '11px', fontWeight: 700, padding: '2px 9px', borderRadius: '10px', whiteSpace: 'nowrap' },
   cardTitle: { fontSize: '15px', fontWeight: 600, color: 'var(--text)' },
   cardMeta: { display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: '12px', color: 'var(--text-muted)' },
+  reactionPreview: { display: 'flex', gap: '5px', flexWrap: 'wrap', marginTop: '7px' },
+  reactionChip: { display: 'inline-flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '12px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-alt)', fontSize: '12px', color: 'var(--text)' },
   empty: { textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' },
   emptyHint: { fontSize: '14px', color: 'var(--text-faint)', margin: '8px 0 0' },
   muted: { color: 'var(--text-muted)', fontSize: '14px' },
