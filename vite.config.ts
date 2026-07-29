@@ -16,6 +16,9 @@ function getCommitSha(): string {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  optimizeDeps: {
+    include: ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
+  },
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
     __APP_COMMIT__: JSON.stringify(getCommitSha()),

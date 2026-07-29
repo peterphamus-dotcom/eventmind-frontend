@@ -11,6 +11,7 @@ const TAB_META: { id: TabId; label: string }[] = [
   { id: 'schedule', label: 'Schedule' },
   { id: 'sideSchedule', label: 'Side Schedule' },
   { id: 'community', label: 'Community' },
+  { id: 'checklists', label: 'Checklists' },
 ];
 
 type TriState = 'default' | 'on' | 'off';

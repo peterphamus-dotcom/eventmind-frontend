@@ -14,7 +14,8 @@ export type TabId =
   | 'schedule'
   | 'sideSchedule'
   | 'community'
-  | 'networking';
+  | 'networking'
+  | 'checklists';
 
 export const COMMENTABLE_TAB_IDS: TabId[] = ['tickets', 'reports', 'schedule', 'community'];
 
@@ -418,6 +419,34 @@ export interface DraftScheduleItem {
   endTime: string | null;
   locationName: string | null;
   suggestedLocationId?: string | null;
+}
+
+export interface ChecklistItem {
+  id: string;
+  title: string;
+  notes: string | null;
+  time: string | null;
+  isChecked: boolean;
+  checkedAt: string | null;
+  reminderOffsetMinutes: number | null;
+  sortOrder: number;
+}
+
+export interface Checklist {
+  id: string;
+  name: string;
+  description: string | null;
+  itemCount: number;
+  checkedCount: number;
+  createdAt: string;
+  updatedAt: string;
+  items?: ChecklistItem[];
+}
+
+export interface DraftChecklistItem {
+  title: string;
+  notes: string | null;
+  time: string | null;
 }
 
 export interface PaginatedResponse<T> {

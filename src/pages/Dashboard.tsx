@@ -11,6 +11,7 @@ import { SchedulePanel } from '../components/SchedulePanel';
 import { SideSchedulePanel } from '../components/SideSchedulePanel';
 import { CommunityPanel } from '../components/CommunityPanel';
 import { NetworkingPanel } from '../components/NetworkingPanel';
+import { ChecklistsPanel } from '../components/ChecklistsPanel';
 import { EventSummary } from '../components/EventSummary';
 import { NotificationBell } from '../components/NotificationBell';
 import { MessagesButton } from '../components/MessagesButton';
@@ -21,7 +22,7 @@ import { InviteModal } from '../components/InviteModal';
 import { AwaitingApproval } from '../components/AwaitingApproval';
 import type { EffectiveTabSettingsMap } from '../types';
 
-type Tab = 'tickets' | 'reports' | 'floorplan' | 'library' | 'schedule' | 'sideSchedule' | 'community' | 'networking';
+type Tab = 'tickets' | 'reports' | 'floorplan' | 'library' | 'schedule' | 'sideSchedule' | 'community' | 'networking' | 'checklists';
 
 /** Line icons at the two sizes the shell uses: 16px in menus and tabs, 17px in header buttons. */
 function Icon({ size = 16, children }: { size?: number; children: React.ReactNode }) {
@@ -145,6 +146,12 @@ const paths = {
       <path d="m15 15 3 3 5-6" />
     </>
   ),
+  checklists: (
+    <>
+      <path d="m9 11 3 3L22 4" />
+      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+    </>
+  ),
 };
 
 const ALL_TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
@@ -156,6 +163,7 @@ const ALL_TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'sideSchedule', label: 'Side Schedule', icon: paths.sideSchedule },
   { id: 'community', label: 'Community', icon: paths.community },
   { id: 'networking', label: 'Networking', icon: paths.networking },
+  { id: 'checklists', label: 'Checklists', icon: paths.checklists },
 ];
 
 /** Fallback tab list before effectiveTabSettings has loaded — all tabs visible by default. */
@@ -360,6 +368,7 @@ export function Dashboard() {
           {activeTab === 'sideSchedule' && <SideSchedulePanel />}
           {activeTab === 'community' && <CommunityPanel />}
           {activeTab === 'networking' && <NetworkingPanel />}
+          {activeTab === 'checklists' && <ChecklistsPanel />}
         </div>
       )}
     </div>

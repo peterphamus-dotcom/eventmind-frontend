@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType, CommunitySortBy, ContentReport, SignupQrCode, Role, AuditLog, AuditSummaryReport, MessageableUser, ConversationSummary, ConversationMessage, TabSettingsMap, TabSettingsPatch, MessagePrivacy, MeetingRequest, MeetingRequestStatus, TagPair, NetworkingProfile, SuggestedMatch, ProfileComment } from './types';
+import type { ApiResponse, User, Report, Ticket, Tag, Team, Location, Comment, ReactionSummary, PaginatedResponse, Notification, NotificationSettings, Reminder, ReminderTargetType, SocialSighting, SocialSightingType, SocialPlatform, PublicUserProfile, UserReport, UserReportReason, UserReportStatus, LibraryDocument, ViewDensity, ScheduleItem, ScheduleItemKind, DraftScheduleItem, ScheduleImportSourceType, PendingUser, PostMortemReport, CommunityPost, CommunityPostType, CommunitySortBy, ContentReport, SignupQrCode, Role, AuditLog, AuditSummaryReport, MessageableUser, ConversationSummary, ConversationMessage, TabSettingsMap, TabSettingsPatch, MessagePrivacy, MeetingRequest, MeetingRequestStatus, TagPair, NetworkingProfile, SuggestedMatch, ProfileComment, Checklist, ChecklistItem, DraftChecklistItem } from './types';
 
 type TeamPreview<T> = PaginatedResponse<T> & { team: { id: string; name: string; tags: Tag[] } };
 
@@ -429,6 +429,44 @@ export const api = {
   confirmScheduleImport: (
     items: { title: string; description?: string | null; startTime: string; endTime?: string | null; locationId?: string | null }[]
   ) => client.post<ApiResponse<{ created: number }>>('/schedule/import/confirm', { items }),
+
+  // Checklists (private, per-user)
+  listChecklists: () =>
+    client.get<ApiResponse<{ items: Checklist[] }>>('/checklists'),
+  createChecklist: (name: string) =>
+    client.post<ApiResponse<Checklist>>('/checklists', { name }),
+  getChecklist: (id: string) =>
+    client.get<ApiResponse<Checklist>>(`/checklists/${id}`),
+  updateChecklist: (id: string, updates: { name?: string; description?: string | null }) =>
+    client.patch<ApiResponse<Checklist>>(`/checklists/${id}`, updates),
+  deleteChecklist: (id: string) =>
+    client.delete<ApiResponse<{ message: string }>>(`/checklists/${id}`),
+  addChecklistItem: (
+    checklistId: string,
+    data: { title: string; notes?: string; time?: string | null; reminderOffsetMinutes?: number | null }
+  ) => client.post<ApiResponse<ChecklistItem>>(`/checklists/${checklistId}/items`, data),
+  updateChecklistItem: (
+    checklistId: string,
+    itemId: string,
+    updates: { title?: string; notes?: string | null; time?: string | null; reminderOffsetMinutes?: number | null; sortOrder?: number }
+  ) => client.patch<ApiResponse<ChecklistItem>>(`/checklists/${checklistId}/items/${itemId}`, updates),
+  deleteChecklistItem: (checklistId: string, itemId: string) =>
+    client.delete<ApiResponse<{ message: string }>>(`/checklists/${checklistId}/items/${itemId}`),
+  toggleChecklistItem: (checklistId: string, itemId: string) =>
+    client.post<ApiResponse<ChecklistItem>>(`/checklists/${checklistId}/items/${itemId}/toggle`),
+  previewChecklistImport: (file: File) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    return client.post<ApiResponse<{ items: DraftChecklistItem[]; total: number }>>('/checklists/import/preview', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  previewChecklistImportText: (text: string) =>
+    client.post<ApiResponse<{ items: DraftChecklistItem[]; total: number }>>('/checklists/import/preview-text', { text }),
+  confirmChecklistImport: (name: string, items: DraftChecklistItem[]) =>
+    client.post<ApiResponse<Checklist>>('/checklists/import/confirm', { name, items }),
+  reorderChecklistItems: (moves: { checklistId: string; itemIds: string[] }[]) =>
+    client.post<ApiResponse<{ message: string }>>('/checklists/reorder', { moves }),
 
   // B2B Community
   listCommunity: (filters?: { type?: CommunityPostType; feed?: 'following'; sortBy?: CommunitySortBy }) =>
