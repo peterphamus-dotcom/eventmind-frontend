@@ -322,6 +322,9 @@ export interface NotificationSettings {
   notifyOnReaction: boolean;
   notifyOnReminderOverdue: boolean;
   notifyOnScheduleReminder: boolean;
+  quietHoursEnabled: boolean;
+  quietHoursStart: string | null;
+  quietHoursEnd: string | null;
 }
 
 export type ReminderTargetType = 'USER' | 'TEAM' | 'LOCATION';

@@ -7,7 +7,15 @@ import type { Notification, NotificationSettings } from '../types';
 const POLL_INTERVAL_MS = 30000;
 const LOW_DATA_POLL_INTERVAL_MS = 120000;
 
-const SETTINGS_META: { key: keyof NotificationSettings; label: string }[] = [
+type BooleanSettingKey =
+  | 'notifyOnComment'
+  | 'notifyOnStatusChange'
+  | 'notifyOnUrgencyChange'
+  | 'notifyOnReaction'
+  | 'notifyOnReminderOverdue'
+  | 'notifyOnScheduleReminder';
+
+const SETTINGS_META: { key: BooleanSettingKey; label: string }[] = [
   { key: 'notifyOnComment', label: 'New comments' },
   { key: 'notifyOnStatusChange', label: 'Status changes' },
   { key: 'notifyOnUrgencyChange', label: 'Urgency changes' },
@@ -172,13 +180,25 @@ export function NotificationBell() {
     }
   }
 
-  async function toggleSetting(key: keyof NotificationSettings) {
+  async function toggleSetting(key: BooleanSettingKey) {
     if (!settings) return;
     const previous = settings;
     const updated = { ...settings, [key]: !settings[key] };
     setSettings(updated);
     try {
       await api.updateNotificationSettings({ [key]: updated[key] });
+    } catch {
+      setSettings(previous);
+    }
+  }
+
+  async function updateQuietHours(patch: Partial<NotificationSettings>) {
+    if (!settings) return;
+    const previous = settings;
+    const updated = { ...settings, ...patch };
+    setSettings(updated);
+    try {
+      await api.updateNotificationSettings(patch);
     } catch {
       setSettings(previous);
     }
@@ -243,6 +263,37 @@ export function NotificationBell() {
                   ))
                 ) : (
                   <p style={styles.empty}>Loading settings…</p>
+                )}
+
+                {settings && (
+                  <>
+                    <div style={styles.settingsDivider} />
+                    <label style={styles.settingRow}>
+                      <input
+                        type="checkbox"
+                        checked={settings.quietHoursEnabled}
+                        onChange={() => updateQuietHours({ quietHoursEnabled: !settings.quietHoursEnabled })}
+                      />
+                      Quiet hours (mute push &amp; email)
+                    </label>
+                    {settings.quietHoursEnabled && (
+                      <div style={styles.quietHoursRow}>
+                        <input
+                          type="time"
+                          value={settings.quietHoursStart || '22:00'}
+                          onChange={(e) => updateQuietHours({ quietHoursStart: e.target.value })}
+                          style={styles.timeInput}
+                        />
+                        <span style={styles.quietHoursTo}>to</span>
+                        <input
+                          type="time"
+                          value={settings.quietHoursEnd || '08:00'}
+                          onChange={(e) => updateQuietHours({ quietHoursEnd: e.target.value })}
+                          style={styles.timeInput}
+                        />
+                      </div>
+                    )}
+                  </>
                 )}
 
                 <div style={styles.settingsDivider} />
@@ -415,6 +466,24 @@ const styles = {
   settingsDivider: {
     borderTop: '1px solid var(--border)',
     margin: '2px 0',
+  },
+  quietHoursRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    paddingLeft: '23px',
+  },
+  timeInput: {
+    fontSize: '12.5px',
+    padding: '4px 6px',
+    borderRadius: '6px',
+    border: '1px solid var(--border-strong)',
+    backgroundColor: 'var(--input-bg)',
+    color: 'var(--text)',
+  },
+  quietHoursTo: {
+    fontSize: '12px',
+    color: 'var(--text-faint)',
   },
   pushUnsupported: {
     fontSize: '12px',
