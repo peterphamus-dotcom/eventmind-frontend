@@ -441,6 +441,12 @@ export const api = {
     client.patch<ApiResponse<Checklist>>(`/checklists/${id}`, updates),
   deleteChecklist: (id: string) =>
     client.delete<ApiResponse<{ message: string }>>(`/checklists/${id}`),
+  archiveChecklist: (id: string) =>
+    client.post<ApiResponse<Checklist>>(`/checklists/${id}/archive`),
+  restoreChecklist: (id: string) =>
+    client.post<ApiResponse<Checklist>>(`/checklists/${id}/restore`),
+  listArchivedChecklists: () =>
+    client.get<ApiResponse<{ items: Checklist[] }>>('/checklists?archived=true'),
   addChecklistItem: (
     checklistId: string,
     data: { title: string; notes?: string; time?: string | null; reminderOffsetMinutes?: number | null }

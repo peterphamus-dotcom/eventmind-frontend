@@ -438,6 +438,7 @@ export interface Checklist {
   description: string | null;
   itemCount: number;
   checkedCount: number;
+  archivedAt: string | null;
   createdAt: string;
   updatedAt: string;
   items?: ChecklistItem[];

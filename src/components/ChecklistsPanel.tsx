@@ -72,6 +72,7 @@ function ChecklistCard({
 function BoardColumn({
   checklist,
   onUpdate,
+  onArchive,
   onDelete,
   onToggleItem,
   onCardClick,
@@ -79,6 +80,7 @@ function BoardColumn({
 }: {
   checklist: Checklist;
   onUpdate: (id: string, updates: { name?: string; description?: string | null }) => void;
+  onArchive: (id: string) => void;
   onDelete: (id: string) => void;
   onToggleItem: (item: ChecklistItem) => void;
   onCardClick: (item: ChecklistItem) => void;
@@ -90,6 +92,7 @@ function BoardColumn({
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [descriptionDraft, setDescriptionDraft] = useState(checklist.description || '');
   const [quickAddValue, setQuickAddValue] = useState('');
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
   const items = checklist.items || [];
   const itemIds = items.map((i) => i.id);
 
@@ -135,10 +138,38 @@ function BoardColumn({
             {checklist.name}
           </span>
         )}
-        <button onClick={() => onDelete(checklist.id)} style={styles.columnDeleteBtn} title="Delete checklist">
+        <button onClick={() => setConfirmingRemove(true)} style={styles.columnDeleteBtn} title="Archive or delete checklist">
           ✕
         </button>
       </div>
+      {confirmingRemove && (
+        <div style={styles.confirmBar}>
+          <span style={styles.confirmText}>Remove "{checklist.name}"? Archiving keeps it, restorable later.</span>
+          <div style={styles.confirmBtns}>
+            <button
+              onClick={() => {
+                setConfirmingRemove(false);
+                onArchive(checklist.id);
+              }}
+              style={styles.confirmArchiveBtn}
+            >
+              Archive
+            </button>
+            <button
+              onClick={() => {
+                setConfirmingRemove(false);
+                onDelete(checklist.id);
+              }}
+              style={styles.confirmDeleteBtn}
+            >
+              Delete forever
+            </button>
+            <button onClick={() => setConfirmingRemove(false)} style={styles.confirmCancelBtn}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
       {isEditingDescription ? (
         <textarea
           autoFocus
@@ -200,6 +231,8 @@ function BoardColumn({
 export function ChecklistsPanel() {
   const showToast = useToast();
   const [checklists, setChecklists] = useState<Checklist[]>([]);
+  const [archivedChecklists, setArchivedChecklists] = useState<Checklist[]>([]);
+  const [showArchived, setShowArchived] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeItem, setActiveItem] = useState<ChecklistItem | null>(null);
@@ -225,9 +258,19 @@ export function ChecklistsPanel() {
     }
   }, []);
 
+  const loadArchived = useCallback(async () => {
+    try {
+      const res = await api.listArchivedChecklists();
+      setArchivedChecklists(res.data.data?.items || []);
+    } catch {
+      // Silent — archived list is a secondary, discreet affordance.
+    }
+  }, []);
+
   useEffect(() => {
     load();
-  }, [load]);
+    loadArchived();
+  }, [load, loadArchived]);
 
   async function persistMoves(moves: { checklistId: string; itemIds: string[] }[]) {
     try {
@@ -357,13 +400,36 @@ export function ChecklistsPanel() {
   }
 
   async function handleDeleteChecklist(id: string) {
-    if (!confirm('Delete this checklist? This cannot be undone.')) return;
     try {
       await api.deleteChecklist(id);
       setChecklists((prev) => prev.filter((c) => c.id !== id));
       showToast('Checklist deleted');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to delete checklist');
+    }
+  }
+
+  async function handleArchiveChecklist(id: string) {
+    const target = checklists.find((c) => c.id === id);
+    try {
+      await api.archiveChecklist(id);
+      setChecklists((prev) => prev.filter((c) => c.id !== id));
+      if (target) setArchivedChecklists((prev) => [{ ...target, archivedAt: new Date().toISOString() }, ...prev]);
+      showToast('Checklist archived');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to archive checklist');
+    }
+  }
+
+  async function handleRestoreChecklist(id: string) {
+    const target = archivedChecklists.find((c) => c.id === id);
+    try {
+      await api.restoreChecklist(id);
+      setArchivedChecklists((prev) => prev.filter((c) => c.id !== id));
+      if (target) setChecklists((prev) => [{ ...target, archivedAt: null }, ...prev]);
+      showToast('Checklist restored');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to restore checklist');
     }
   }
 
@@ -439,6 +505,7 @@ export function ChecklistsPanel() {
                 key={c.id}
                 checklist={c}
                 onUpdate={handleUpdateChecklist}
+                onArchive={handleArchiveChecklist}
                 onDelete={handleDeleteChecklist}
                 onToggleItem={handleToggleItem}
                 onCardClick={(item) => {
@@ -460,6 +527,26 @@ export function ChecklistsPanel() {
             ) : null}
           </DragOverlay>
         </DndContext>
+      )}
+
+      {archivedChecklists.length > 0 && (
+        <div style={styles.archivedFooter}>
+          <span onClick={() => setShowArchived((v) => !v)} style={styles.archivedLink}>
+            {archivedChecklists.length} archived checklist{archivedChecklists.length === 1 ? '' : 's'}
+          </span>
+          {showArchived && (
+            <div style={styles.archivedList}>
+              {archivedChecklists.map((c) => (
+                <div key={c.id} style={styles.archivedRow}>
+                  <span style={styles.archivedName}>{c.name}</span>
+                  <span onClick={() => handleRestoreChecklist(c.id)} style={styles.restoreLink}>
+                    Restore
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {editing && (
@@ -617,6 +704,91 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '4px',
     cursor: 'pointer',
     fontSize: '11px',
+  },
+  confirmBar: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+    padding: '8px',
+    backgroundColor: 'var(--danger-bg)',
+    border: '1px solid var(--danger-text)',
+    borderRadius: '6px',
+  },
+  confirmText: {
+    fontSize: '11.5px',
+    color: 'var(--danger-text)',
+    lineHeight: 1.3,
+  },
+  confirmBtns: {
+    display: 'flex',
+    gap: '6px',
+    flexWrap: 'wrap',
+  },
+  confirmArchiveBtn: {
+    padding: '4px 8px',
+    backgroundColor: 'var(--surface)',
+    border: '1px solid var(--border-strong)',
+    color: 'var(--text)',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '11px',
+    fontWeight: 600,
+  },
+  confirmDeleteBtn: {
+    padding: '4px 8px',
+    backgroundColor: '#dc3545',
+    border: 'none',
+    color: 'white',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '11px',
+    fontWeight: 600,
+  },
+  confirmCancelBtn: {
+    padding: '4px 8px',
+    backgroundColor: 'transparent',
+    border: 'none',
+    color: 'var(--text-muted)',
+    cursor: 'pointer',
+    fontSize: '11px',
+  },
+  archivedFooter: {
+    marginTop: '18px',
+  },
+  archivedLink: {
+    fontSize: '12.5px',
+    color: 'var(--text-faint)',
+    cursor: 'pointer',
+    textDecoration: 'underline',
+  },
+  archivedList: {
+    marginTop: '8px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    maxWidth: '360px',
+  },
+  archivedRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    fontSize: '12.5px',
+    color: 'var(--text-muted)',
+    padding: '4px 0',
+    borderBottom: '1px solid var(--border)',
+  },
+  archivedName: {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    marginRight: '10px',
+  },
+  restoreLink: {
+    flexShrink: 0,
+    color: 'var(--text)',
+    cursor: 'pointer',
+    textDecoration: 'underline',
+    fontWeight: 600,
   },
   columnDescription: {
     fontSize: '12px',
