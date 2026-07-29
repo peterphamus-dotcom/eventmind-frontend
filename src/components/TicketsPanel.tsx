@@ -5,6 +5,7 @@ import { useAuth } from '../AuthContext';
 import { LocationFilter } from './LocationFilter';
 import { CollapsibleSection } from './CollapsibleSection';
 import { SearchBar } from './SearchBar';
+import { LazyImage } from './LazyImage';
 import {
   urgencyBadge,
   statusBadge,
@@ -122,7 +123,7 @@ export function TicketsPanel() {
       }}
     >
       {!isCompact && ticket.photos && ticket.photos.length > 0 && (
-        <img
+        <LazyImage
           src={photoSrc(ticket.photos[0].url)}
           alt=""
           loading="lazy"

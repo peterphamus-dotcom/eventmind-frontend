@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, photoSrc } from '../api';
+import { LazyImage } from './LazyImage';
 
 /**
  * Top-of-app header. Shows the admin-set cover photo (like a social
@@ -47,7 +48,7 @@ export function BannerBar() {
   return (
     <div>
       <style>{TICKER_CSS}</style>
-      {imageUrl && <img src={photoSrc(imageUrl)} alt="" style={styles.headerImg} />}
+      {imageUrl && <LazyImage src={photoSrc(imageUrl)} alt="" style={styles.headerImg} />}
       {messages.length > 0 && (
         <div style={styles.bar}>
           <span style={styles.icon}>📢</span>

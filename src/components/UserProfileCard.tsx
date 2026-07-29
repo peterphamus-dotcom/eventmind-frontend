@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, photoSrc } from '../api';
 import { Modal } from './Modal';
+import { LazyImage } from './LazyImage';
 import { ReportUserDialog } from './ReportUserDialog';
 import { RequestMeetingDialog } from './RequestMeetingDialog';
 import { useUserProfileActions } from '../useUserProfileActions';
@@ -62,7 +63,7 @@ export function UserProfileCard({ userId, name, onClose }: UserProfileCardProps)
         <div style={styles.header}>
           <div style={styles.avatarWrap}>
             {profile?.avatarUrl ? (
-              <img src={photoSrc(profile.avatarUrl)} alt="" style={styles.avatarImg} />
+              <LazyImage src={photoSrc(profile.avatarUrl)} alt="" style={styles.avatarImg} />
             ) : (
               <div style={styles.avatarPlaceholder}>{initials}</div>
             )}

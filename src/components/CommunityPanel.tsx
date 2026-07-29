@@ -4,6 +4,7 @@ import { api } from '../api';
 import { Modal } from './Modal';
 import { CommunityPostModal } from './CommunityPostModal';
 import { UserLink } from './UserLink';
+import { useLowData } from '../LowDataContext';
 import type { CommunityPost, CommunityPostType, CommunitySortBy, MarketplacePriceType, HelpUrgency } from '../types';
 
 const TYPE_META: Record<CommunityPostType, { label: string; color: string; emoji: string }> = {
@@ -74,6 +75,7 @@ function shortWhen(iso: string | null): string {
  */
 export function CommunityPanel() {
   const showToast = useToast();
+  const { lowData } = useLowData();
 
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [canPost, setCanPost] = useState(false);
@@ -93,9 +95,10 @@ export function CommunityPanel() {
     setLoading(true);
     setError(null);
     try {
-      const params: { type?: CommunityPostType; feed?: 'following'; sortBy?: CommunitySortBy } = { sortBy };
+      const params: { type?: CommunityPostType; feed?: 'following'; sortBy?: CommunitySortBy; lowData?: boolean } = { sortBy };
       if (filter === 'following') params.feed = 'following';
       else if (filter !== 'all') params.type = filter;
+      if (lowData) params.lowData = true;
       const res = await api.listCommunity(params);
       setPosts(res.data.data?.items || []);
       setCanPost(res.data.data?.canPost || false);
@@ -105,7 +108,7 @@ export function CommunityPanel() {
     } finally {
       setLoading(false);
     }
-  }, [filter, sortBy]);
+  }, [filter, sortBy, lowData]);
 
   useEffect(() => { load(); }, [load]);
 

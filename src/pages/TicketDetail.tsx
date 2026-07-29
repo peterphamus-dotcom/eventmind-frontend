@@ -6,6 +6,7 @@ import { useToast } from '../Toast';
 import { CommentsSection } from '../components/CommentsSection';
 import { UserLink } from '../components/UserLink';
 import { ReactionBar } from '../components/ReactionBar';
+import { LazyImage } from '../components/LazyImage';
 import {
   DetailPage,
   DetailSection,
@@ -288,7 +289,7 @@ export function TicketDetail() {
           <div style={detail.photoGrid}>
             {ticket.photos.map((photo) => (
               <div key={photo.id}>
-                <img
+                <LazyImage
                   src={photoSrc(photo.url)}
                   alt={photo.caption || 'Ticket photo'}
                   style={detail.photo}

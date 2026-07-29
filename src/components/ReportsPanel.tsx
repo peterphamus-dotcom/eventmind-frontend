@@ -6,6 +6,7 @@ import { LocationFilter } from './LocationFilter';
 import { CollapsibleSection } from './CollapsibleSection';
 import { SearchBar } from './SearchBar';
 import { UserLink } from './UserLink';
+import { LazyImage } from './LazyImage';
 import {
   LocationIcon,
   PlusIcon,
@@ -150,7 +151,7 @@ export function ReportsPanel() {
                 style={{ ...styles.listItem, ...(isCompact ? styles.listItemCompact : {}) }}
               >
                 {!isCompact && report.photos && report.photos.length > 0 && (
-                  <img
+                  <LazyImage
                     src={photoSrc(report.photos[0].url)}
                     alt=""
                     loading="lazy"

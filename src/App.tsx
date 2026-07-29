@@ -2,9 +2,12 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './AuthContext';
 import { ToastProvider } from './Toast';
 import { ThemeProvider } from './ThemeContext';
+import { LowDataProvider } from './LowDataContext';
 import { BannerBar } from './components/BannerBar';
 import { ScrollToTopButton } from './components/ScrollToTopButton';
 import { ThemeToggle } from './components/ThemeToggle';
+import { LowDataToggle } from './components/LowDataToggle';
+import { LowDataBanner } from './components/LowDataBanner';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 import { VerifyEmail } from './pages/VerifyEmail';
@@ -139,6 +142,8 @@ function AppRoutes() {
       </Routes>
       {user && <ScrollToTopButton />}
       <ThemeToggle />
+      <LowDataToggle />
+      <LowDataBanner />
     </>
   );
 }
@@ -146,13 +151,15 @@ function AppRoutes() {
 export function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <ToastProvider>
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
-        </ToastProvider>
-      </AuthProvider>
+      <LowDataProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </ToastProvider>
+        </AuthProvider>
+      </LowDataProvider>
     </ThemeProvider>
   );
 }

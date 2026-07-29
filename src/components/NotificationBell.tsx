@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
+import { useLowData } from '../LowDataContext';
 import type { Notification, NotificationSettings } from '../types';
 
 const POLL_INTERVAL_MS = 30000;
+const LOW_DATA_POLL_INTERVAL_MS = 120000;
 
 const SETTINGS_META: { key: keyof NotificationSettings; label: string }[] = [
   { key: 'notifyOnComment', label: 'New comments' },
@@ -39,6 +41,7 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
 /** Header bell icon: unread badge, dropdown feed, and per-trigger settings. */
 export function NotificationBell() {
   const navigate = useNavigate();
+  const { lowData } = useLowData();
   const [open, setOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -50,9 +53,9 @@ export function NotificationBell() {
 
   useEffect(() => {
     loadUnreadCount();
-    const interval = setInterval(loadUnreadCount, POLL_INTERVAL_MS);
+    const interval = setInterval(loadUnreadCount, lowData ? LOW_DATA_POLL_INTERVAL_MS : POLL_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, []);
+  }, [lowData]);
 
   async function loadUnreadCount() {
     try {

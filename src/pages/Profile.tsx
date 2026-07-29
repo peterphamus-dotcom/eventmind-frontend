@@ -5,6 +5,7 @@ import { api, photoSrc } from '../api';
 import { DetailPage, styles as detail } from '../components/DetailPage';
 import { styles as form } from '../components/FormPage';
 import { ProfileCommentsSection } from '../components/ProfileCommentsSection';
+import { LazyImage } from '../components/LazyImage';
 import type { MessagePrivacy, Tag } from '../types';
 
 export function Profile() {
@@ -176,7 +177,7 @@ export function Profile() {
       <div style={styles.avatarSection}>
         <div style={styles.avatarWrap} onClick={() => fileInputRef.current?.click()}>
           {user.avatarUrl ? (
-            <img src={photoSrc(user.avatarUrl)} alt="" style={styles.avatarImg} />
+            <LazyImage src={photoSrc(user.avatarUrl)} alt="" style={styles.avatarImg} />
           ) : (
             <div style={styles.avatarPlaceholder}>{initials}</div>
           )}

@@ -6,6 +6,7 @@ import { useAuth } from '../AuthContext';
 import { CommentsSection } from '../components/CommentsSection';
 import { UserLink } from '../components/UserLink';
 import { ReactionBar } from '../components/ReactionBar';
+import { LazyImage } from '../components/LazyImage';
 import { DetailPage, DetailSection, DetailRow, BellIcon, styles } from '../components/DetailPage';
 import type { Report } from '../types';
 
@@ -124,7 +125,7 @@ export function ReportDetail() {
           <div style={styles.photoGrid}>
             {report.photos.map((photo) => (
               <div key={photo.id}>
-                <img
+                <LazyImage
                   src={photoSrc(photo.url)}
                   alt={photo.caption || 'Report photo'}
                   style={styles.photo}

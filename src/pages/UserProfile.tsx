@@ -6,6 +6,7 @@ import { DetailPage, styles as detail } from '../components/DetailPage';
 import { ReportUserDialog } from '../components/ReportUserDialog';
 import { RequestMeetingDialog } from '../components/RequestMeetingDialog';
 import { ProfileCommentsSection } from '../components/ProfileCommentsSection';
+import { LazyImage } from '../components/LazyImage';
 import { useUserProfileActions } from '../useUserProfileActions';
 import type { PublicUserProfile } from '../types';
 
@@ -76,7 +77,7 @@ export function UserProfile() {
         <div style={styles.avatarSection}>
           <div style={styles.avatarWrap}>
             {profile.avatarUrl ? (
-              <img src={photoSrc(profile.avatarUrl)} alt="" style={styles.avatarImg} />
+              <LazyImage src={photoSrc(profile.avatarUrl)} alt="" style={styles.avatarImg} />
             ) : (
               <div style={styles.avatarPlaceholder}>{initials}</div>
             )}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, photoSrc } from '../api';
+import { LazyImage } from './LazyImage';
 import type { Ticket, Location } from '../types';
 
 const urgencyColor = (urgency: string) =>
@@ -79,7 +80,7 @@ export function FloorplanPanel() {
 
       {selectedLocation && (
         <div style={styles.wrap} onClick={() => setSelectedTicketId(null)}>
-          <img
+          <LazyImage
             src={photoSrc(selectedLocation.floorplanUrl!)}
             alt={`${selectedLocation.name} floorplan`}
             style={styles.img}

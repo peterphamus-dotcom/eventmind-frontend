@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useSocketEvent } from '../useSocket';
+import { useLowData } from '../LowDataContext';
 
 const POLL_INTERVAL_MS = 30000;
+const LOW_DATA_POLL_INTERVAL_MS = 120000;
 
 /** Header icon button linking to /messages, with a live unread-conversation badge. */
 export function MessagesButton() {
   const navigate = useNavigate();
+  const { lowData } = useLowData();
   const [unreadCount, setUnreadCount] = useState(0);
 
   async function loadUnreadCount() {
@@ -21,9 +24,9 @@ export function MessagesButton() {
 
   useEffect(() => {
     loadUnreadCount();
-    const interval = setInterval(loadUnreadCount, POLL_INTERVAL_MS);
+    const interval = setInterval(loadUnreadCount, lowData ? LOW_DATA_POLL_INTERVAL_MS : POLL_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, []);
+  }, [lowData]);
 
   // Sockets give an instant nudge; the poll above is the fallback if a
   // socket event is missed (e.g. briefly disconnected).

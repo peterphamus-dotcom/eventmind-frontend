@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, photoSrc } from '../api';
 import { useToast } from '../Toast';
 import { UserLink } from './UserLink';
+import { LazyImage } from './LazyImage';
 import type { ProfileComment } from '../types';
 
 interface ProfileCommentsSectionProps {
@@ -93,7 +94,7 @@ export function ProfileCommentsSection({ userId, commentsEnabled }: ProfileComme
             <div key={c.id} style={styles.row}>
               <div style={styles.avatarWrap}>
                 {c.author.avatarUrl ? (
-                  <img src={photoSrc(c.author.avatarUrl)} alt="" style={styles.avatarImg} />
+                  <LazyImage src={photoSrc(c.author.avatarUrl)} alt="" style={styles.avatarImg} />
                 ) : (
                   <div style={styles.avatarPlaceholder}>{c.author.name.slice(0, 1).toUpperCase()}</div>
                 )}

@@ -475,7 +475,7 @@ export const api = {
     client.post<ApiResponse<{ message: string }>>('/checklists/reorder', { moves }),
 
   // B2B Community
-  listCommunity: (filters?: { type?: CommunityPostType; feed?: 'following'; sortBy?: CommunitySortBy }) =>
+  listCommunity: (filters?: { type?: CommunityPostType; feed?: 'following'; sortBy?: CommunitySortBy; lowData?: boolean }) =>
     client.get<ApiResponse<{ items: CommunityPost[]; canPost: boolean; canModerate: boolean }>>('/community', { params: filters }),
   getCommunityPost: (id: string) => client.get<ApiResponse<CommunityPost>>(`/community/${id}`),
   createCommunityPost: (data: {
