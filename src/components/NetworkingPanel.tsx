@@ -71,8 +71,12 @@ export function NetworkingPanel() {
 
   const [directory, setDirectory] = useState<NetworkingProfile[] | null>(null);
   const [search, setSearch] = useState('');
-  const [goalTagFilter, setGoalTagFilter] = useState('');
+  const [goalTagFilterIds, setGoalTagFilterIds] = useState<string[]>([]);
   const [goalTags, setGoalTags] = useState<Tag[]>([]);
+
+  function toggleGoalTagFilter(id: string) {
+    setGoalTagFilterIds((prev) => (prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]));
+  }
 
   const [suggested, setSuggested] = useState<SuggestedMatch[] | null>(null);
 
@@ -93,14 +97,14 @@ export function NetworkingPanel() {
   const loadDirectory = useCallback(async () => {
     try {
       const res = await api.listNetworkingDirectory({
-        goalTagId: goalTagFilter || undefined,
+        goalTagIds: goalTagFilterIds.length ? goalTagFilterIds : undefined,
         search: search.trim() || undefined,
       });
       setDirectory(res.data.data || []);
     } catch {
       setDirectory([]);
     }
-  }, [goalTagFilter, search]);
+  }, [goalTagFilterIds, search]);
 
   const loadSuggested = useCallback(async () => {
     try {
@@ -146,7 +150,7 @@ export function NetworkingPanel() {
   useEffect(() => {
     if (subTab === 'directory') loadDirectory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [goalTagFilter, search]);
+  }, [goalTagFilterIds, search]);
 
   async function respond(id: string, action: 'accept' | 'decline') {
     if (respondingId) return;
@@ -210,18 +214,27 @@ export function NetworkingPanel() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name…"
+              placeholder="Search by name, bio, or post…"
               style={styles.searchInput}
             />
-            <select value={goalTagFilter} onChange={(e) => setGoalTagFilter(e.target.value)} style={styles.select}>
-              <option value="">All goals</option>
-              {goalTags.map((tag) => (
-                <option key={tag.id} value={tag.id}>
-                  {tag.name}
-                </option>
-              ))}
-            </select>
           </div>
+          {goalTags.length > 0 && (
+            <div style={styles.tagFilterRow}>
+              {goalTags.map((tag) => {
+                const active = goalTagFilterIds.includes(tag.id);
+                return (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => toggleGoalTagFilter(tag.id)}
+                    style={{ ...styles.tagFilterChip, ...(active ? styles.tagFilterChipActive : {}) }}
+                  >
+                    {tag.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           <div style={styles.list}>
             {directory == null ? (
               <p style={styles.empty}>Loading…</p>
@@ -407,14 +420,6 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--text)',
     fontSize: '13.5px',
   },
-  select: {
-    padding: '9px 12px',
-    border: '1px solid var(--border-strong)',
-    borderRadius: '8px',
-    backgroundColor: 'var(--surface)',
-    color: 'var(--text)',
-    fontSize: '13.5px',
-  },
   boxBtn: {
     padding: '8px 16px',
     background: 'none',
@@ -431,6 +436,29 @@ const styles: Record<string, React.CSSProperties> = {
   boxBtnActive: {
     borderColor: 'var(--accent)',
     color: 'var(--accent)',
+  },
+  tagFilterRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px',
+    marginBottom: '16px',
+  },
+  tagFilterChip: {
+    fontSize: '12px',
+    fontWeight: 600,
+    color: 'var(--text-muted)',
+    backgroundColor: 'var(--surface)',
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: 'var(--border-strong)',
+    borderRadius: '999px',
+    padding: '5px 12px',
+    cursor: 'pointer',
+  },
+  tagFilterChipActive: {
+    color: 'var(--accent-text)',
+    backgroundColor: 'var(--accent-soft)',
+    borderColor: 'var(--accent)',
   },
   list: {
     display: 'flex',

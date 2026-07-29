@@ -540,8 +540,13 @@ export const api = {
     client.post<ApiResponse<unknown>>(`/messages/${messageId}/report`, { reason, details }),
 
   // Business networking
-  listNetworkingDirectory: (filters?: { goalTagId?: string; search?: string }) =>
-    client.get<ApiResponse<NetworkingProfile[]>>('/networking/directory', { params: filters }),
+  listNetworkingDirectory: (filters?: { goalTagIds?: string[]; search?: string }) =>
+    client.get<ApiResponse<NetworkingProfile[]>>('/networking/directory', {
+      params: {
+        goalTagIds: filters?.goalTagIds?.length ? filters.goalTagIds.join(',') : undefined,
+        search: filters?.search,
+      },
+    }),
   listSuggestedMatches: () =>
     client.get<ApiResponse<SuggestedMatch[]>>('/networking/suggested'),
   listMeetingRequests: (box: 'incoming' | 'outgoing', status?: MeetingRequestStatus) =>
