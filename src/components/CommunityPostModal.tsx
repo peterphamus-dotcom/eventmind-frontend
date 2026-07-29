@@ -7,7 +7,7 @@ import { CommentsSection } from './CommentsSection';
 import { ReactionBar } from './ReactionBar';
 import { ReportContentDialog } from './ReportContentDialog';
 import { UserLink } from './UserLink';
-import type { CommunityPost, UserReportReason } from '../types';
+import type { CommunityPost, UserReportReason, MarketplacePriceType, HelpUrgency } from '../types';
 
 /** What's being reported: the post itself, or one of its comments. */
 type ReportTarget = { kind: 'post' } | { kind: 'comment'; commentId: string };
@@ -16,7 +16,23 @@ const TYPE_META: Record<string, { label: string; color: string }> = {
   MEETUP: { label: 'Meetup', color: 'var(--accent)' },
   PROMO: { label: 'Promo', color: 'var(--warning)' },
   DISCUSSION: { label: 'Discussion', color: 'var(--purple)' },
+  MARKETPLACE: { label: 'Marketplace', color: 'var(--success)' },
+  BOOTH_HIGHLIGHT: { label: 'Booth Highlight', color: 'var(--neutral)' },
+  HELPING_HAND: { label: 'Helping Hand', color: 'var(--danger)' },
 };
+
+const URGENCY_LABEL: Record<HelpUrgency, string> = {
+  NOW: 'Now',
+  TODAY: 'Today',
+  THIS_WEEK: 'This week',
+};
+
+function formatPrice(priceType?: MarketplacePriceType | null, price?: number | null): string {
+  if (priceType === 'FREE') return 'Free';
+  if (priceType === 'MAKE_OFFER') return 'Make an offer';
+  if (priceType === 'FIXED' && typeof price === 'number') return `$${(price / 100).toFixed(2)}`;
+  return '';
+}
 
 function formatRange(startIso: string | null, endIso: string | null): string {
   if (!startIso) return '';
@@ -129,6 +145,20 @@ export function CommunityPostModal({ postId, onClose, onChanged }: Props) {
     }
   }
 
+  async function toggleResolve() {
+    if (!post || busy) return;
+    setBusy(true);
+    try {
+      const res = await api.toggleCommunityResolve(post.id);
+      setPost({ ...post, isResolved: res.data.data!.isResolved });
+      onChanged?.();
+    } catch (err: any) {
+      showToast(err.response?.data?.error || 'Failed to update');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <Modal title={post?.title || 'Post'} onClose={onClose}>
       {loading && <p style={styles.muted}>Loading…</p>}
@@ -152,6 +182,25 @@ export function CommunityPostModal({ postId, onClose, onChanged }: Props) {
             <div style={styles.meetupMeta}>
               🗓️ {formatRange(post.startTime, post.endTime)}
               {post.meetupLocation && <> · 📍 {post.meetupLocation}</>}
+            </div>
+          )}
+
+          {post.type === 'MARKETPLACE' && (
+            <div style={styles.meetupMeta}>
+              {formatPrice(post.priceType, post.price)}
+              {post.isResolved && <> · ✅ Sold</>}
+            </div>
+          )}
+
+          {post.type === 'BOOTH_HIGHLIGHT' && post.boothLocation && (
+            <div style={styles.meetupMeta}>📍 {post.boothLocation}</div>
+          )}
+
+          {post.type === 'HELPING_HAND' && (post.urgency || post.isResolved) && (
+            <div style={styles.meetupMeta}>
+              {post.urgency && <>⏱ {URGENCY_LABEL[post.urgency]}</>}
+              {post.urgency && post.isResolved && ' · '}
+              {post.isResolved && '✅ Resolved'}
             </div>
           )}
 
@@ -197,6 +246,13 @@ export function CommunityPostModal({ postId, onClose, onChanged }: Props) {
               {post.canModerate && (
                 <button onClick={togglePin} disabled={busy} style={styles.pinBtn}>
                   {post.isPinned ? 'Unpin' : '📌 Pin to top'}
+                </button>
+              )}
+              {(post.type === 'MARKETPLACE' || post.type === 'HELPING_HAND') && (
+                <button onClick={toggleResolve} disabled={busy} style={styles.pinBtn}>
+                  {post.isResolved
+                    ? post.type === 'MARKETPLACE' ? 'Reopen listing' : 'Reopen'
+                    : post.type === 'MARKETPLACE' ? 'Mark as Sold' : 'Mark as Resolved'}
                 </button>
               )}
               <button onClick={deletePost} style={styles.deleteBtn}>

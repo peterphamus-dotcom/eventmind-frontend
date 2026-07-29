@@ -4,15 +4,31 @@ import { api } from '../api';
 import { Modal } from './Modal';
 import { CommunityPostModal } from './CommunityPostModal';
 import { UserLink } from './UserLink';
-import type { CommunityPost, CommunityPostType, CommunitySortBy } from '../types';
+import type { CommunityPost, CommunityPostType, CommunitySortBy, MarketplacePriceType, HelpUrgency } from '../types';
 
 const TYPE_META: Record<CommunityPostType, { label: string; color: string; emoji: string }> = {
   MEETUP: { label: 'Meetup', color: 'var(--accent)', emoji: '🤝' },
   PROMO: { label: 'Promo', color: 'var(--warning)', emoji: '📣' },
   DISCUSSION: { label: 'Discussion', color: 'var(--purple)', emoji: '💬' },
+  MARKETPLACE: { label: 'Marketplace', color: 'var(--success)', emoji: '🛍️' },
+  BOOTH_HIGHLIGHT: { label: 'Booth Highlight', color: 'var(--neutral)', emoji: '🏪' },
+  HELPING_HAND: { label: 'Helping Hand', color: 'var(--danger)', emoji: '🙋' },
 };
 
-type FeedFilter = 'all' | 'MEETUP' | 'PROMO' | 'DISCUSSION' | 'following';
+const URGENCY_LABEL: Record<HelpUrgency, string> = {
+  NOW: 'Now',
+  TODAY: 'Today',
+  THIS_WEEK: 'This week',
+};
+
+function formatPrice(priceType?: MarketplacePriceType | null, price?: number | null): string {
+  if (priceType === 'FREE') return 'Free';
+  if (priceType === 'MAKE_OFFER') return 'Make an offer';
+  if (priceType === 'FIXED' && typeof price === 'number') return `$${(price / 100).toFixed(2)}`;
+  return '';
+}
+
+type FeedFilter = 'all' | 'MEETUP' | 'PROMO' | 'DISCUSSION' | 'MARKETPLACE' | 'BOOTH_HIGHLIGHT' | 'HELPING_HAND' | 'following';
 
 const SORT_OPTIONS: { id: CommunitySortBy; label: string }[] = [
   { id: 'date', label: 'Newest' },
@@ -27,9 +43,24 @@ interface ComposerState {
   startTime: string;
   endTime: string;
   meetupLocation: string;
+  priceType: MarketplacePriceType | '';
+  price: string;
+  boothLocation: string;
+  urgency: HelpUrgency | '';
 }
 
-const emptyComposer: ComposerState = { type: 'DISCUSSION', title: '', body: '', startTime: '', endTime: '', meetupLocation: '' };
+const emptyComposer: ComposerState = {
+  type: 'DISCUSSION',
+  title: '',
+  body: '',
+  startTime: '',
+  endTime: '',
+  meetupLocation: '',
+  priceType: '',
+  price: '',
+  boothLocation: '',
+  urgency: '',
+};
 
 function shortWhen(iso: string | null): string {
   if (!iso) return '';
@@ -98,6 +129,13 @@ export function CommunityPanel() {
     if (!composer.title.trim()) { setComposerError('Title is required'); return; }
     if (!composer.body.trim()) { setComposerError('Body is required'); return; }
     if (composer.type === 'MEETUP' && !composer.startTime) { setComposerError('Meetups need a start time'); return; }
+    if (composer.type === 'MARKETPLACE' && !composer.priceType) { setComposerError('Choose a price option'); return; }
+    if (composer.type === 'MARKETPLACE' && composer.priceType === 'FIXED' && !composer.price.trim()) {
+      setComposerError('Enter a price'); return;
+    }
+    if (composer.type === 'BOOTH_HIGHLIGHT' && !composer.boothLocation.trim()) {
+      setComposerError('Booth/table location is required'); return;
+    }
     setSubmitting(true);
     setComposerError(null);
     try {
@@ -108,6 +146,13 @@ export function CommunityPanel() {
         startTime: composer.type === 'MEETUP' && composer.startTime ? new Date(composer.startTime).toISOString() : undefined,
         endTime: composer.type === 'MEETUP' && composer.endTime ? new Date(composer.endTime).toISOString() : undefined,
         meetupLocation: composer.type === 'MEETUP' ? composer.meetupLocation.trim() || undefined : undefined,
+        priceType: composer.type === 'MARKETPLACE' ? (composer.priceType as MarketplacePriceType) : undefined,
+        price:
+          composer.type === 'MARKETPLACE' && composer.priceType === 'FIXED'
+            ? Math.round(parseFloat(composer.price) * 100)
+            : undefined,
+        boothLocation: composer.type === 'BOOTH_HIGHLIGHT' ? composer.boothLocation.trim() : undefined,
+        urgency: composer.type === 'HELPING_HAND' && composer.urgency ? composer.urgency : undefined,
       });
       showToast('Posted to community');
       setComposer(null);
@@ -129,11 +174,24 @@ export function CommunityPanel() {
     }
   }
 
+  async function toggleResolve(e: React.MouseEvent, postId: string) {
+    e.stopPropagation();
+    try {
+      await api.toggleCommunityResolve(postId);
+      load();
+    } catch (err: any) {
+      showToast(err.response?.data?.error || 'Failed to update');
+    }
+  }
+
   const filters: { id: FeedFilter; label: string }[] = [
     { id: 'all', label: 'All' },
     { id: 'MEETUP', label: '🤝 Meetups' },
     { id: 'PROMO', label: '📣 Promos' },
     { id: 'DISCUSSION', label: '💬 Discussion' },
+    { id: 'MARKETPLACE', label: '🛍️ Marketplace' },
+    { id: 'BOOTH_HIGHLIGHT', label: '🏪 Booths' },
+    { id: 'HELPING_HAND', label: '🙋 Helping Hand' },
     { id: 'following', label: '⭐ Following' },
   ];
 
@@ -179,12 +237,29 @@ export function CommunityPanel() {
         <div style={styles.list}>
           {posts.map((p) => {
             const meta = TYPE_META[p.type];
+            const canResolve = (p.type === 'MARKETPLACE' || p.type === 'HELPING_HAND') && (p.canManage || canModerate);
             return (
-              <div key={p.id} style={{ ...styles.card, borderLeft: `4px solid ${meta.color}`, ...(p.isPinned ? styles.cardPinned : {}) }} onClick={() => setOpenId(p.id)}>
+              <div
+                key={p.id}
+                style={{
+                  ...styles.card,
+                  borderLeft: `4px solid ${meta.color}`,
+                  ...(p.isPinned ? styles.cardPinned : {}),
+                  ...(p.isResolved ? styles.cardResolved : {}),
+                }}
+                onClick={() => setOpenId(p.id)}
+              >
                 <div style={styles.cardHead}>
                   {p.isPinned && <span style={styles.pinnedBadge} title="Pinned">📌 Pinned</span>}
                   <span style={{ ...styles.typeBadge, backgroundColor: meta.color }}>{meta.emoji} {meta.label}</span>
                   <span style={styles.cardTitle}>{p.title}</span>
+                  {canResolve && (
+                    <button onClick={(e) => toggleResolve(e, p.id)} style={styles.pinBtn}>
+                      {p.isResolved
+                        ? p.type === 'MARKETPLACE' ? 'Reopen listing' : 'Reopen'
+                        : p.type === 'MARKETPLACE' ? 'Mark as Sold' : 'Mark as Resolved'}
+                    </button>
+                  )}
                   {canModerate && (
                     <button onClick={(e) => togglePin(e, p.id)} style={styles.pinBtn} title={p.isPinned ? 'Unpin' : 'Pin to top'}>
                       {p.isPinned ? 'Unpin' : '📌 Pin'}
@@ -196,6 +271,10 @@ export function CommunityPanel() {
                   <span>· {shortWhen(p.createdAt)}</span>
                   {p.type === 'MEETUP' && p.startTime && <span>· 🗓️ {shortWhen(p.startTime)}{p.meetupLocation ? ` · 📍 ${p.meetupLocation}` : ''}</span>}
                   {p.type === 'MEETUP' && <span>· 👥 {p.rsvpCount || 0} going</span>}
+                  {p.type === 'MARKETPLACE' && <span>· {formatPrice(p.priceType, p.price)}</span>}
+                  {p.type === 'BOOTH_HIGHLIGHT' && p.boothLocation && <span>· 📍 {p.boothLocation}</span>}
+                  {p.type === 'HELPING_HAND' && p.urgency && <span>· ⏱ {URGENCY_LABEL[p.urgency]}</span>}
+                  {p.isResolved && <span>· ✅ {p.type === 'MARKETPLACE' ? 'Sold' : 'Resolved'}</span>}
                   {!!p.commentCount && <span>· 💬 {p.commentCount}</span>}
                   {!!p.viewCount && <span>· 👁️ {p.viewCount}</span>}
                   {p.author.contact && <span title="Shared contact">· 📇</span>}
@@ -230,7 +309,7 @@ export function CommunityPanel() {
           <div style={styles.section}>
             <label style={styles.label}>Type</label>
             <div style={styles.typePick}>
-              {(['MEETUP', 'PROMO', 'DISCUSSION'] as CommunityPostType[]).map((t) => (
+              {(['MEETUP', 'PROMO', 'DISCUSSION', 'MARKETPLACE', 'BOOTH_HIGHLIGHT', 'HELPING_HAND'] as CommunityPostType[]).map((t) => (
                 <button
                   key={t}
                   onClick={() => setComposer({ ...composer, type: t })}
@@ -266,6 +345,68 @@ export function CommunityPanel() {
             </>
           )}
 
+          {composer.type === 'MARKETPLACE' && (
+            <>
+              <div style={styles.section}>
+                <label style={styles.label}>Price</label>
+                <div style={styles.typePick}>
+                  {(['FIXED', 'FREE', 'MAKE_OFFER'] as MarketplacePriceType[]).map((pt) => (
+                    <button
+                      key={pt}
+                      onClick={() => setComposer({ ...composer, priceType: pt })}
+                      style={{ ...styles.typeOption, ...(composer.priceType === pt ? { borderColor: 'var(--success)', color: 'var(--success)', fontWeight: 700 } : {}) }}
+                    >
+                      {pt === 'FIXED' ? 'Fixed price' : pt === 'FREE' ? 'Free' : 'Make an offer'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {composer.priceType === 'FIXED' && (
+                <div style={styles.section}>
+                  <label style={styles.label}>Amount ($)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={composer.price}
+                    onChange={(e) => setComposer({ ...composer, price: e.target.value })}
+                    style={styles.input}
+                    placeholder="0.00"
+                  />
+                </div>
+              )}
+            </>
+          )}
+
+          {composer.type === 'BOOTH_HIGHLIGHT' && (
+            <div style={styles.section}>
+              <label style={styles.label}>Booth / table location</label>
+              <input
+                value={composer.boothLocation}
+                onChange={(e) => setComposer({ ...composer, boothLocation: e.target.value })}
+                style={styles.input}
+                placeholder="e.g. Stall 12"
+                maxLength={120}
+              />
+            </div>
+          )}
+
+          {composer.type === 'HELPING_HAND' && (
+            <div style={styles.section}>
+              <label style={styles.label}>Urgency (optional)</label>
+              <select
+                value={composer.urgency}
+                onChange={(e) => setComposer({ ...composer, urgency: e.target.value as HelpUrgency | '' })}
+                style={styles.input}
+              >
+                <option value="">No rush</option>
+                <option value="NOW">Now</option>
+                <option value="TODAY">Today</option>
+                <option value="THIS_WEEK">This week</option>
+              </select>
+            </div>
+          )}
+
           <div style={styles.section}>
             <label style={styles.label}>Body</label>
             <textarea value={composer.body} onChange={(e) => setComposer({ ...composer, body: e.target.value })} style={styles.textarea} rows={5} maxLength={5000} placeholder="Write your post… tag others with @Name" />
@@ -295,6 +436,7 @@ const styles: Record<string, React.CSSProperties> = {
   list: { display: 'flex', flexDirection: 'column', gap: '10px' },
   card: { backgroundColor: 'var(--surface)', borderRadius: '6px', boxShadow: '0 1px 4px var(--shadow)', padding: '12px 14px', cursor: 'pointer' },
   cardPinned: { backgroundColor: 'var(--warning-soft)' },
+  cardResolved: { opacity: 0.55, filter: 'grayscale(0.6)' },
   pinnedBadge: { fontSize: '11px', fontWeight: 700, color: 'var(--warning-text2)', whiteSpace: 'nowrap' },
   pinBtn: { marginLeft: 'auto', padding: '3px 10px', borderRadius: '12px', border: '1px solid var(--border-strong)', backgroundColor: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '11.5px', fontWeight: 600, whiteSpace: 'nowrap' },
   cardHead: { display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '6px' },

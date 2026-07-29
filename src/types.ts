@@ -508,8 +508,10 @@ export interface PostMortemReport {
 
 // ---- B2B Community ----
 
-export type CommunityPostType = 'MEETUP' | 'PROMO' | 'DISCUSSION';
+export type CommunityPostType = 'MEETUP' | 'PROMO' | 'DISCUSSION' | 'MARKETPLACE' | 'BOOTH_HIGHLIGHT' | 'HELPING_HAND';
 export type CommunitySortBy = 'date' | 'views' | 'comments';
+export type MarketplacePriceType = 'FIXED' | 'FREE' | 'MAKE_OFFER';
+export type HelpUrgency = 'NOW' | 'TODAY' | 'THIS_WEEK';
 
 export interface CommunityContact {
   email: string;
@@ -532,6 +534,11 @@ export interface CommunityPost {
   startTime: string | null;
   endTime: string | null;
   meetupLocation: string | null;
+  priceType?: MarketplacePriceType | null;
+  price?: number | null; // cents
+  boothLocation?: string | null;
+  urgency?: HelpUrgency | null;
+  isResolved?: boolean;
   isPinned?: boolean;
   author: CommunityAuthor;
   createdAt: string;
